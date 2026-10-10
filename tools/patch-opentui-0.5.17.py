@@ -22,8 +22,42 @@ def main() -> int:
     native = args.tree / "packages" / "native" / "src"
     buffer = native / "buffer.zig"
     renderer = native / "renderer.zig"
-    if not buffer.is_file() or not renderer.is_file():
+    build = args.tree / "packages" / "native" / "build.zig"
+    if not buffer.is_file() or not renderer.is_file() or not build.is_file():
         raise SystemExit("patch-opentui: expected packages/native/src source tree")
+
+    replace_exact(
+        build,
+        """fn addTranslatedCImports(
+    b: *std.Build,""",
+        """fn addBionicTranslateIncludes(b: *std.Build, step: *std.Build.Step.TranslateC) void {
+    if (b.graph.environ_map.get("BIONIC_ARCH_INCLUDE")) |path| {
+        step.addSystemIncludePath(.{ .cwd_relative = path });
+    }
+    if (b.graph.environ_map.get("BIONIC_SYS_INCLUDE")) |path| {
+        step.addSystemIncludePath(.{ .cwd_relative = path });
+    }
+}
+
+fn addTranslatedCImports(
+    b: *std.Build,""",
+    )
+    replace_exact(
+        build,
+        """    miniaudio_translate.addIncludePath(b.path("src"));
+    module.addImport("miniaudio", miniaudio_translate.createModule());""",
+        """    miniaudio_translate.addIncludePath(b.path("src"));
+    addBionicTranslateIncludes(b, miniaudio_translate);
+    module.addImport("miniaudio", miniaudio_translate.createModule());""",
+    )
+    replace_exact(
+        build,
+        """    yoga_translate.addIncludePath(yoga_dep.path(""));
+    module.addImport("yoga", yoga_translate.createModule());""",
+        """    yoga_translate.addIncludePath(yoga_dep.path(""));
+    addBionicTranslateIncludes(b, yoga_translate);
+    module.addImport("yoga", yoga_translate.createModule());""",
+    )
 
     replace_exact(
         buffer,

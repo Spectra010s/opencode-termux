@@ -100,6 +100,8 @@ jobs:
           (
             cd work/opentui/packages/native
             OPENTUI_C_REMAP="-ffile-prefix-map=$GITHUB_WORKSPACE=/usr/src" \
+            BIONIC_ARCH_INCLUDE="$SYSROOT/usr/include/aarch64-linux-android" \
+            BIONIC_SYS_INCLUDE="$SYSROOT/usr/include" \
               zig build -Dlibrary-target=aarch64-linux-android \
                 -Doptimize=ReleaseSafe --libc "$GITHUB_WORKSPACE/work/android-libc.txt"
           )
