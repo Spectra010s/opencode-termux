@@ -37,6 +37,11 @@ def main() -> int:
     if (b.graph.environ_map.get("BIONIC_SYS_INCLUDE")) |path| {
         step.addSystemIncludePath(.{ .cwd_relative = path });
     }
+    // Nullability is type metadata only. Zig translate-c rejects the NDK's
+    // annotated array parameters, so erase these annotations for translation.
+    step.defineCMacroRaw("_Nullable=");
+    step.defineCMacroRaw("_Nonnull=");
+    step.defineCMacroRaw("_Null_unspecified=");
 }
 
 fn addTranslatedCImports(
