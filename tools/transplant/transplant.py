@@ -695,8 +695,9 @@ def tui_probe(product: Path, timeout: int = 15) -> dict:
 def swap_step(binary: Path, tui_lib: Path, out: Path, strip: bool = True) -> dict:
     """Swap a bionic libopentui.so into `binary` (wrapper over swap_tui.py).
 
-    The bionic lib is stripped (debug info only) when a strip tool is available,
-    so it fits the embedded slot. Raises TransplantError on swap failure; the
+    The bionic lib is stripped of symbols not needed at runtime when a strip
+    tool is available, so it fits the embedded slot while retaining dynamic
+    exports for the FFI guard check. Raises TransplantError on swap failure; the
     equal-length/NUL-padding algorithm lives in swap_tui.py and is untouched.
     """
     if not binary.is_file():
@@ -717,7 +718,7 @@ def swap_step(binary: Path, tui_lib: Path, out: Path, strip: bool = True) -> dic
             tmp = out.with_name(out.name + ".strip.so")
             try:
                 subprocess.run(
-                    [strip_bin, "--strip-debug", str(tui_lib), "-o", str(tmp)],
+                    [strip_bin, "--strip-unneeded", str(tui_lib), "-o", str(tmp)],
                     check=True,
                     capture_output=True,
                     timeout=120,

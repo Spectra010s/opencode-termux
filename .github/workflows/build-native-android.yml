@@ -112,7 +112,7 @@ jobs:
           SO="work/opentui/packages/native/lib/aarch64-linux-android.28/libopentui.so"
           test -f "$SO"
           python3 tools/remap-binary-prefix.py "$SO" "$GITHUB_WORKSPACE" /usr/src
-          "$LLVM_STRIP" --strip-debug "$SO"
+          "$LLVM_STRIP" --strip-unneeded "$SO"
           cp "$SO" artifacts/transplant/opentui-bionic/libopentui.so
 
       - name: Verify Bionic library

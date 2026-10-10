@@ -119,7 +119,7 @@ def elf_size(data: bytes, off: int) -> int:
 
 def _iter_func_syms(data: bytes):
     """Yield (name, FILE OFFSET, st_size) for every defined STT_FUNC symbol in
-    SHT_SYMTAB (full table; guard-owner functions are local F entries).
+    SHT_SYMTAB, falling back to SHT_DYNSYM after distribution stripping.
     st_value is a virtual address: translate through PT_LOAD segments."""
     if data[4] != 2:  # EI_CLASS != ELFCLASS64
         raise ValueError("not ELF64")
@@ -146,19 +146,22 @@ def _iter_func_syms(data: bytes):
     e_shentsize = struct.unpack_from("<H", data, 0x3A)[0]
     e_shnum = struct.unpack_from("<H", data, 0x3C)[0]
     symtab_off = symtab_size = symtab_entsize = strtab_off = None
-    for n in range(e_shnum):
-        so = e_shoff + n * e_shentsize
-        s_type = struct.unpack_from("<I", data, so + 0x4)[0]
-        if s_type == 2:  # SHT_SYMTAB
-            symtab_off = struct.unpack_from("<Q", data, so + 0x18)[0]
-            symtab_size = struct.unpack_from("<Q", data, so + 0x20)[0]
-            symtab_entsize = struct.unpack_from("<Q", data, so + 0x38)[0]
-            link = struct.unpack_from("<I", data, so + 0x28)[0]
-            strtab_so = e_shoff + link * e_shentsize
-            strtab_off = struct.unpack_from("<Q", data, strtab_so + 0x18)[0]
+    for wanted_type in (2, 11):  # SHT_SYMTAB, then SHT_DYNSYM
+        for n in range(e_shnum):
+            so = e_shoff + n * e_shentsize
+            s_type = struct.unpack_from("<I", data, so + 0x4)[0]
+            if s_type == wanted_type:
+                symtab_off = struct.unpack_from("<Q", data, so + 0x18)[0]
+                symtab_size = struct.unpack_from("<Q", data, so + 0x20)[0]
+                symtab_entsize = struct.unpack_from("<Q", data, so + 0x38)[0]
+                link = struct.unpack_from("<I", data, so + 0x28)[0]
+                strtab_so = e_shoff + link * e_shentsize
+                strtab_off = struct.unpack_from("<Q", data, strtab_so + 0x18)[0]
+                break
+        if symtab_off is not None:
             break
     if symtab_off is None:
-        raise ValueError("no SHT_SYMTAB (symbol table stripped)")
+        raise ValueError("no SHT_SYMTAB or SHT_DYNSYM function table")
     for off in range(symtab_off, symtab_off + symtab_size, symtab_entsize):
         st_name = struct.unpack_from("<I", data, off)[0]
         st_info = data[off + 4]

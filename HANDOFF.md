@@ -42,7 +42,9 @@ Run `38053424120` then compiled the Bionic OpenTUI library successfully and pass
 
 Run `38054582952` passed the build-path check, Bionic verification, FFI guard, and locked OpenCode package verification. Transplant then selected Ubuntu's host `/usr/bin/strip`, which cannot process the Android/aarch64 library. The next patch exports the NDK `llvm-strip` path as `LLVM_STRIP`, and transplant validates and honors that explicit tool.
 
-Latest known failed run: <https://github.com/Spectra010s/opencode-termux/actions/runs/38054582952>
+Run `38054798108` used NDK `llvm-strip` successfully. The debug-stripped library was `6,307,000` bytes, larger than the pinned package's `5,908,024`-byte embedded slot. The next patch uses `--strip-unneeded` and lets the mandatory FFI guard verifier fall back from the removed full symbol table to retained dynamic export symbols.
+
+Latest known failed run: <https://github.com/Spectra010s/opencode-termux/actions/runs/38054798108>
 
 ## Continue
 
