@@ -18,18 +18,23 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
-      - name: Checkout hardened packaging repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with:
-          persist-credentials: false
+      - name: Fetch workflow commit without broken submodules
+        run: |
+          set -euo pipefail
+          git init .
+          git remote add origin "https://github.com/$GITHUB_REPOSITORY.git"
+          git fetch --depth=1 origin "$GITHUB_SHA"
+          git checkout --detach FETCH_HEAD
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
 
-      - name: Checkout pinned OpenTUI source
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with:
-          repository: anomalyco/opentui
-          ref: 6f0efd3330978d696b42db3d7d95d2042008312b
-          path: work/opentui
-          persist-credentials: false
+      - name: Fetch pinned OpenTUI source
+        run: |
+          set -euo pipefail
+          mkdir -p work/opentui
+          git -C work/opentui init .
+          git -C work/opentui remote add origin https://github.com/anomalyco/opentui.git
+          git -C work/opentui fetch --depth=1 origin "$OPENTUI_COMMIT"
+          git -C work/opentui checkout --detach FETCH_HEAD
 
       - name: Install hash-verified Zig
         run: |
