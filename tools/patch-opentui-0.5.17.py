@@ -42,6 +42,8 @@ def main() -> int:
     step.defineCMacroRaw("_Nullable=");
     step.defineCMacroRaw("_Nonnull=");
     step.defineCMacroRaw("_Null_unspecified=");
+    step.defineCMacroRaw("__ANDROID_MIN_SDK_VERSION__=28");
+    step.defineCMacroRaw("__ANDROID_API__=28");
 }
 
 fn addTranslatedCImports(

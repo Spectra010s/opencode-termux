@@ -99,7 +99,7 @@ jobs:
           sh work/opentui/packages/native/scripts/prepare-zig-deps.sh
           (
             cd work/opentui/packages/native
-            OPENTUI_C_REMAP="-ffile-prefix-map=$GITHUB_WORKSPACE=/usr/src" \
+            OPENTUI_C_REMAP="-ffile-prefix-map=$GITHUB_WORKSPACE=/usr/src -D__ANDROID_MIN_SDK_VERSION__=28 -D__ANDROID_API__=28" \
             BIONIC_ARCH_INCLUDE="$SYSROOT/usr/include/aarch64-linux-android" \
             BIONIC_SYS_INCLUDE="$SYSROOT/usr/include" \
               zig build -Dlibrary-target=aarch64-linux-android.28 \
