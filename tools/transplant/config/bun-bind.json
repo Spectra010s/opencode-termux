@@ -1,6 +1,8 @@
 {
   "target": "1.4.0",
   "url_pattern": "https://github.com/oven-sh/bun/releases/download/bun-v{ver}/bun-linux-aarch64-android.zip",
+  "archive_sha256": "42544d7438bb92c7e7df7d30b9a5858cb7a834636608e5b850f59138283567fc",
+  "elf_sha256": "44a83a9b716a2df09c7c62cfee94f99b4d0b389f9326c6318c4831d888e2a250",
   "min_base_for_section": "1.4.0",
   "notes": "opencode >=1.18 uses the new .bun section-format module graph, which requires a >=1.4 android Bun base (plain-offset size-mode). <=1.3.x trailer-format graphs require a 1.3.x base (reloc size-mode)."
 }

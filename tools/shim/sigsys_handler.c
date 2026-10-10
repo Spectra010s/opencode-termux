@@ -26,9 +26,8 @@
 // 2. SIGSYS handler (#39060 on-device, #39775 in-binary design): for the
 //    inline-svc sites no interposition can reach, a SIGSYS handler rewrites
 //    the interrupted context so the syscall appears to have returned
-//    -ENOSYS. ALL seccomp traps are blanket-answered with -ENOSYS (#39775
-//    semantics: also rescues openat2 437 / fchmodat2 452 / pidfd_open traps
-//    during bun install).
+//    -ENOSYS. Only the audited Bun compatibility syscalls are handled;
+//    unexpected seccomp traps remain fail-closed instead of being hidden.
 //
 // Delivery: linked into the main ELF as the FIRST DT_NEEDED entry
 // (libopencode-crhandler.so, self-activation; no env vars). The constructor
@@ -66,6 +65,21 @@
 #define ENOSYS 38
 #endif
 
+// Linux aarch64 syscall numbers used by Bun's compatibility/fallback paths.
+// Do not broaden this list without an on-device trace and a documented
+// graceful ENOSYS fallback in the caller.
+static int is_compat_syscall(int nr) {
+    switch (nr) {
+        case 434: // pidfd_open
+        case 436: // close_range
+        case 437: // openat2
+        case 452: // fchmodat2
+            return 1;
+        default:
+            return 0;
+    }
+}
+
 // Cached once by the constructor (before any handler can run), so the
 // handler itself never calls getenv (async-signal-unsafe).
 static int debug_cached = -1;
@@ -92,6 +106,12 @@ static void sigsys_handler(int signo, siginfo_t *info, void *uctx) {
         sigaction(SIGSYS, &sa, NULL);
         raise(SIGSYS);
         return;
+    }
+    if (!is_compat_syscall(info->si_syscall)) {
+        // Returning would retry or skip an unaudited syscall. Terminate with
+        // the conventional SIGSYS shell status instead of weakening seccomp.
+        if (getenv_debug()) write_str("CRHANDLER: unexpected seccomp trap\n");
+        _exit(128 + SIGSYS);
     }
     uc->uc_mcontext.pc += 4;                              // skip the svc
     uc->uc_mcontext.regs[0] = (unsigned long)(long)-ENOSYS; // x0 = -ENOSYS

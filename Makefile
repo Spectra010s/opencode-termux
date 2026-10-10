@@ -277,8 +277,11 @@ transplant:
 		echo "Error: VER is empty. Example: make transplant VER=1.3.13"; \
 		exit 1; \
 	fi
+	@printf '%s' '$(VER)' | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$$' || { echo "Error: invalid VER: $(VER)" >&2; exit 1; }
 	@echo "==> transplant VER=$(VER)"
-	python3 tools/transplant/transplant.py all --ver $(VER) --tgz $${TMPDIR:-/tmp}/$$(npm pack opencode-linux-arm64@$(VER) --pack-destination $${TMPDIR:-/tmp} 2>/dev/null | tail -n1)
+	@tgz="$${TMPDIR:-/tmp}/$$(npm pack '@opencode/cli-linux-arm64@$(VER)' --pack-destination "$${TMPDIR:-/tmp}" --silent | tail -n1)"; \
+	python3 tools/verify-release-input.py --kind opencode-cli --version '$(VER)' --file "$$tgz"; \
+	python3 tools/transplant/transplant.py all --ver '$(VER)' --tgz "$$tgz"
 	@# W7c2: TUI swap + post-swap pty probe are now performed INSIDE
 	@# `transplant.py all` (tools/transplant/swap_tui.py graft + tui_probe gate),
 	@# which records `tui_probe` in report.json. The Makefile only adds the
@@ -838,7 +841,8 @@ build-native:
 		echo "Error: VER is required. Example: make build-native VER=2.0.0"; \
 		exit 1; \
 	fi
-	VER=$(VER) V2_SRC='$(V2_SRC)' bash scripts/build-bionic.sh
+	@printf '%s' '$(VER)' | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$$' || { echo "Error: invalid VER: $(VER)" >&2; exit 1; }
+	VER='$(VER)' V2_SRC='$(V2_SRC)' bash scripts/build-bionic.sh
 
 # build-native-upx: UPX-compress the B-line product (optional final step)
 .PHONY: build-native-upx

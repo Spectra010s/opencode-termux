@@ -40,6 +40,13 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 VER="${VER:-2.0.0}"
+VERIFY_INPUT="$ROOT_DIR/tools/verify-release-input.py"
+[[ "$VER" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+  echo "Error: invalid version: $VER" >&2
+  exit 1
+}
+[[ -f "$VERIFY_INPUT" ]] || { echo "Error: missing verifier: $VERIFY_INPUT" >&2; exit 1; }
+OPENCODE_COMMIT="$(python3 "$VERIFY_INPUT" --kind opencode --version "$VER" --print-field commit)"
 
 # ── resolve v2 source tree ─────────────────────────────────────────────
 if [[ -n "${V2_SRC:-}" ]]; then
@@ -59,11 +66,12 @@ fi
   if [[ ! -f "$EXTRACT_DIR/packages/cli/script/build.ts" ]]; then
     TGZ="$DL_DIR/opencode-${VER}-src.tar.gz"
     if [[ ! -f "$TGZ" ]]; then
-      curl -fsSL "https://codeload.github.com/anomalyco/opencode/tar.gz/v${VER}" -o "$TGZ" || {
+      curl -fsSL "https://codeload.github.com/anomalyco/opencode/tar.gz/${OPENCODE_COMMIT}" -o "$TGZ" || {
         echo "Error: failed to download source for v${VER} from GitHub" >&2
         exit 1
       }
     fi
+    python3 "$VERIFY_INPUT" --kind opencode --version "$VER" --file "$TGZ"
     mkdir -p "$EXTRACT_DIR"
     tar xzf "$TGZ" -C "$EXTRACT_DIR" --strip-components=1 2>/dev/null || {
       echo "Error: failed to extract source tarball" >&2
@@ -76,6 +84,24 @@ fi
   }
   SRC_DIR="$EXTRACT_DIR"
 }
+
+# Resolve native dependency versions from the pinned upstream source instead
+# of carrying stale constants in this packaging repository.
+readarray -t NATIVE_VERSIONS < <(python3 - "$SRC_DIR/package.json" "$SRC_DIR/packages/cli/package.json" <<'PY'
+import json, sys
+root = json.load(open(sys.argv[1], encoding="utf-8"))
+cli = json.load(open(sys.argv[2], encoding="utf-8"))
+catalog = root.get("catalog", {})
+print(catalog["@opentui/core"])
+print(cli["dependencies"]["@opencode-ai/pty"])
+print(cli["dependencies"]["@parcel/watcher"])
+PY
+)
+[[ ${#NATIVE_VERSIONS[@]} -eq 3 ]] || { echo "Error: could not resolve native dependency versions" >&2; exit 1; }
+OPENTUI_VERSION="${NATIVE_VERSIONS[0]}"
+PTY_VERSION="${NATIVE_VERSIONS[1]}"
+WATCHER_VERSION="${NATIVE_VERSIONS[2]}"
+echo "==> pinned native deps: opentui=$OPENTUI_VERSION pty=$PTY_VERSION watcher=$WATCHER_VERSION"
 
 # Fixes #23 (B line): default to bun-1.4.0 — 1.4.2 panics "Segmentation fault
 # at address 0x40" on Android/bionic during TUI startup (EXIT 139, reproduced).
@@ -121,7 +147,7 @@ cd "$ROOT_DIR"
 # mandatory targets hard-fail, optional (musl/solid) warn-and-continue.
 echo "==> installing platform packages one-by-one (pty, watcher, core, fonts)..."
 cd "$SRC_DIR/packages/cli"
-for pkg in "@opencode-ai/pty-linux-arm64-gnu@0.1.13" "@parcel/watcher-linux-arm64-glibc@2.5.1" "@opentui/core-linux-arm64@0.5.10"; do
+for pkg in "@opencode-ai/pty-linux-arm64-gnu@$PTY_VERSION" "@parcel/watcher-linux-arm64-glibc@$WATCHER_VERSION" "@opentui/core-linux-arm64@$OPENTUI_VERSION"; do
   pkg_ok=0
   for attempt in 1 2 3 4 5; do
     if LD_PRELOAD="$OPENAT2_SHIM" "$ANDROID_BUN" install --force --ignore-scripts --os=linux --cpu=arm64 "$pkg" 2>&1 | tail -2; then
@@ -134,7 +160,7 @@ for pkg in "@opencode-ai/pty-linux-arm64-gnu@0.1.13" "@parcel/watcher-linux-arm6
   [[ $pkg_ok -eq 1 ]] || { echo "Error: mandatory platform package failed after 5 attempts: $pkg" >&2; exit 1; }
   echo "    ^ $pkg"
 done
-for pkg in "@opentui/core-linux-arm64-musl@0.5.10" "@opentui/solid-linux-arm64@0.5.10"; do
+for pkg in "@opentui/core-linux-arm64-musl@$OPENTUI_VERSION" "@opentui/solid-linux-arm64@$OPENTUI_VERSION"; do
   if LD_PRELOAD="$OPENAT2_SHIM" "$ANDROID_BUN" install --force --ignore-scripts --os=linux --cpu=arm64 "$pkg" >/dev/null 2>&1; then
     echo "    OK  $pkg"
   else
@@ -211,7 +237,7 @@ fi
 # ── 1b. install linux platform packages (android bun reports platform=android) ──
 echo "==> installing linux platform packages (pty, watcher)..."
 cd "$SRC_DIR"
-for pkg in "@opencode-ai/pty@0.1.13" "@parcel/watcher-linux-arm64-glibc@2.5.1"; do
+for pkg in "@opencode-ai/pty@$PTY_VERSION" "@parcel/watcher-linux-arm64-glibc@$WATCHER_VERSION"; do
   pkg_name="${pkg%%@*}"
   pkg_short="${pkg_name##*/}"
   # Check if already installed in store (any platform variant)
@@ -251,7 +277,7 @@ PTY_VARIANT="${PTY_VARIANT:-musl}"
 case "$PTY_VARIANT" in
   musl)
     echo "==> installing musl PTY helper (issue #27: gnu variant cannot run on bionic)..."
-    if LD_PRELOAD="$OPENAT2_SHIM" "$ANDROID_BUN" install --force --ignore-scripts --os=linux --cpu=arm64 "@opencode-ai/pty-linux-arm64-musl@0.1.13" 2>&1 | tail -1; then :; fi
+    if LD_PRELOAD="$OPENAT2_SHIM" "$ANDROID_BUN" install --force --ignore-scripts --os=linux --cpu=arm64 "@opencode-ai/pty-linux-arm64-musl@$PTY_VERSION" 2>&1 | tail -1; then :; fi
     PTY_MUSL_BIN="$(find "$STORE" "$SRC_DIR/node_modules" -path '*pty-linux-arm64-musl/bin/opencode-pty' -type f 2>/dev/null | head -n1)"
     if [[ -z "$PTY_MUSL_BIN" ]] || ! file "$PTY_MUSL_BIN" | grep -q 'statically linked'; then
       echo "Error: static musl opencode-pty not found/valid — bionic PTY would be broken (issue #27)" >&2

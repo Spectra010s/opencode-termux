@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "opencode": {
+    "2.0.26": {
+      "commit": "9b4ec5714d481559990db0a816d5dec19541a814",
+      "source_sha256": "3c8373973985b7691843faf7d5603cb11d8eb1b9c66b73d5f92e999b93236d35",
+      "cli_linux_arm64_sha256": "1d7117dbb31968456f89537b562fb5e20e48d9e9ef0325fc8845abdda6ef4842"
+    }
+  },
+  "android_bun": {
+    "1.4.0": {
+      "archive_sha256": "42544d7438bb92c7e7df7d30b9a5858cb7a834636608e5b850f59138283567fc",
+      "elf_sha256": "44a83a9b716a2df09c7c62cfee94f99b4d0b389f9326c6318c4831d888e2a250"
+    }
+  },
+  "opentui": {
+    "0.5.17": {
+      "commit": "6f0efd3330978d696b42db3d7d95d2042008312b",
+      "zig_version": "0.16.0",
+      "zig_x86_64_linux_sha256": "70e49664a74374b48b51e6f3fdfbf437f6395d42509050588bd49abe52ba3d00"
+    }
+  }
+}

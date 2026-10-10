@@ -1,121 +1,169 @@
-# Build Native Android OpenCode via transplant pipeline
-#
-# Diagnostic/handoff workflow (attempt-based evidence, NOT a release path):
-#   1. npm pack opencode-linux-arm64@<ver>
-#   2. Download official android Bun (target from tools/transplant/config/bun-bind.json)
-#   3. Run tools/transplant/transplant.py all --no-execve
-#      (x86 build host cannot exec aarch64 ELF; produces binary + report only)
-#   4. Golden regression (tests/transplant/test_golden.py)
-#   5. Upload artifacts/transplant/ + write status/*.json (attempt evidence)
-#
-# Final runtime acceptance happens on a real Termux aarch64 device, not here.
-
-name: Build Native Android (transplant)
+name: Build locked OpenCode v2 for native Android
 
 on:
   workflow_dispatch:
-    inputs:
-      version:
-        description: "opencode version (e.g. 1.3.13)"
-        required: false
-        default: "1.18.21"
+
+permissions:
+  contents: read
 
 env:
-  BUN_BIND_JSON: tools/transplant/config/bun-bind.json
+  OPENCODE_VERSION: "2.0.26"
+  OPENTUI_VERSION: "0.5.17"
+  OPENTUI_COMMIT: "6f0efd3330978d696b42db3d7d95d2042008312b"
+  ZIG_VERSION: "0.16.0"
+  ANDROID_API: "28"
 
 jobs:
-  transplant:
+  build-candidate:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Prepare directories
-        run: |
-          mkdir -p out/status out/logs work
-          python3 --version
-          npm --version
-
-      - name: Resolve android Bun target from bun-bind.json
-        id: bun
-        run: |
-          BUN_VER="$(python3 -c 'import json;print(json.load(open("tools/transplant/config/bun-bind.json"))["target"])')"
-          echo "bun_ver=$BUN_VER" >> "$GITHUB_OUTPUT"
-          echo "bound bun target: $BUN_VER"
-
-      - name: Probe latest android Bun (diagnostic, non-blocking)
-        continue-on-error: true
-        run: |
-          bash scripts/ci/probe-latest-bun.sh --offline
-          bash scripts/ci/probe-latest-bun.sh 2>&1 | tail -8 || true
-
-      - name: Download opencode tgz
-        run: |
-          VER="${{ github.event.inputs.version }}"
-          npm pack "opencode-linux-arm64@$VER" --pack-destination work/
-          ls -la work/
-
-      # NOTE: intentionally NO pre-staging of the android Bun zip here.
-      # transplant.py pins its own BUN_URL and downloads idempotently into its
-      # own cache dir. Pre-seeding artifacts/transplant/android-bun/ collides
-      # with that cache path (known cache-path collision): the pipeline then
-      # skips its own download and silently grafts whatever base was seeded.
-      # The default revive mode is `reloc`, which requires a <=1.3.x base
-      # (reloc+1.4.0 = SIGSEGV at runtime despite sha self-consistency);
-      # letting the pipeline self-download keeps base and mode matched.
-
-      - name: Run transplant pipeline (--no-execve)
-        run: |
-          VER="${{ github.event.inputs.version }}"
-          TGZ="$(ls work/opencode-linux-arm64-*.tgz | head -1)"
-          python3 tools/transplant/transplant.py all --ver "$VER" --tgz "$TGZ" --no-execve
-          ls -la artifacts/transplant/"$VER"/
-
-      # NOTE: no separate revive step here. `transplant.py all` already runs the
-      # revive graft internally (cmd_all step 6) and records it in report.json
-      # steps.revive; re-running revive_patch.py with a manually computed
-      # --size-mode overwrote that verified output and broke artifact vs
-      # report.json self-consistency (double-revive bug, fixed 2026-08-25).
-      # Size-mode knowledge for manual debugging: revive_patch.py default is
-      # `reloc`; bun >= 1.4 base may need `plain-offset` -- let transplant.py's
-      # internal logic decide, do not guess in CI.
-
-      - name: Ensure golden fixtures
-        run: |
-          if [ -z "$(ls -A tests/transplant/fixtures/tgz/ 2>/dev/null)" ]; then
-            echo "fixtures missing; fetching..."
-            bash scripts/fetch-fixtures.sh
-          else
-            echo "fixtures present:"
-            ls tests/transplant/fixtures/tgz/
-          fi
-
-      - name: Run golden regression
-        run: |
-          python3 tests/transplant/test_golden.py --fixtures-dir tests/transplant/fixtures/tgz
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+      - name: Checkout hardened packaging repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          name: transplant-${{ github.event.inputs.version }}
-          path: artifacts/transplant/${{ github.event.inputs.version }}/
-          retention-days: 30
+          persist-credentials: false
 
-      - name: Write status (attempt-based evidence)
+      - name: Checkout pinned OpenTUI source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: anomalyco/opentui
+          ref: 6f0efd3330978d696b42db3d7d95d2042008312b
+          path: work/opentui
+          persist-credentials: false
+
+      - name: Install hash-verified Zig
         run: |
+          set -euo pipefail
+          URL="https://ziglang.org/download/$ZIG_VERSION/zig-x86_64-linux-$ZIG_VERSION.tar.xz"
+          SHA="$(python3 -c 'import json,os; print(json.load(open("tools/supply-chain-lock.json"))["opentui"][os.environ["OPENTUI_VERSION"]]["zig_x86_64_linux_sha256"])')"
+          mkdir -p work
+          curl -fsSLo work/zig.tar.xz "$URL"
+          echo "$SHA  work/zig.tar.xz" | sha256sum -c -
+          tar -xJf work/zig.tar.xz -C work
+          echo "$GITHUB_WORKSPACE/work/zig-x86_64-linux-$ZIG_VERSION" >> "$GITHUB_PATH"
+
+      - name: Verify locked metadata
+        run: |
+          set -euo pipefail
           python3 - <<'PY'
           import json
-          from pathlib import Path
-          ver = "${{ github.event.inputs.version }}"
-          out = Path("artifacts/transplant") / ver
-          report = json.loads((out / "report.json").read_text()) if (out / "report.json").is_file() else {}
-          assets = sorted(str(p.relative_to(Path("artifacts"))) for p in out.rglob("*") if p.is_file())
-          Path("out/status/transplant-attempt.json").write_text(json.dumps({
-            "status": "completed",
-            "ver": ver,
-            "attempt": "evidence-only (not a release)",
-            "execve_result": report.get("steps", {}).get("verify", {}).get("execve_result", "n/a"),
-            "layout": report.get("layout"),
-            "artifacts": assets,
-          }, indent=2) + "\n")
+          import os
+          import subprocess
+
+          lock = json.load(open("tools/supply-chain-lock.json", encoding="utf-8"))
+          oc = lock["opencode"][os.environ["OPENCODE_VERSION"]]
+          ot = lock["opentui"][os.environ["OPENTUI_VERSION"]]
+          assert ot["commit"] == os.environ["OPENTUI_COMMIT"]
+          assert ot["zig_version"] == os.environ["ZIG_VERSION"]
+          head = subprocess.check_output(
+              ["git", "-C", "work/opentui", "rev-parse", "HEAD"], text=True
+          ).strip()
+          assert head == ot["commit"], (head, ot["commit"])
+          assert len(oc["cli_linux_arm64_sha256"]) == 64
           PY
-          cat out/status/transplant-attempt.json
+          test "$(zig version)" = "$ZIG_VERSION"
+
+      - name: Apply version-locked OpenTUI Android hardening
+        run: |
+          set -euo pipefail
+          python3 tools/patch-opentui-0.5.17.py work/opentui
+          patch --fuzz=0 -d work/opentui -p1 < patches/opentui/v0.5.17-file-prefix-map.patch
+          patch --fuzz=0 -d work/opentui -p1 < patches/opentui/tlsdesc-self-resolver.patch
+          git -C work/opentui diff --check
+
+      - name: Build Bionic OpenTUI library
+        run: |
+          set -euo pipefail
+          NDK="${ANDROID_NDK_LATEST_HOME:-}"
+          if [ -z "$NDK" ] || [ ! -d "$NDK" ]; then
+            NDK="$(find "$ANDROID_SDK_ROOT/ndk" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)"
+          fi
+          test -d "$NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot"
+          SYSROOT="$NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot"
+          LIBDIR="$SYSROOT/usr/lib/aarch64-linux-android/$ANDROID_API"
+          test -d "$LIBDIR"
+          mkdir -p work artifacts/transplant/opentui-bionic
+          {
+            echo "include_dir=$SYSROOT/usr/include/aarch64-linux-android"
+            echo "sys_include_dir=$SYSROOT/usr/include"
+            echo "crt_dir=$LIBDIR"
+            echo "msvc_lib_dir="
+            echo "kernel32_lib_dir="
+            echo "gcc_dir="
+          } > work/android-libc.txt
+          sh work/opentui/packages/native/scripts/prepare-zig-deps.sh
+          (
+            cd work/opentui/packages/native
+            OPENTUI_C_REMAP="-ffile-prefix-map=$GITHUB_WORKSPACE=/usr/src" \
+              zig build -Dlibrary-target=aarch64-linux-android \
+                -Doptimize=ReleaseSafe --libc "$GITHUB_WORKSPACE/work/android-libc.txt"
+          )
+          SO="work/opentui/packages/native/lib/aarch64-linux-android/libopentui.so"
+          test -f "$SO"
+          "$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip" --strip-debug "$SO"
+          cp "$SO" artifacts/transplant/opentui-bionic/libopentui.so
+
+      - name: Verify Bionic library
+        run: |
+          set -euo pipefail
+          SO=artifacts/transplant/opentui-bionic/libopentui.so
+          file "$SO" | grep -q 'ARM aarch64'
+          readelf -d "$SO" > work/opentui-needed.txt
+          grep -q 'NEEDED.*libc.so' work/opentui-needed.txt
+          if grep -q 'libc.so.6' work/opentui-needed.txt; then
+            echo "glibc dependency found in Bionic library" >&2
+            exit 1
+          fi
+          python3 -c 'import sys; sys.path.insert(0,"tools/transplant"); from swap_tui import has_ffi_guard; assert has_ffi_guard(open(sys.argv[1],"rb").read())' "$SO"
+          if grep -aFq "$GITHUB_WORKSPACE" "$SO"; then
+            echo "build workspace path leaked into library" >&2
+            exit 1
+          fi
+
+      - name: Download and verify locked OpenCode v2 package
+        run: |
+          set -euo pipefail
+          mkdir -p work/npm
+          NAME="$(npm pack "@opencode/cli-linux-arm64@$OPENCODE_VERSION" --pack-destination work/npm --silent | tail -1)"
+          TGZ="work/npm/$NAME"
+          test -f "$TGZ"
+          python3 tools/verify-release-input.py \
+            --kind opencode-cli --version "$OPENCODE_VERSION" --file "$TGZ"
+          echo "TGZ=$TGZ" >> "$GITHUB_ENV"
+
+      - name: Transplant onto verified Android Bun
+        run: |
+          set -euo pipefail
+          python3 tools/transplant/transplant.py all \
+            --ver "$OPENCODE_VERSION" --tgz "$TGZ" --no-execve
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          out = Path("artifacts/transplant") / os.environ["OPENCODE_VERSION"]
+          report = json.loads((out / "report.json").read_text(encoding="utf-8"))
+          assert report["steps"]["swap"]["status"] == "ok", report["steps"].get("swap")
+          product = out / "opencode-native-tui"
+          assert product.is_file() and product.stat().st_size > 50_000_000
+          PY
+
+      - name: Stage candidate and checksums
+        run: |
+          set -euo pipefail
+          OUT="artifacts/transplant/$OPENCODE_VERSION"
+          mkdir -p dist
+          install -m 0755 "$OUT/opencode-native-tui" "dist/opencode-$OPENCODE_VERSION-android-aarch64"
+          cp "$OUT/report.json" dist/transplant-report.json
+          cp tools/supply-chain-lock.json dist/supply-chain-lock.json
+          (cd dist && sha256sum * > SHA256SUMS)
+          file "dist/opencode-$OPENCODE_VERSION-android-aarch64"
+          cat dist/SHA256SUMS
+
+      - name: Upload unsigned runtime-test candidate
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: opencode-${{ env.OPENCODE_VERSION }}-android-aarch64-candidate
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14

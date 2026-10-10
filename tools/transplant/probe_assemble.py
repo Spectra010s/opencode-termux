@@ -11,6 +11,7 @@ Zero third-party dependencies: python3 stdlib only.
 """
 
 import argparse
+import hashlib
 import json
 import re
 import struct
@@ -118,6 +119,24 @@ def _extract_bun_zip(zip_path: Path, dest_elf: Path) -> str | None:
     return bun_version_from_elf(dest_elf)
 
 
+def _sha256(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b""):
+            h.update(block)
+    return h.hexdigest()
+
+
+def _verify_hash(path: Path, expected: str | None, label: str) -> None:
+    if not expected:
+        raise ResolveError(f"no pinned SHA-256 for {label}")
+    actual = _sha256(path)
+    if actual != expected:
+        raise ResolveError(
+            f"SHA-256 mismatch for {label}: expected {expected}, got {actual}"
+        )
+
+
 def _scan_local_buns(cache_dir: Path) -> list:
     """Identify bun ELFs/zips already present in the cache (any version)."""
     found = []
@@ -182,6 +201,8 @@ def resolve_bun_base(
         "bun-linux-aarch64-android.zip",
     )
     min_base = _semver_key(bind.get("min_base_for_section", "1.4.0"))
+    archive_sha256 = bind.get("archive_sha256")
+    elf_sha256 = bind.get("elf_sha256")
     trial: list = []
     chosen = None
 
@@ -190,7 +211,8 @@ def resolve_bun_base(
     #     Fixes #23: a stray bun-1.4.2 in cache silently shipped over the
     #     declared 1.4.0 target and segfaulted at 0x40 on Android16/SVE.) ---
     cands = [c for c in _scan_local_buns(cache_dir)
-             if _satisfies(c["version"], graph_format, min_base)]
+             if _satisfies(c["version"], graph_format, min_base)
+             and (graph_format != "section" or c["version"] == target)]
     cands.sort(key=lambda c: (c["version"] != target, c["version"]))
     for c in cands:
         ok = _satisfies(c["version"], graph_format, min_base)
@@ -205,11 +227,21 @@ def resolve_bun_base(
             if c["kind"] == "zip":
                 dest = cache_dir / f"bun-{c['version']}" / "bun"
                 try:
+                    if graph_format == "section":
+                        _verify_hash(c["path"], archive_sha256, f"Bun {target} archive")
                     _extract_bun_zip(c["path"], dest)
+                    if graph_format == "section":
+                        _verify_hash(dest, elf_sha256, f"Bun {target} ELF")
                     path = dest
                     entry["extracted"] = str(dest)
                 except Exception as e:  # noqa: BLE001
                     entry["status"] = f"extract-failed: {e}"
+                    ok = False
+            elif graph_format == "section":
+                try:
+                    _verify_hash(path, elf_sha256, f"Bun {target} ELF")
+                except ResolveError as e:
+                    entry["status"] = f"hash-failed: {e}"
                     ok = False
             if ok:
                 chosen = {"path": str(path), "version": c["version"]}
@@ -236,7 +268,11 @@ def resolve_bun_base(
             if not zip_path.is_file():
                 print(f"downloading {url}")
                 urllib.request.urlretrieve(url, zip_path)
+            if graph_format == "section":
+                _verify_hash(zip_path, archive_sha256, f"Bun {target} archive")
             got = _extract_bun_zip(zip_path, dest)
+            if graph_format == "section":
+                _verify_hash(dest, elf_sha256, f"Bun {target} ELF")
             trial[-1]["status"] = "ok"
             trial[-1]["path"] = str(dest)
             if got:
@@ -244,6 +280,22 @@ def resolve_bun_base(
             return {"path": dest, "version": target, "trial": trial, "verdict": "OK"}
         except Exception as e:  # noqa: BLE001
             trial[-1]["status"] = f"failed: {e}"
+
+    if graph_format == "section" and (archive_sha256 or elf_sha256):
+        q = {
+            "verdict": "QUARANTINE",
+            "graph_format": graph_format,
+            "breakpoint": "pinned-bun-verification",
+            "candidates": trial,
+            "suggestion": "Fix the pinned Bun target or hashes; moving latest fallback is disabled.",
+        }
+        if out_dir is not None:
+            (out_dir / "bun-base.QUARANTINE.json").write_text(
+                json.dumps(q, indent=2) + "\n", encoding="utf-8"
+            )
+        raise ResolveError(
+            f"pinned Bun {target} could not be verified; refusing unpinned fallback"
+        )
 
     # --- level 3: github latest (true source) ---
     try:
