@@ -55,6 +55,16 @@ Run `38055045432` passed every CI step and uploaded the unsigned runtime-test ca
 - ELF: ARM aarch64 PIE, interpreter `/system/bin/linker64`
 - CI runtime probe: `skipped(no-aarch64)` as expected on the x86_64 runner
 
+On-device Termux verification completed after downloading the artifact:
+
+- `sha256sum -c SHA256SUMS`: all three artifact files passed
+- Candidate SHA-256: `eeeedf75fb74b1630f30a5723f4249f308aab29ec5dddb321865d3e399f236d0`
+- ELF interpreter: `/system/bin/linker64`; Android API 28; direct dependencies are `libc.so`, `libm.so`, and `libdl.so`
+- `--version`: `opencode v2.0.26`
+- PTY smoke: rendered successfully, no panic or crash, embedded OpenTUI guard passed (`clamp=2`, `csel_vs=4`)
+- Preserved at `$HOME/.opencode/bin/opencode-v2.0.26-native`; the existing `opencode`, `opencode-v2-test`, and `opencode.bak` files were not changed
+- Remaining release gate: interactive testing with the user's normal provider authentication and a harmless real prompt
+
 Latest known failed run (historical): <https://github.com/Spectra010s/opencode-termux/actions/runs/38054798108>
 
 ## Continue
@@ -75,7 +85,7 @@ If linking fails again, inspect it with:
 gh run view RUN_ID --repo Spectra010s/opencode-termux --log-failed
 ```
 
-Do not publish a GitHub release yet. Download the green-run artifact on Termux, verify `SHA256SUMS`, run `file` and `readelf -d`, then test `opencode --version`, startup, TUI input/rendering, provider authentication, a harmless prompt, and clean exit. Record those results before describing the build as stable.
+Do not publish a GitHub release yet. Integrity, native execution, TUI rendering, and the embedded guard have passed on-device. Test provider authentication, a harmless real prompt, normal interactive input, and clean exit using the versioned candidate before describing the build as stable or replacing the active binary.
 
 ## Local side effects already disclosed
 

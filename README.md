@@ -79,6 +79,10 @@ Packages are published on [GitHub Releases](https://github.com/Hope2333/opencode
 - `Push260922` -- **RC3**: v2.0.[0-12] native & wrapper + v1.18.[30-32] three families, all PKGREL=3 (70 assets, per-file digest-verified)
 - `Push260912` -- archived (prerelease)
 
+### Development candidate: v2.0.26
+
+The `native-android` branch has a supply-chain-locked OpenCode 2.0.26 Android/aarch64 candidate built by GitHub Actions. It has passed CI integrity checks and an on-device Termux TUI smoke test, but it is not a published stable release. See [HANDOFF.md](./HANDOFF.md) for hashes, audit findings, the successful workflow artifact, and remaining release gates.
+
 ### Package formats
 
 - **deb**: `opencode_<ver>_aarch64.deb` (Termux apt)
