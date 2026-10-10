@@ -59,28 +59,3 @@ index b226da7..56a4584 100644
      };
      const webp_dispatch_flags = if (target.result.cpu.arch == .x86_64)
          appendCFlags(b, webp_flags, &.{ "-DWEBP_HAVE_SSE2", "-DWEBP_HAVE_SSE41", "-DWEBP_HAVE_AVX2" })
-@@ -382,7 +400,7 @@ fn addYogaDependencies(b: *std.Build, module: *std.Build.Module) void {
-     module.addCSourceFiles(.{
-         .root = yoga_dep.path(""),
-         .files = &YOGA_CXX_SOURCES,
--        .flags = &YOGA_CXX_FLAGS,
-+        .flags = remapFlags(b, &YOGA_CXX_FLAGS),
-     });
- }
- 
-@@ -409,6 +427,7 @@ fn addTranslatedCImports(
-         .root_source_file = b.path("src/vendor/miniaudio/miniaudio.h"),
-         .target = target,
-         .optimize = optimize,
-+        .flags = remapFlags(b, &.{}),
-     });
-     miniaudio_translate.addIncludePath(b.path("src"));
-     module.addImport("miniaudio", miniaudio_translate.createModule());
-@@ -418,6 +437,7 @@ fn addTranslatedCImports(
-         .root_source_file = yoga_dep.path("yoga/Yoga.h"),
-         .target = target,
-         .optimize = optimize,
-+        .flags = remapFlags(b, &.{}),
-     });
-     yoga_translate.addIncludePath(yoga_dep.path(""));
-     module.addImport("yoga", yoga_translate.createModule());
