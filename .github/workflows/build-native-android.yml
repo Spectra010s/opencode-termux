@@ -108,6 +108,7 @@ jobs:
           )
           SO="work/opentui/packages/native/lib/aarch64-linux-android.28/libopentui.so"
           test -f "$SO"
+          python3 tools/remap-binary-prefix.py "$SO" "$GITHUB_WORKSPACE" /usr/src
           "$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip" --strip-debug "$SO"
           cp "$SO" artifacts/transplant/opentui-bionic/libopentui.so
 

@@ -36,9 +36,11 @@ Actions branch: `native-android`
 
 Earlier runs exposed and fixed: broken upstream submodule checkout, Zig 0.16 API drift, missing NDK headers, unversioned Android targets, and missing Android API macros.
 
-Run `38052473347` reached OpenTUI linking and failed because Zig was given no NDK library search path for `dl`, `pthread`, and `m`. The next patch passes `BIONIC_LIB_DIR` into the pinned OpenTUI build, adds that path to the Zig module, and omits `-lpthread` for Android because Bionic supplies pthread symbols through libc.
+Run `38052473347` reached OpenTUI linking and failed because Zig was given no NDK library search path for `dl`, `pthread`, and `m`. Commit `14e1929` fixed that by passing `BIONIC_LIB_DIR`, adding the NDK path to the Zig module, and omitting `-lpthread` for Android because Bionic supplies pthread symbols through libc.
 
-Latest known failed run: <https://github.com/Spectra010s/opencode-termux/actions/runs/38052473347>
+Run `38053424120` then compiled the Bionic OpenTUI library successfully and passed its FFI guard, but rejected an embedded absolute Actions workspace path. The next patch uses `tools/remap-binary-prefix.py` to replace only that exact prefix with a same-length `/usr/src////...` prefix before debug stripping. It preserves the ELF size and offsets and fails closed if the expected prefix is absent or remains.
+
+Latest known failed run: <https://github.com/Spectra010s/opencode-termux/actions/runs/38053424120>
 
 ## Continue
 
