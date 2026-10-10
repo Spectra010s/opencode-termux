@@ -672,10 +672,16 @@ def tui_probe(product: Path, timeout: int = 15) -> dict:
         pass
 
     text = captured.decode("utf-8", "replace")
-    if "Failed to initialize OpenTUI" in text:
+    failure_markers = (
+        "Failed to initialize OpenTUI",
+        "Server process exited with code",
+        "SyntaxError:",
+    )
+    matched = next((marker for marker in failure_markers if marker in text), None)
+    if matched is not None:
         return {
             "verdict": "fail",
-            "reason": "stdout/stderr contained 'Failed to initialize OpenTUI'",
+            "reason": f"stdout/stderr contained {matched!r}",
             "captured_tail": text[-400:],
         }
     if timed_out:
@@ -684,9 +690,10 @@ def tui_probe(product: Path, timeout: int = 15) -> dict:
             "reason": f"survived {timeout}s under pty without init failure (rendering)",
             "captured_bytes": len(captured),
         }
+    verdict = "pass" if exit_code == 0 else "fail"
     return {
-        "verdict": "pass",
-        "reason": f"exited cleanly (code {exit_code}) without init failure",
+        "verdict": verdict,
+        "reason": f"exited with code {exit_code} without a known failure marker",
         "exit_code": exit_code,
         "captured_bytes": len(captured),
     }

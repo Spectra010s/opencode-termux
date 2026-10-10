@@ -55,15 +55,18 @@ Run `38055045432` passed every CI step and uploaded the unsigned runtime-test ca
 - ELF: ARM aarch64 PIE, interpreter `/system/bin/linker64`
 - CI runtime probe: `skipped(no-aarch64)` as expected on the x86_64 runner
 
-On-device Termux verification completed after downloading the artifact:
+On-device Termux verification of the first artifact found a runtime failure:
 
 - `sha256sum -c SHA256SUMS`: all three artifact files passed
 - Candidate SHA-256: `eeeedf75fb74b1630f30a5723f4249f308aab29ec5dddb321865d3e399f236d0`
 - ELF interpreter: `/system/bin/linker64`; Android API 28; direct dependencies are `libc.so`, `libm.so`, and `libdl.so`
 - `--version`: `opencode v2.0.26`
-- PTY smoke: rendered successfully, no panic or crash, embedded OpenTUI guard passed (`clamp=2`, `csel_vs=4`)
+- PTY initially rendered and the embedded OpenTUI guard passed (`clamp=2`, `csel_vs=4`), but the old smoke gate incorrectly ignored the early nonzero exit
+- Normal startup failed with `SyntaxError: Unexpected identifier 'are'` while Bun 1.4.0 tried to parse `/$bunfs/root/system-cvb7jtx8.txt` as JavaScript
+- OpenCode 2.0.26's pinned source and official publish workflow specify Bun 1.4.2; the first candidate incorrectly used Android Bun 1.4.0
+- The replacement build must use the verified Bun 1.4.2 Android archive (`a1c7e298...`) and ELF (`f2970336...`), and the strengthened smoke gate must reject server exits, syntax errors, and early nonzero exits
 - Preserved at `$HOME/.opencode/bin/opencode-v2.0.26-native`; the existing `opencode`, `opencode-v2-test`, and `opencode.bak` files were not changed
-- Remaining release gate: interactive testing with the user's normal provider authentication and a harmless real prompt
+- The saved `opencode-v2.0.26-native` file is the failed first candidate; do not promote it
 
 Latest known failed run (historical): <https://github.com/Spectra010s/opencode-termux/actions/runs/38054798108>
 

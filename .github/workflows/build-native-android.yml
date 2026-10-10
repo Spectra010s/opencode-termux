@@ -56,10 +56,16 @@ jobs:
           import subprocess
 
           lock = json.load(open("tools/supply-chain-lock.json", encoding="utf-8"))
+          bind = json.load(open("tools/transplant/config/bun-bind.json", encoding="utf-8"))
           oc = lock["opencode"][os.environ["OPENCODE_VERSION"]]
           ot = lock["opentui"][os.environ["OPENTUI_VERSION"]]
+          bun_version = oc["bun_version"]
+          bun = lock["android_bun"][bun_version]
           assert ot["commit"] == os.environ["OPENTUI_COMMIT"]
           assert ot["zig_version"] == os.environ["ZIG_VERSION"]
+          assert bind["target"] == bun_version, (bind["target"], bun_version)
+          assert bind["archive_sha256"] == bun["archive_sha256"]
+          assert bind["elf_sha256"] == bun["elf_sha256"]
           head = subprocess.check_output(
               ["git", "-C", "work/opentui", "rev-parse", "HEAD"], text=True
           ).strip()

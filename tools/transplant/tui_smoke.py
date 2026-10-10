@@ -60,6 +60,7 @@ def main() -> int:
     buf = b""
     deadline = time.time() + args.timeout
     status = None
+    timed_out = False
     while time.time() < deadline:
         r, _, _ = select.select([fd], [], [], 0.5)
         if r:
@@ -89,6 +90,7 @@ def main() -> int:
     if status is None:
         # still running after window: the TUI rendered and is interactive -> ok,
         # terminate it cleanly.
+        timed_out = True
         os.kill(pid, signal.SIGTERM)
         try:
             status = os.waitpid(pid, 0)[1]
@@ -109,6 +111,15 @@ def main() -> int:
     code = os.waitstatus_to_exitcode(status) if exited else None
     crashed = exited and code in CRASH_EXITS
     panic = b"integer does not fit" in buf or b"panic:" in buf
+    runtime_error = any(
+        marker in buf
+        for marker in (
+            b"Failed to initialize OpenTUI",
+            b"Server process exited with code",
+            b"SyntaxError:",
+        )
+    )
+    early_failure = not timed_out and code not in (None, 0)
 
     # guard verification on the lazily-extracted runtime lib
     sos = glob.glob(os.path.join(tmpdir, ".bun-*-*.so"))
@@ -121,9 +132,17 @@ def main() -> int:
     print(f"tui_smoke: render={'yes' if render_evidence else 'NO'} "
           f"exit={code if exited else 'still-running'} "
           f"panic={'YES' if panic else 'no'} "
+          f"runtime_error={'YES' if runtime_error else 'no'} "
           f"guard={'PASS' if guard_ok else ('FAIL' if guard_ok is False else 'no-so')}")
 
-    ok = render_evidence and not panic and not crashed and guard_ok is not False
+    ok = (
+        render_evidence
+        and not panic
+        and not crashed
+        and not runtime_error
+        and not early_failure
+        and guard_ok is not False
+    )
     if guard_ok is None and not crashed:
         # no .so extracted (TUI never started the renderer) -> treat as fail
         print("tui_smoke: FAIL — no runtime libopentui extracted (TUI did not start?)")

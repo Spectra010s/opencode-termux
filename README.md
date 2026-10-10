@@ -81,7 +81,7 @@ Packages are published on [GitHub Releases](https://github.com/Hope2333/opencode
 
 ### Development candidate: v2.0.26
 
-The `native-android` branch has a supply-chain-locked OpenCode 2.0.26 Android/aarch64 candidate built by GitHub Actions. It has passed CI integrity checks and an on-device Termux TUI smoke test, but it is not a published stable release. See [HANDOFF.md](./HANDOFF.md) for hashes, audit findings, the successful workflow artifact, and remaining release gates.
+The `native-android` branch contains ongoing supply-chain-locked work for OpenCode 2.0.26 on Android/aarch64. The first CI candidate exposed a Bun runtime-version mismatch during on-device testing and is not a stable release. See [HANDOFF.md](./HANDOFF.md) for the current status and verification evidence.
 
 ### Package formats
 
