@@ -4,7 +4,7 @@ Status date: 2026-10-10
 
 ## Goal and current truth
 
-Build OpenCode `2.0.26` as a native Android/aarch64 Termux candidate without proot or glibc. The repository has been statically audited and its supply chain hardened. No malware indicators were found, but this is **not yet a finished or stable release**. GitHub Actions must pass, then the resulting binary must be tested on the user's Android device.
+Build OpenCode `2.0.26` as a native Android/aarch64 Termux candidate without proot or glibc. The repository has been statically audited and its supply chain hardened. No malware indicators were found. GitHub Actions now passes, but this is **not yet a stable release** until the resulting binary passes tests on the user's Android device.
 
 Fork: <https://github.com/Spectra010s/opencode-termux>
 
@@ -44,7 +44,18 @@ Run `38054582952` passed the build-path check, Bionic verification, FFI guard, a
 
 Run `38054798108` used NDK `llvm-strip` successfully. The debug-stripped library was `6,307,000` bytes, larger than the pinned package's `5,908,024`-byte embedded slot. The next patch uses `--strip-unneeded` and lets the mandatory FFI guard verifier fall back from the removed full symbol table to retained dynamic export symbols.
 
-Latest known failed run: <https://github.com/Spectra010s/opencode-termux/actions/runs/38054798108>
+Run `38055045432` passed every CI step and uploaded the unsigned runtime-test candidate:
+
+- Run: <https://github.com/Spectra010s/opencode-termux/actions/runs/38055045432>
+- Artifact: <https://github.com/Spectra010s/opencode-termux/actions/runs/38055045432/artifacts/11671000530>
+- Artifact name: `opencode-2.0.26-android-aarch64-candidate`
+- Artifact ZIP size: `97,242,278` bytes; retained for 14 days
+- Artifact ZIP SHA-256 reported by GitHub: `27254fc8441b0283fc7daf45272b3c9b2f2c6c53971bd0327dbbddccda58636d`
+- Candidate ELF SHA-256 from `SHA256SUMS`: `eeeedf75fb74b1630f30a5723f4249f308aab29ec5dddb321865d3e399f236d0`
+- ELF: ARM aarch64 PIE, interpreter `/system/bin/linker64`
+- CI runtime probe: `skipped(no-aarch64)` as expected on the x86_64 runner
+
+Latest known failed run (historical): <https://github.com/Spectra010s/opencode-termux/actions/runs/38054798108>
 
 ## Continue
 
@@ -64,7 +75,7 @@ If linking fails again, inspect it with:
 gh run view RUN_ID --repo Spectra010s/opencode-termux --log-failed
 ```
 
-Do not publish a GitHub release yet. Once CI is green, download the artifact on Termux, verify `SHA256SUMS`, run `file` and `readelf -d`, then test `opencode --version`, startup, TUI input/rendering, provider authentication, a harmless prompt, and clean exit. Record those results before describing the build as stable.
+Do not publish a GitHub release yet. Download the green-run artifact on Termux, verify `SHA256SUMS`, run `file` and `readelf -d`, then test `opencode --version`, startup, TUI input/rendering, provider authentication, a harmless prompt, and clean exit. Record those results before describing the build as stable.
 
 ## Local side effects already disclosed
 
