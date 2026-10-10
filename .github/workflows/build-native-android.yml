@@ -87,6 +87,9 @@ jobs:
           SYSROOT="$NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot"
           LIBDIR="$SYSROOT/usr/lib/aarch64-linux-android/$ANDROID_API"
           test -d "$LIBDIR"
+          LLVM_STRIP="$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip"
+          test -x "$LLVM_STRIP"
+          echo "LLVM_STRIP=$LLVM_STRIP" >> "$GITHUB_ENV"
           mkdir -p work artifacts/transplant/opentui-bionic
           {
             echo "include_dir=$SYSROOT/usr/include/aarch64-linux-android"
@@ -109,7 +112,7 @@ jobs:
           SO="work/opentui/packages/native/lib/aarch64-linux-android.28/libopentui.so"
           test -f "$SO"
           python3 tools/remap-binary-prefix.py "$SO" "$GITHUB_WORKSPACE" /usr/src
-          "$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip" --strip-debug "$SO"
+          "$LLVM_STRIP" --strip-debug "$SO"
           cp "$SO" artifacts/transplant/opentui-bionic/libopentui.so
 
       - name: Verify Bionic library

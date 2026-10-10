@@ -705,15 +705,28 @@ def swap_step(binary: Path, tui_lib: Path, out: Path, strip: bool = True) -> dic
         raise TransplantError(f"bionic libopentui.so missing: {tui_lib}")
     lib = tui_lib
     if strip:
-        strip_bin = shutil.which("llvm-strip") or shutil.which("strip")
+        strip_override = os.environ.get("LLVM_STRIP")
+        strip_bin = strip_override or shutil.which("llvm-strip") or shutil.which("strip")
+        if strip_override and not (
+            Path(strip_override).is_file() and os.access(strip_override, os.X_OK)
+        ):
+            raise TransplantError(
+                f"LLVM_STRIP is not an executable file: {strip_override}"
+            )
         if strip_bin:
             tmp = out.with_name(out.name + ".strip.so")
-            subprocess.run(
-                [strip_bin, "--strip-debug", str(tui_lib), "-o", str(tmp)],
-                check=True,
-                capture_output=True,
-                timeout=120,
-            )
+            try:
+                subprocess.run(
+                    [strip_bin, "--strip-debug", str(tui_lib), "-o", str(tmp)],
+                    check=True,
+                    capture_output=True,
+                    timeout=120,
+                )
+            except subprocess.CalledProcessError as exc:
+                stderr = exc.stderr.decode("utf-8", "replace").strip()
+                raise TransplantError(
+                    f"{strip_bin} failed to strip {tui_lib}: {stderr or exc}"
+                ) from exc
             lib = tmp
     swap_script = Path(__file__).resolve().parent / "swap_tui.py"
     proc = subprocess.run(

@@ -40,7 +40,9 @@ Run `38052473347` reached OpenTUI linking and failed because Zig was given no ND
 
 Run `38053424120` then compiled the Bionic OpenTUI library successfully and passed its FFI guard, but rejected an embedded absolute Actions workspace path. The next patch uses `tools/remap-binary-prefix.py` to replace only that exact prefix with a same-length `/usr/src////...` prefix before debug stripping. It preserves the ELF size and offsets and fails closed if the expected prefix is absent or remains.
 
-Latest known failed run: <https://github.com/Spectra010s/opencode-termux/actions/runs/38053424120>
+Run `38054582952` passed the build-path check, Bionic verification, FFI guard, and locked OpenCode package verification. Transplant then selected Ubuntu's host `/usr/bin/strip`, which cannot process the Android/aarch64 library. The next patch exports the NDK `llvm-strip` path as `LLVM_STRIP`, and transplant validates and honors that explicit tool.
+
+Latest known failed run: <https://github.com/Spectra010s/opencode-termux/actions/runs/38054582952>
 
 ## Continue
 
