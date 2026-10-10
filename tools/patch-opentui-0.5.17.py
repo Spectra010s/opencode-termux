@@ -65,6 +65,27 @@ fn addTranslatedCImports(
     addBionicTranslateIncludes(b, yoga_translate);
     module.addImport("yoga", yoga_translate.createModule());""",
     )
+    replace_exact(
+        build,
+        """        .linux => {
+            module.linkSystemLibrary("dl", .{});
+            module.linkSystemLibrary("pthread", .{});
+            module.linkSystemLibrary("m", .{});
+        },""",
+        """        .linux => {
+            if (b.graph.environ_map.get("BIONIC_LIB_DIR")) |path| {
+                module.addLibraryPath(.{ .cwd_relative = path });
+                // Android's pthread API is part of libc; the NDK has no
+                // separate libpthread stub to link.
+                module.linkSystemLibrary("dl", .{});
+                module.linkSystemLibrary("m", .{});
+            } else {
+                module.linkSystemLibrary("dl", .{});
+                module.linkSystemLibrary("pthread", .{});
+                module.linkSystemLibrary("m", .{});
+            }
+        },""",
+    )
 
     replace_exact(
         buffer,
@@ -126,6 +147,7 @@ fn addTranslatedCImports(
     replace_exact(renderer, rect_old, rect_new)
 
     required = (
+        (build, 'b.graph.environ_map.get("BIONIC_LIB_DIR")'),
         (buffer, "@min(scissor.width, 0x7FFFFFFF)"),
         (buffer, "if (y <= -0x40000000) return;"),
         (buffer, "if (posX < -0x40000000 or posY < -0x40000000) return;"),

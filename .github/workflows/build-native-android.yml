@@ -102,6 +102,7 @@ jobs:
             OPENTUI_C_REMAP="-ffile-prefix-map=$GITHUB_WORKSPACE=/usr/src -D__ANDROID_MIN_SDK_VERSION__=28 -D__ANDROID_API__=28" \
             BIONIC_ARCH_INCLUDE="$SYSROOT/usr/include/aarch64-linux-android" \
             BIONIC_SYS_INCLUDE="$SYSROOT/usr/include" \
+            BIONIC_LIB_DIR="$LIBDIR" \
               zig build -Dlibrary-target=aarch64-linux-android.28 \
                 -Doptimize=ReleaseSafe --libc "$GITHUB_WORKSPACE/work/android-libc.txt"
           )
@@ -168,7 +169,7 @@ jobs:
           cat dist/SHA256SUMS
 
       - name: Upload unsigned runtime-test candidate
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: opencode-${{ env.OPENCODE_VERSION }}-android-aarch64-candidate
           path: dist/
