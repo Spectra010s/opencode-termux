@@ -22,8 +22,9 @@ def main() -> int:
     native = args.tree / "packages" / "native" / "src"
     buffer = native / "buffer.zig"
     renderer = native / "renderer.zig"
+    clipboard_host = native / "clipboard" / "host.zig"
     build = args.tree / "packages" / "native" / "build.zig"
-    if not buffer.is_file() or not renderer.is_file() or not build.is_file():
+    if not all(path.is_file() for path in (buffer, renderer, clipboard_host, build)):
         raise SystemExit("patch-opentui: expected packages/native/src source tree")
 
     replace_exact(
@@ -146,6 +147,27 @@ fn addTranslatedCImports(
     )
     replace_exact(renderer, rect_old, rect_new)
 
+    # Android uses the Linux OS tag but Bionic does not provide glibc's
+    # pthread_tryjoin_np. By the time this helper is called for the only Linux
+    # worker, OpenTUI's completion flag is already clear, so a normal join does
+    # not block the UI. Keep the non-blocking glibc path for other Linux ABIs.
+    replace_exact(
+        clipboard_host,
+        """        .linux => switch (pthread_tryjoin_np(thread.getHandle(), null)) {
+            0 => true,
+            @intFromEnum(std.posix.E.BUSY) => false,
+            else => false,
+        },""",
+        """        .linux => if (comptime builtin.target.abi == .android) blk: {
+            thread.join();
+            break :blk true;
+        } else switch (pthread_tryjoin_np(thread.getHandle(), null)) {
+            0 => true,
+            @intFromEnum(std.posix.E.BUSY) => false,
+            else => false,
+        },""",
+    )
+
     required = (
         (build, 'b.graph.environ_map.get("BIONIC_LIB_DIR")'),
         (buffer, "@min(scissor.width, 0x7FFFFFFF)"),
@@ -153,6 +175,7 @@ fn addTranslatedCImports(
         (buffer, "if (posX < -0x40000000 or posY < -0x40000000) return;"),
         (renderer, "@min(clipped.width, 0x7FFFFFFF)"),
         (renderer, "const rect_end_x = x +| w;"),
+        (clipboard_host, "builtin.target.abi == .android"),
     )
     for path, marker in required:
         if marker not in path.read_text(encoding="utf-8"):

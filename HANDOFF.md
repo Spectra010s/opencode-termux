@@ -26,8 +26,8 @@ Actions branch: `native-android`
 - OpenCode `2.0.26` commit: `9b4ec5714d481559990db0a816d5dec19541a814`
 - OpenCode source tar SHA-256: `3c8373973985b7691843faf7d5603cb11d8eb1b9c66b73d5f92e999b93236d35`
 - `@opencode/cli-linux-arm64@2.0.26` tar SHA-256: `1d7117dbb31968456f89537b562fb5e20e48d9e9ef0325fc8845abdda6ef4842`
-- Bun Android `1.4.0` zip SHA-256: `42544d7438bb92c7e7df7d30b9a5858cb7a834636608e5b850f59138283567fc`
-- Bun extracted ELF SHA-256: `44a83a9b716a2df09c7c62cfee94f99b4d0b389f9326c6318c4831d888e2a250`
+- Bun Android `1.4.2` zip SHA-256: `a1c7e2983f1bb65146beb256a4d72449f23042412bc2cf278aa6397ba27e0274`
+- Bun extracted ELF SHA-256: `f2970336bfccf36e4e8a408b25c627122f210e941672f184198c31f4dbd377a0`
 - OpenTUI `0.5.17` commit: `6f0efd3330978d696b42db3d7d95d2042008312b`
 - Zig `0.16.0` archive SHA-256: `70e49664a74374b48b51e6f3fdfbf437f6395d42509050588bd49abe52ba3d00`
 - `actions/upload-artifact` v6 commit: `b7c566a772e6b6bfb58ed0dc250532a479d7789f`
@@ -65,8 +65,13 @@ On-device Termux verification of the first artifact found a runtime failure:
 - Normal startup failed with `SyntaxError: Unexpected identifier 'are'` while Bun 1.4.0 tried to parse `/$bunfs/root/system-cvb7jtx8.txt` as JavaScript
 - OpenCode 2.0.26's pinned source and official publish workflow specify Bun 1.4.2; the first candidate incorrectly used Android Bun 1.4.0
 - The replacement build must use the verified Bun 1.4.2 Android archive (`a1c7e298...`) and ELF (`f2970336...`), and the strengthened smoke gate must reject server exits, syntax errors, and early nonzero exits
-- Preserved at `$HOME/.opencode/bin/opencode-v2.0.26-native`; the existing `opencode`, `opencode-v2-test`, and `opencode.bak` files were not changed
-- The saved `opencode-v2.0.26-native` file is the failed first candidate; do not promote it
+- The failed first candidate was moved back to its artifact staging directory; the existing `opencode`, `opencode-v2-test`, and `opencode.bak` files were not changed
+
+Run `38067446529` rebuilt the candidate with the source-matched Bun 1.4.2 runtime and passed CI. Its artifact ID is `11676125245`, artifact ZIP SHA-256 is `3f4da01633e8ad9c6ab15b416c8908ea8f1ac0d14afa03245cfe5953e70ca951`, and candidate SHA-256 is `f72432616c5ec54efdba9ee27f3852b8eb8ecadc16fab9fea8608c9e9772c0e6`.
+
+On-device testing of that second candidate fixed the embedded-text parse error, but the TUI crashed reproducibly with Bun `panic: Segmentation fault at address 0x40`. Extracting the exact embedded OpenTUI library established the cause: it had an undefined `pthread_tryjoin_np` import, and Bionic rejected `dlopen` because Android does not provide that glibc extension. The candidate remains at `$HOME/.opencode/bin/opencode-v2.0.26-native` only for debugging and must not be promoted.
+
+The current fix patches pinned OpenTUI 0.5.17 so Android uses `std.Thread.join()` after OpenTUI's existing worker-completion flag clears, while other Linux ABIs retain `pthread_tryjoin_np`. CI now rejects any Bionic OpenTUI library that still imports `pthread_tryjoin_np`. The PTY smoke helper also isolates all XDG paths, preventing collisions with the user's real managed service.
 
 Latest known failed run (historical): <https://github.com/Spectra010s/opencode-termux/actions/runs/38054798108>
 
@@ -88,7 +93,7 @@ If linking fails again, inspect it with:
 gh run view RUN_ID --repo Spectra010s/opencode-termux --log-failed
 ```
 
-Do not publish a GitHub release yet. Integrity, native execution, TUI rendering, and the embedded guard have passed on-device. Test provider authentication, a harmless real prompt, normal interactive input, and clean exit using the versioned candidate before describing the build as stable or replacing the active binary.
+Do not publish a GitHub release yet. The latest on-device candidate crashes while loading OpenTUI. Rebuild with the Android clipboard-thread patch, verify that the embedded library has no undefined `pthread_tryjoin_np`, then repeat native TUI startup, provider authentication, a harmless real prompt, normal interactive input, and clean exit before describing the build as stable or replacing the active binary.
 
 ## Local side effects already disclosed
 

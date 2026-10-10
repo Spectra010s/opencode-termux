@@ -44,7 +44,16 @@ def main() -> int:
     env["TERM"] = env.get("TERM") or "xterm-256color"
     env["TMPDIR"] = tmpdir
     if args.home:
-        env["HOME"] = os.path.abspath(args.home)
+        home = os.path.abspath(args.home)
+        env["HOME"] = home
+        # OpenCode stores its managed-service state under XDG paths. Merely
+        # replacing HOME is not isolation when the caller already exports
+        # XDG_* variables (as Termux users commonly do), and can make a smoke
+        # test collide with or reuse the user's real background service.
+        env["XDG_CONFIG_HOME"] = os.path.join(home, ".config")
+        env["XDG_CACHE_HOME"] = os.path.join(home, ".cache")
+        env["XDG_DATA_HOME"] = os.path.join(home, ".local", "share")
+        env["XDG_STATE_HOME"] = os.path.join(home, ".local", "state")
     if args.shim_dir:
         env["LD_LIBRARY_PATH"] = os.path.abspath(args.shim_dir)
 

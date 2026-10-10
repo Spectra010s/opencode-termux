@@ -132,6 +132,10 @@ jobs:
             echo "glibc dependency found in Bionic library" >&2
             exit 1
           fi
+          if readelf -Ws "$SO" | grep -E 'UND[[:space:]]+pthread_tryjoin_np' >/dev/null; then
+            echo "glibc-only pthread_tryjoin_np import found in Bionic library" >&2
+            exit 1
+          fi
           python3 -c 'import sys; sys.path.insert(0,"tools/transplant"); from swap_tui import has_ffi_guard; assert has_ffi_guard(open(sys.argv[1],"rb").read())' "$SO"
           if grep -aFq "$GITHUB_WORKSPACE" "$SO"; then
             echo "build workspace path leaked into library" >&2
