@@ -148,9 +148,8 @@ fn addTranslatedCImports(
     replace_exact(renderer, rect_old, rect_new)
 
     # Android uses the Linux OS tag but Bionic does not provide glibc's
-    # pthread_tryjoin_np. By the time this helper is called for the only Linux
-    # worker, OpenTUI's completion flag is already clear, so a normal join does
-    # not block the UI. Keep the non-blocking glibc path for other Linux ABIs.
+    # pthread_tryjoin_np. The C shim supplies a nonblocking implementation;
+    # keep upstream probe semantics instead of a blocking join.
     replace_exact(
         clipboard_host,
         """        .linux => switch (pthread_tryjoin_np(thread.getHandle(), null)) {
@@ -158,10 +157,7 @@ fn addTranslatedCImports(
             @intFromEnum(std.posix.E.BUSY) => false,
             else => false,
         },""",
-        """        .linux => if (comptime builtin.target.abi == .android) blk: {
-            thread.join();
-            break :blk true;
-        } else switch (pthread_tryjoin_np(thread.getHandle(), null)) {
+        """        .linux => switch (pthread_tryjoin_np(thread.getHandle(), null)) {
             0 => true,
             @intFromEnum(std.posix.E.BUSY) => false,
             else => false,
@@ -175,7 +171,7 @@ fn addTranslatedCImports(
         (buffer, "if (posX < -0x40000000 or posY < -0x40000000) return;"),
         (renderer, "@min(clipped.width, 0x7FFFFFFF)"),
         (renderer, "const rect_end_x = x +| w;"),
-        (clipboard_host, "builtin.target.abi == .android"),
+        (clipboard_host, "pthread_tryjoin_np(thread.getHandle(), null)"),
     )
     for path, marker in required:
         if marker not in path.read_text(encoding="utf-8"):
