@@ -1,0 +1,69 @@
+name: Publish tested native Android build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SOURCE_RUN: "38142306988"
+      SOURCE_SHA: "964564f2aa4eabcfb3722fff928f2f35e80e5176"
+      RELEASE_TAG: "v2.0.26-termux.1"
+      ASSET: "opencode-2.0.26-android-aarch64-source-bun140"
+      ASSET_SHA256: "67d923eaf0b07f7339dd193614214624ed3e38643e3c5fd58b84712d59de1063"
+    steps:
+      - name: Fetch release workflow commit without broken submodules
+        run: |
+          set -euo pipefail
+          git init .
+          git remote add origin "https://github.com/$GITHUB_REPOSITORY.git"
+          git fetch --depth=20 origin "$GITHUB_SHA"
+          git checkout --detach FETCH_HEAD
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+
+      - name: Confirm tested build provenance
+        run: |
+          set -euo pipefail
+          test "$(gh run view "$SOURCE_RUN" --repo "$GITHUB_REPOSITORY" --json conclusion --jq .conclusion)" = success
+          test "$(gh run view "$SOURCE_RUN" --repo "$GITHUB_REPOSITORY" --json headSha --jq .headSha)" = "$SOURCE_SHA"
+          git merge-base --is-ancestor "$SOURCE_SHA" HEAD
+          git diff --quiet "$SOURCE_SHA" HEAD -- .github/workflows/build-native-android.yml scripts/ci tools patches
+
+      - name: Download and verify the successful CI artifact
+        run: |
+          set -euo pipefail
+          mkdir dist
+          gh run download "$SOURCE_RUN" --repo "$GITHUB_REPOSITORY" \
+            --name "opencode-2.0.26-android-aarch64-source-bun140-candidate" --dir dist
+          (cd dist && sha256sum -c SHA256SUMS)
+          echo "$ASSET_SHA256  dist/$ASSET" | sha256sum -c -
+          file "dist/$ASSET" | grep -q 'ARM aarch64'
+
+      - name: Make bandwidth-saving archive
+        run: |
+          set -euo pipefail
+          tar -C dist -czf "dist/$ASSET.tar.gz" "$ASSET"
+          (cd dist && sha256sum "$ASSET.tar.gz" >> SHA256SUMS)
+
+      - name: Publish prerelease and installer from CI
+        run: |
+          set -euo pipefail
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $RELEASE_TAG already exists; refusing to overwrite it" >&2
+            exit 1
+          fi
+          gh release create "$RELEASE_TAG" \
+            "dist/$ASSET.tar.gz" dist/SHA256SUMS dist/supply-chain-lock.json \
+            dist/transplant-report.json install.sh \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title 'OpenCode 2.0.26 native Termux (prerelease 1)' \
+            --notes-file RELEASE_NOTES.md \
+            --prerelease

@@ -6,7 +6,7 @@ SHELL := /data/data/com.termux/files/usr/bin/bash
 VER ?= latest
 VERS ?=
 PKG ?= both
-PACKAGER_NAME ?= Hope2333(幽零小喵) <u0catmiao@proton.me>
+PACKAGER_NAME ?= Adeloye Adetayo (Spectra010s) <adeloyeadetayo8@gmail.com>
 MORE ?=
 ODIR ?=
 MIX ?= 0
@@ -29,7 +29,7 @@ HOOK_STALE_SERVE_KILL_VERSIONS ?= 2.0.[0-3]
 
 # Release upload target variables
 TAG ?= Push$(shell date +%y%m%d)
-REPO ?= Hope2333/opencode-termux
+REPO ?= Spectra010s/opencode-termux
 # Release staging dir: /tmp is not app-writable on Termux; honor TMPDIR
 RELEASE_DIR ?= $(if $(TMPDIR),$(TMPDIR),/tmp)/oc-release-$(TAG)
 NATIVE ?=

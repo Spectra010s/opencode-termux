@@ -1,11 +1,11 @@
 # PROJECT KNOWLEDGE BASE
 
-## ACTIVE NATIVE V2 WORK (2026-10-10)
+## ACTIVE NATIVE V2 WORK (2026-10-11)
 
-- The current native Android/OpenCode v2 effort is on branch `harden-v2.0.26` and mirrored to the fork's `native-android` branch.
-- Read `HANDOFF.md` before changing or rerunning this work. It records the pinned inputs, audit result, Actions history, present blocker, and exact continuation commands.
-- Build the candidate in GitHub Actions; do not compile the full project on the Termux phone unless the user explicitly requests it.
-- A green x86_64-hosted Actions build produces only an unsigned runtime-test candidate. Do not call it stable or publish a release until the aarch64 Android binary passes on-device Termux tests.
+- Native Android/OpenCode v2 `2.0.26` is done and user-facing. Branch `harden-v2.0.26` mirrored to `native-android`.
+- Current user-facing path: `README.md` and `install.sh` installing `~/.local/bin/opencode`. Current build path: `docs/native-v2-build.md` and the native Android workflows.
+- Release builds run in GitHub Actions for reproducibility. On-device local builds are allowed; Termux already is Bionic so no NDK. Needs Termux `python3`, `npm`, `clang`, `make` (`zig` only to rebuild OpenTUI), network, and pinned inputs in `tools/supply-chain-lock.json`. Guide: `docs/transplant.md` + `make transplant VER=2.0.26`.
+- Source/Bun 1.4.0 candidate from Actions run 38142306988 passed on-device TUI, API, session, and real-prompt checks. It remains a prerelease until tested on more devices. Publish from a verified CI artifact only; never upload the phone's local copy.
 - Keep third-party Actions pinned to immutable commit SHAs. Use v6 action lines when available; do not downgrade to v4.
 - Do not replace the manual repository fetch with `actions/checkout` until the malformed upstream `termux-packages` gitlink/submodule metadata is repaired.
 
