@@ -7,8 +7,7 @@
 In Termux:
 
 ```sh
-curl -fsSLO https://github.com/Spectra010s/opencode-termux/releases/download/v2.0.26-termux.1/install.sh
-sh install.sh
+curl -fsSL https://github.com/Spectra010s/opencode-termux/releases/download/v2.0.26-termux.1/install.sh | sh
 opencode
 ```
 
