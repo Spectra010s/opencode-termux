@@ -2,6 +2,15 @@ name: Build locked OpenCode v2 for native Android
 
 on:
   workflow_dispatch:
+    inputs:
+      strategy:
+        description: Build strategy for the unsigned candidate
+        type: choice
+        required: true
+        default: source-bun140
+        options:
+          - source-bun140
+          - upstream-transplant
 
 permissions:
   contents: read
@@ -63,9 +72,16 @@ jobs:
           bun = lock["android_bun"][bun_version]
           assert ot["commit"] == os.environ["OPENTUI_COMMIT"]
           assert ot["zig_version"] == os.environ["ZIG_VERSION"]
-          assert bind["target"] == bun_version, (bind["target"], bun_version)
-          assert bind["archive_sha256"] == bun["archive_sha256"]
-          assert bind["elf_sha256"] == bun["elf_sha256"]
+          if os.environ["BUILD_STRATEGY"] == "upstream-transplant":
+              assert bind["target"] == bun_version, (bind["target"], bun_version)
+              assert bind["archive_sha256"] == bun["archive_sha256"]
+              assert bind["elf_sha256"] == bun["elf_sha256"]
+          else:
+              source_bind = json.load(open("tools/transplant/config/bun-bind-source-1.4.0.json", encoding="utf-8"))
+              source_bun = lock["android_bun"]["1.4.0"]
+              assert source_bind["target"] == "1.4.0"
+              assert source_bind["archive_sha256"] == source_bun["archive_sha256"]
+              assert source_bind["elf_sha256"] == source_bun["elf_sha256"]
           head = subprocess.check_output(
               ["git", "-C", "work/opentui", "rev-parse", "HEAD"], text=True
           ).strip()
@@ -73,6 +89,8 @@ jobs:
           assert len(oc["cli_linux_arm64_sha256"]) == 64
           PY
           test "$(zig version)" = "$ZIG_VERSION"
+        env:
+          BUILD_STRATEGY: ${{ inputs.strategy }}
 
       - name: Apply version-locked OpenTUI Android hardening
         run: |
@@ -143,6 +161,7 @@ jobs:
           fi
 
       - name: Download and verify locked OpenCode v2 package
+        if: ${{ inputs.strategy == 'upstream-transplant' }}
         run: |
           set -euo pipefail
           mkdir -p work/npm
@@ -154,6 +173,7 @@ jobs:
           echo "TGZ=$TGZ" >> "$GITHUB_ENV"
 
       - name: Transplant onto verified Android Bun
+        if: ${{ inputs.strategy == 'upstream-transplant' }}
         run: |
           set -euo pipefail
           python3 tools/transplant/transplant.py all \
@@ -170,22 +190,31 @@ jobs:
           assert product.is_file() and product.stat().st_size > 50_000_000
           PY
 
+      - name: Build version-matched Bun 1.4.0 source package and transplant it
+        if: ${{ inputs.strategy == 'source-bun140' }}
+        run: bash scripts/ci/build-opencode-source-bun140.sh
+
       - name: Stage candidate and checksums
         run: |
           set -euo pipefail
           OUT="artifacts/transplant/$OPENCODE_VERSION"
           mkdir -p dist
-          install -m 0755 "$OUT/opencode-native-tui" "dist/opencode-$OPENCODE_VERSION-android-aarch64"
+          if [ "${{ inputs.strategy }}" = source-bun140 ]; then
+            NAME="opencode-$OPENCODE_VERSION-android-aarch64-source-bun140"
+          else
+            NAME="opencode-$OPENCODE_VERSION-android-aarch64"
+          fi
+          install -m 0755 "$OUT/opencode-native-tui" "dist/$NAME"
           cp "$OUT/report.json" dist/transplant-report.json
           cp tools/supply-chain-lock.json dist/supply-chain-lock.json
           (cd dist && sha256sum * > SHA256SUMS)
-          file "dist/opencode-$OPENCODE_VERSION-android-aarch64"
+          file "dist/$NAME"
           cat dist/SHA256SUMS
 
       - name: Upload unsigned runtime-test candidate
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
-          name: opencode-${{ env.OPENCODE_VERSION }}-android-aarch64-candidate
+          name: opencode-${{ env.OPENCODE_VERSION }}-android-aarch64-${{ inputs.strategy }}-candidate
           path: dist/
           if-no-files-found: error
           retention-days: 14

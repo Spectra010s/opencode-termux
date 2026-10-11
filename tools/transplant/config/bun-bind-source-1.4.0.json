@@ -1,0 +1,8 @@
+{
+  "target": "1.4.0",
+  "url_pattern": "https://github.com/oven-sh/bun/releases/download/bun-v{ver}/bun-linux-aarch64-android.zip",
+  "archive_sha256": "42544d7438bb92c7e7df7d30b9a5858cb7a834636608e5b850f59138283567fc",
+  "elf_sha256": "44a83a9b716a2df09c7c62cfee94f99b4d0b389f9326c6318c4831d888e2a250",
+  "min_base_for_section": "1.4.0",
+  "notes": "For a module graph freshly compiled from the pinned OpenCode source with Bun 1.4.0. Never pair the upstream Bun 1.4.2 package graph with this base."
+}
