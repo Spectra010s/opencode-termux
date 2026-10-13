@@ -6,6 +6,10 @@
       "source_sha256": "3c8373973985b7691843faf7d5603cb11d8eb1b9c66b73d5f92e999b93236d35",
       "cli_linux_arm64_sha256": "1d7117dbb31968456f89537b562fb5e20e48d9e9ef0325fc8845abdda6ef4842",
       "bun_version": "1.4.2"
+    },
+    "2.0.28": {
+      "commit": "026b106bc5d41b679ffc413264229c340871e4d3",
+      "bun_version": "1.4.2"
     }
   },
   "android_bun": {

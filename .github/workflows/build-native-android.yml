@@ -10,13 +10,12 @@ on:
         default: source-bun140
         options:
           - source-bun140
-          - upstream-transplant
 
 permissions:
   contents: read
 
 env:
-  OPENCODE_VERSION: "2.0.26"
+  OPENCODE_VERSION: "2.0.28"
   OPENTUI_VERSION: "0.5.17"
   OPENTUI_COMMIT: "6f0efd3330978d696b42db3d7d95d2042008312b"
   ZIG_VERSION: "0.16.0"
@@ -86,7 +85,8 @@ jobs:
               ["git", "-C", "work/opentui", "rev-parse", "HEAD"], text=True
           ).strip()
           assert head == ot["commit"], (head, ot["commit"])
-          assert len(oc["cli_linux_arm64_sha256"]) == 64
+          if os.environ["BUILD_STRATEGY"] == "upstream-transplant":
+              assert len(oc["cli_linux_arm64_sha256"]) == 64
           PY
           test "$(zig version)" = "$ZIG_VERSION"
         env:

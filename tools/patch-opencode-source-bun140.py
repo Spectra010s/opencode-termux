@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Make the pinned OpenCode source compile with a verified Bun 1.4.0 runtime.
+"""Patch pinned OpenCode source for the verified Android/Bionic release.
 
-This patches only the build-time Bun version gate and lets the upstream build
-script use a preverified Linux ARM64 Bun executable instead of downloading one.
-The source tarball is SHA-256 checked before this script runs.
+The source is fetched at the commit recorded in the supply-chain lock before
+this script runs. Each replacement must match exactly once so upstream changes
+fail the build instead of silently dropping a safety patch.
 """
 
 import json
@@ -40,6 +40,56 @@ def main() -> None:
         '   if (!(await Bun.file(pinned).exists())) throw new Error("pinned Bun target missing")\n'
         '   return pinned\n'
         ' }\n',
+    )
+
+    upgrade = root / "packages/cli/src/commands/handlers/upgrade.ts"
+    replace_once(
+        upgrade,
+        'import { stripVTControlCharacters } from "node:util"\n',
+        'import { stripVTControlCharacters } from "node:util"\n'
+        'import { Global } from "@opencode/util/global"\n'
+        'import path from "node:path"\n',
+    )
+    replace_once(
+        upgrade,
+        '      intro("Upgrade")\n      const updater = yield* Updater.Service\n',
+        '      intro("Upgrade")\n'
+        '      const global = yield* Global.Service\n'
+        '      if (process.platform === "android" &&\n'
+        '          process.execPath === path.join(global.home, ".local", "bin", "opencode")) {\n'
+        '        return yield* Effect.fail(new Error(\n'
+        '          "This native Termux build must be upgraded with its verified release installer: " +\n'
+        '          "curl -fsSL https://github.com/Spectra010s/opencode-termux/releases/latest/download/install.sh | sh"\n'
+        '        ))\n'
+        '      }\n'
+        '      const updater = yield* Updater.Service\n',
+    )
+
+    uninstall = root / "packages/cli/src/commands/handlers/uninstall.ts"
+    replace_once(
+        uninstall,
+        '    const method = yield* updater.method()\n',
+        '    const nativeBinary = process.platform === "android" &&\n'
+        '      process.execPath === path.join(global.home, ".local", "bin", "opencode")\n'
+        '    const method = yield* updater.method()\n',
+    )
+    replace_once(
+        uninstall,
+        '    if (method === "curl") log.info(`  Binary (manual removal): ${process.execPath}`)\n'
+        '    if (!method) log.warn("Could not detect the installation method. Remove the installation manually after cleanup.")\n',
+        '    if (nativeBinary) log.info(`  Binary: ${process.execPath}`)\n'
+        '    else if (method === "curl") log.info(`  Binary (manual removal): ${process.execPath}`)\n'
+        '    if (!method && !nativeBinary) log.warn("Could not detect the installation method. Remove the installation manually after cleanup.")\n',
+    )
+    replace_once(
+        uninstall,
+        '    if (method === "curl") {\n      log.message("To finish removing the binary, run:")\n',
+        '    if (nativeBinary) {\n'
+        '      yield* fs.remove(process.execPath).pipe(\n'
+        '        Effect.catch((error) => Effect.sync(() => errors.push(`Binary: ${errorMessage(error)}`))),\n'
+        '      )\n'
+        '    }\n'
+        '    if (method === "curl") {\n      log.message("To finish removing the binary, run:")\n',
     )
 
 
