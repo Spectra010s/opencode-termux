@@ -2,6 +2,11 @@ name: Publish tested native Android build
 
 on:
   workflow_dispatch:
+    inputs:
+      source_run:
+        description: Successful native Android candidate run to release
+        required: true
+        type: string
 
 permissions:
   actions: read
@@ -13,11 +18,9 @@ jobs:
     timeout-minutes: 20
     env:
       GH_TOKEN: ${{ github.token }}
-      SOURCE_RUN: "38381487307"
-      SOURCE_SHA: "fb8285f12ada909f13dea7cba34e88d74d0528b0"
+      SOURCE_RUN: ${{ inputs.source_run }}
       RELEASE_TAG: "v2.0.28"
       ASSET: "opencode-2.0.28-android-aarch64-source-bun140"
-      ASSET_SHA256: "76032bc0a5900961a8e3db24923c4a8bedf1523c4ca8bac02e6d2267707e4c52"
     steps:
       - name: Fetch release workflow commit without broken submodules
         run: |
@@ -31,8 +34,13 @@ jobs:
       - name: Confirm tested build provenance
         run: |
           set -euo pipefail
-          test "$(gh run view "$SOURCE_RUN" --repo "$GITHUB_REPOSITORY" --json conclusion --jq .conclusion)" = success
-          test "$(gh run view "$SOURCE_RUN" --repo "$GITHUB_REPOSITORY" --json headSha --jq .headSha)" = "$SOURCE_SHA"
+          case "$SOURCE_RUN" in ''|*[!0-9]*) echo 'source_run must be a numeric Actions run ID' >&2; exit 1 ;; esac
+          META="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN")"
+          test "$(jq -r .conclusion <<<"$META")" = success
+          test "$(jq -r .name <<<"$META")" = 'Build locked OpenCode v2 for native Android'
+          test "$(jq -r .event <<<"$META")" = workflow_dispatch
+          SOURCE_SHA="$(jq -r .head_sha <<<"$META")"
+          test "${#SOURCE_SHA}" -eq 40
           git merge-base --is-ancestor "$SOURCE_SHA" HEAD
           git diff --quiet "$SOURCE_SHA" HEAD -- .github/workflows/build-native-android.yml scripts/ci tools patches
 
@@ -43,7 +51,7 @@ jobs:
           gh run download "$SOURCE_RUN" --repo "$GITHUB_REPOSITORY" \
             --name "opencode-2.0.28-android-aarch64-source-bun140-candidate" --dir dist
           (cd dist && sha256sum -c SHA256SUMS)
-          echo "$ASSET_SHA256  dist/$ASSET" | sha256sum -c -
+          test "$(awk -v name="$ASSET" '$2 == name && length($1) == 64 { count++ } END { print count+0 }' dist/SHA256SUMS)" -eq 1
           file "dist/$ASSET" | grep -q 'ARM aarch64'
 
       - name: Make bandwidth-saving archive

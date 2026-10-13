@@ -4,7 +4,6 @@ set -eu
 release_tag=v2.0.28
 asset=opencode-2.0.28-android-aarch64-source-bun140
 archive="$asset.tar.gz"
-expected_binary_sha256=76032bc0a5900961a8e3db24923c4a8bedf1523c4ca8bac02e6d2267707e4c52
 base_url="https://github.com/Spectra010s/opencode-termux/releases/download/$release_tag"
 destination="$HOME/.local/bin/opencode"
 
@@ -26,15 +25,13 @@ curl -fL --retry 3 -o "$temporary_dir/SHA256SUMS" "$base_url/SHA256SUMS"
 curl -fL --retry 3 -o "$temporary_dir/$archive" "$base_url/$archive"
 checksum_line=$(awk -v name="$archive" '$2 == name && length($1) == 64 { print }' "$temporary_dir/SHA256SUMS")
 [ -n "$checksum_line" ] || { echo 'Release checksum for archive is missing.' >&2; exit 1; }
+[ "$(printf '%s\n' "$checksum_line" | awk 'END { print NR }')" -eq 1 ] || { echo 'Release archive checksum is ambiguous.' >&2; exit 1; }
 printf '%s\n' "$checksum_line" | (cd "$temporary_dir" && sha256sum -c -)
 
 tar -xzf "$temporary_dir/$archive" -C "$temporary_dir" "$asset"
 checksum_line=$(awk -v name="$asset" '$2 == name && length($1) == 64 { print }' "$temporary_dir/SHA256SUMS")
 [ -n "$checksum_line" ] || { echo 'Release checksum for binary is missing.' >&2; exit 1; }
-case "$checksum_line" in
-  "$expected_binary_sha256  $asset") ;;
-  *) echo 'Release binary does not match the tested SHA-256.' >&2; exit 1 ;;
-esac
+[ "$(printf '%s\n' "$checksum_line" | awk 'END { print NR }')" -eq 1 ] || { echo 'Release binary checksum is ambiguous.' >&2; exit 1; }
 printf '%s\n' "$checksum_line" | (cd "$temporary_dir" && sha256sum -c -)
 
 mkdir -p "$HOME/.local/bin"
