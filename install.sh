@@ -1,10 +1,10 @@
 #!/bin/sh
 set -eu
 
-release_tag=v2.0.26-termux.1
-asset=opencode-2.0.26-android-aarch64-source-bun140
+release_tag=v2.0.28
+asset=opencode-2.0.28-android-aarch64-source-bun140
 archive="$asset.tar.gz"
-expected_binary_sha256=67d923eaf0b07f7339dd193614214624ed3e38643e3c5fd58b84712d59de1063
+expected_binary_sha256=76032bc0a5900961a8e3db24923c4a8bedf1523c4ca8bac02e6d2267707e4c52
 base_url="https://github.com/Spectra010s/opencode-termux/releases/download/$release_tag"
 destination="$HOME/.local/bin/opencode"
 

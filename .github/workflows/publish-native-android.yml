@@ -13,11 +13,11 @@ jobs:
     timeout-minutes: 20
     env:
       GH_TOKEN: ${{ github.token }}
-      SOURCE_RUN: "38142306988"
-      SOURCE_SHA: "964564f2aa4eabcfb3722fff928f2f35e80e5176"
-      RELEASE_TAG: "v2.0.26-termux.1"
-      ASSET: "opencode-2.0.26-android-aarch64-source-bun140"
-      ASSET_SHA256: "67d923eaf0b07f7339dd193614214624ed3e38643e3c5fd58b84712d59de1063"
+      SOURCE_RUN: "38381487307"
+      SOURCE_SHA: "fb8285f12ada909f13dea7cba34e88d74d0528b0"
+      RELEASE_TAG: "v2.0.28"
+      ASSET: "opencode-2.0.28-android-aarch64-source-bun140"
+      ASSET_SHA256: "76032bc0a5900961a8e3db24923c4a8bedf1523c4ca8bac02e6d2267707e4c52"
     steps:
       - name: Fetch release workflow commit without broken submodules
         run: |
@@ -41,7 +41,7 @@ jobs:
           set -euo pipefail
           mkdir dist
           gh run download "$SOURCE_RUN" --repo "$GITHUB_REPOSITORY" \
-            --name "opencode-2.0.26-android-aarch64-source-bun140-candidate" --dir dist
+            --name "opencode-2.0.28-android-aarch64-source-bun140-candidate" --dir dist
           (cd dist && sha256sum -c SHA256SUMS)
           echo "$ASSET_SHA256  dist/$ASSET" | sha256sum -c -
           file "dist/$ASSET" | grep -q 'ARM aarch64'
@@ -52,7 +52,7 @@ jobs:
           tar -C dist -czf "dist/$ASSET.tar.gz" "$ASSET"
           (cd dist && sha256sum "$ASSET.tar.gz" >> SHA256SUMS)
 
-      - name: Publish prerelease and installer from CI
+      - name: Publish release from CI
         run: |
           set -euo pipefail
           if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
@@ -61,9 +61,8 @@ jobs:
           fi
           gh release create "$RELEASE_TAG" \
             "dist/$ASSET.tar.gz" dist/SHA256SUMS dist/supply-chain-lock.json \
-            dist/transplant-report.json install.sh \
+            dist/transplant-report.json \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
-            --title 'OpenCode 2.0.26 native Termux (prerelease 1)' \
-            --notes-file RELEASE_NOTES.md \
-            --prerelease
+            --title 'OpenCode 2.0.28 native Termux' \
+            --notes-file RELEASE_NOTES.md

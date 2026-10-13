@@ -58,7 +58,7 @@ def main() -> None:
         '      if (process.execPath === path.join(global.home, ".local", "bin", "opencode")) {\n'
         '        return yield* Effect.fail(new Error(\n'
         '          "This native Termux build must be upgraded with its verified release installer: " +\n'
-        '          "curl -fsSL https://github.com/Spectra010s/opencode-termux/releases/latest/download/install.sh | sh"\n'
+        '          "curl -fsSL https://github.com/Spectra010s/opencode-termux/raw/v2.0.28/install.sh | sh"\n'
         '        ))\n'
         '      }\n'
         '      const updater = yield* Updater.Service\n',

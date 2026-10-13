@@ -13,7 +13,7 @@
 In Termux:
 
 ```sh
-curl -fsSL https://github.com/Spectra010s/opencode-termux/releases/download/v2.0.26-termux.1/install.sh | sh
+curl -fsSL https://github.com/Spectra010s/opencode-termux/raw/v2.0.28/install.sh | sh
 opencode
 ```
 
@@ -27,19 +27,22 @@ The installer replaces only `~/.local/bin/opencode`; it does not delete your cha
 
 ## Uninstall
 
+`opencode uninstall` stops its background services, removes its cache and this project's installed binary, but keeps chats, sign-ins, and configuration. Preview it first:
+
+```sh
+opencode uninstall --dry-run
+opencode uninstall
+```
+
+If the command cannot start, remove only the installed binary manually:
+
 ```sh
 rm -f ~/.local/bin/opencode
 ```
 
-Optional (deletes chats, auth, config — skip if unsure):
-
-```sh
-rm -rf ~/.local/share/opencode ~/.config/opencode
-```
-
 ## Build from source
 
-You can build a native binary yourself in Termux or GitHub Actions. Follow the [native build guide](docs/native-v2-build.md); the [transplant guide](docs/transplant.md) explains the Bionic runtime and native renderer. The released binary is built in GitHub Actions from pinned sources, not uploaded from a maintainer's phone.
+The 2.0.28 release is built from pinned source in GitHub Actions, not uploaded from a maintainer's phone. Follow the [native build guide](docs/native-v2-build.md) to reproduce that build or to use the separate on-device build path for supported versions; the [transplant guide](docs/transplant.md) explains the Bionic runtime and native renderer.
 
 ## Releases and provenance
 

@@ -19,6 +19,7 @@ packing/dpkg-native/
 packing/pacman/pkg/
 packing/pacman/src/
 .work/
+work/
 
 # Session artifacts / temp test files
 26003091@session*
