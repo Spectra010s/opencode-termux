@@ -55,8 +55,7 @@ def main() -> None:
         '      intro("Upgrade")\n      const updater = yield* Updater.Service\n',
         '      intro("Upgrade")\n'
         '      const global = yield* Global.Service\n'
-        '      if (process.platform === "android" &&\n'
-        '          process.execPath === path.join(global.home, ".local", "bin", "opencode")) {\n'
+        '      if (process.execPath === path.join(global.home, ".local", "bin", "opencode")) {\n'
         '        return yield* Effect.fail(new Error(\n'
         '          "This native Termux build must be upgraded with its verified release installer: " +\n'
         '          "curl -fsSL https://github.com/Spectra010s/opencode-termux/releases/latest/download/install.sh | sh"\n'
@@ -69,8 +68,7 @@ def main() -> None:
     replace_once(
         uninstall,
         '    const method = yield* updater.method()\n',
-        '    const nativeBinary = process.platform === "android" &&\n'
-        '      process.execPath === path.join(global.home, ".local", "bin", "opencode")\n'
+        '    const nativeBinary = process.execPath === path.join(global.home, ".local", "bin", "opencode")\n'
         '    const method = yield* updater.method()\n',
     )
     replace_once(
