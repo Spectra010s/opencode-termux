@@ -141,7 +141,10 @@ jobs:
           SO="work/opentui/packages/native/lib/aarch64-linux-android.28/libopentui.so"
           test -f "$SO"
           python3 tools/remap-binary-prefix.py "$SO" "$GITHUB_WORKSPACE" /usr/src
-          "$LLVM_STRIP" --strip-unneeded "$SO"
+          # Keep this lib unstripped: the guard gate scans local guard-owner
+          # symbols, and llvm-strip --strip-unneeded deletes them. The
+          # transplant swap verifies the unstripped build, then strips to fit
+          # the embedded slot.
           cp "$SO" artifacts/transplant/opentui-bionic/libopentui.so
 
       - name: Verify Bionic library
