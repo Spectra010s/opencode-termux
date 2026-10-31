@@ -250,6 +250,12 @@ def main() -> int:
     ap.add_argument("--binary", required=True)
     ap.add_argument("--tui-lib", required=True)
     ap.add_argument("--out", required=True)
+    ap.add_argument(
+        "--guard-preverified",
+        action="store_true",
+        help="caller already ran has_ffi_guard() on the unstripped build "
+        "(stripping drops the local guard-owner symbols this gate scans)",
+    )
     args = ap.parse_args()
 
     data = open(args.binary, "rb").read()
@@ -314,7 +320,7 @@ def main() -> int:
         )
         return 6
 
-    if not has_ffi_guard(lib):
+    if not args.guard_preverified and not has_ffi_guard(lib):
         print(
             "swap_tui: REFUSED — tui-lib lacks the FFI negative-coordinate "
             "guard v2 (patches/opentui/*.patch); build via "

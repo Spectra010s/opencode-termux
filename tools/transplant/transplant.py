@@ -712,7 +712,19 @@ def swap_step(binary: Path, tui_lib: Path, out: Path, strip: bool = True) -> dic
     if not tui_lib.is_file():
         raise TransplantError(f"bionic libopentui.so missing: {tui_lib}")
     lib = tui_lib
+    guard_preverified = False
     if strip:
+        # The guard gate scans local guard-owner symbols, which stripping
+        # removes. Verify the unstripped build first, then let swap_tui skip
+        # its (now impossible) rescan.
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from swap_tui import has_ffi_guard
+
+        if not has_ffi_guard(tui_lib.read_bytes()):
+            raise TransplantError(
+                f"bionic libopentui.so lacks the FFI negative-coordinate guard v2: {tui_lib}"
+            )
+        guard_preverified = True
         strip_override = os.environ.get("LLVM_STRIP")
         strip_bin = strip_override or shutil.which("llvm-strip") or shutil.which("strip")
         if strip_override and not (
@@ -737,9 +749,14 @@ def swap_step(binary: Path, tui_lib: Path, out: Path, strip: bool = True) -> dic
                 ) from exc
             lib = tmp
     swap_script = Path(__file__).resolve().parent / "swap_tui.py"
+    swap_args = [
+        sys.executable, str(swap_script),
+        "--binary", str(binary), "--tui-lib", str(lib), "--out", str(out),
+    ]
+    if guard_preverified:
+        swap_args.append("--guard-preverified")
     proc = subprocess.run(
-        [sys.executable, str(swap_script),
-         "--binary", str(binary), "--tui-lib", str(lib), "--out", str(out)],
+        swap_args,
         capture_output=True,
         text=True,
         timeout=120,

@@ -1,15 +1,27 @@
 #!/bin/sh
 set -eu
 
-release_tag=v2.0.28
-asset=opencode-2.0.28-android-aarch64-source-bun140
-archive="$asset.tar.gz"
-base_url="https://github.com/Spectra010s/opencode-termux/releases/download/$release_tag"
+repo=Spectra010s/opencode-termux
+branch=native-android
+lock_url="https://raw.githubusercontent.com/$repo/$branch/tools/supply-chain-lock.json"
+
 destination="$HOME/.local/bin/opencode"
 
-for tool in curl sha256sum tar mktemp install mv uname getprop awk; do
+for tool in curl sed head sha256sum tar mktemp install mv uname getprop awk; do
   command -v "$tool" >/dev/null 2>&1 || { printf 'Missing command: %s\n' "$tool" >&2; exit 1; }
 done
+
+version=$(curl -fsSL "$lock_url" | sed -n 's/^[[:space:]]*"current":[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
+case "$version" in
+  ''|*[!0-9.]*|*.*.*.*) echo 'Could not resolve the current version from the supply-chain lock.' >&2; exit 1 ;;
+  *.*.*) ;;
+  *) echo 'Supply-chain lock version is not x.y.z.' >&2; exit 1 ;;
+esac
+
+release_tag="v$version"
+asset="opencode-$version-android-aarch64-source"
+archive="$asset.tar.gz"
+base_url="https://github.com/$repo/releases/download/$release_tag"
 
 [ "$(uname -m)" = aarch64 ] || { echo 'This release requires Android aarch64.' >&2; exit 1; }
 android_api=$(getprop ro.build.version.sdk)

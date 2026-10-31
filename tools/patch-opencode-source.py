@@ -7,8 +7,16 @@ fail the build instead of silently dropping a safety patch.
 """
 
 import json
+import os
 import sys
 from pathlib import Path
+
+LOCK = Path(__file__).resolve().parent / "supply-chain-lock.json"
+
+
+def lock_bun_version(root: Path) -> str:
+    lock = json.loads(LOCK.read_text(encoding="utf-8"))
+    return lock["opencode"][lock["current"]]["bun_version"]
 
 
 def replace_once(path: Path, old: str, new: str) -> None:
@@ -21,13 +29,17 @@ def replace_once(path: Path, old: str, new: str) -> None:
 
 def main() -> None:
     if len(sys.argv) != 2:
-        raise SystemExit("usage: patch-opencode-source-bun140.py SOURCE_ROOT")
+        raise SystemExit("usage: patch-opencode-source.py SOURCE_ROOT")
     root = Path(sys.argv[1])
     package = root / "package.json"
     metadata = json.loads(package.read_text(encoding="utf-8"))
-    if metadata.get("packageManager") != "bun@1.4.2":
-        raise SystemExit(f"unexpected packageManager: {metadata.get('packageManager')!r}")
-    replace_once(package, '"packageManager": "bun@1.4.2"', '"packageManager": "bun@1.4.0"')
+    declared = metadata.get("packageManager") or ""
+    if not declared.startswith("bun@") or declared.count(".") != 2:
+        raise SystemExit(f"unexpected packageManager: {declared!r}")
+    # Upstream bumps this every release; rewrite it to the Bun that actually
+    # compiles this build instead of pinning a literal here.
+    pinned_bun = os.environ.get("OPENCODE_BUN_VERSION") or lock_bun_version(root)
+    replace_once(package, f'"packageManager": "{declared}"', f'"packageManager": "bun@{pinned_bun}"')
 
     build = root / "packages/cli/script/build.ts"
     replace_once(
@@ -58,7 +70,7 @@ def main() -> None:
         '      if (process.execPath === path.join(global.home, ".local", "bin", "opencode")) {\n'
         '        return yield* Effect.fail(new Error(\n'
         '          "This native Termux build must be upgraded with its verified release installer: " +\n'
-        '          "curl -fsSL https://github.com/Spectra010s/opencode-termux/raw/v2.0.28/install.sh | sh"\n'
+        '          "curl -fsSL https://github.com/Spectra010s/opencode-termux/raw/native-android/install.sh | sh"\n'
         '        ))\n'
         '      }\n'
         '      const updater = yield* Updater.Service\n',

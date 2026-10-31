@@ -28,11 +28,13 @@
 #      UUCODE_USE_PREBUILT_TABLES env switch (see build.zig patch).
 #   3. Guard v2 (task-tui-common-fix, root cause: batch builds swapped a
 #      pre-fix libopentui.so because the patch was never applied at the
-#      common build layer): ALL patches under patches/opentui/*.patch are
-#      applied to the source tree BEFORE building (idempotently), and the
-#      built .so is SELF-VERIFIED — bufferDrawChar must contain the FFI
-#      negative-coordinate guard pattern (@min 0x7fffffff clamp + saturating
-#      add). A build without the guard fails loudly.
+#      common build layer): the version-agnostic
+#      tools/patch-opentui-android.py runs first (build.zig bionic hooks +
+#      tlsdesc shim + guards), then every patches/opentui/*.patch is applied
+#      idempotently for legacy trees. The built .so is SELF-VERIFIED —
+#      bufferDrawChar must contain the FFI negative-coordinate guard pattern
+#      (@min 0x7fffffff clamp + saturating add). A build without the guard
+#      fails loudly.
 #
 # Modes:
 #   build-libopentui.sh              apply patches + build + verify + install
@@ -153,6 +155,22 @@ fi
 # packages/native and packages/core/src/zig)
 OPENTUI_TREE="$(cd "$OPENTUI_ZIG_DIR" && while [ "$(basename "$PWD")" != "packages" ] && [ "$PWD" != "/" ]; do cd ..; done && cd .. && pwd)"
 command -v patch >/dev/null 2>&1 || { echo "patch(1) not found" >&2; exit 1; }
+
+# phase 0a: version-agnostic bionic hooks (build.zig linkLibC + BIONIC_*
+# includes + tlsdesc shim). Required for OpenTUI >= 0.6, where the
+# version-locked *.patch files no longer apply. Pre-0.6 trees that only need
+# the legacy family can opt out with ALLOW_LEGACY_PATCH_ONLY=1.
+GENERIC_PATCHER="$REPO_ROOT/tools/patch-opentui-android.py"
+if [ "$PROFILE" = native ] && [ -f "$GENERIC_PATCHER" ]; then
+  if ! python3 "$GENERIC_PATCHER" "$OPENTUI_TREE"; then
+    if [ "${ALLOW_LEGACY_PATCH_ONLY:-0}" = 1 ]; then
+      echo "WARN: generic bionic patch failed; continuing with legacy patches only" >&2
+    else
+      echo "ERROR: generic bionic patch failed (set ALLOW_LEGACY_PATCH_ONLY=1 only for pre-0.6 trees)" >&2
+      exit 1
+    fi
+  fi
+fi
 shopt -s nullglob
 PATCHES=("$PATCH_DIR"/*.patch)
 shopt -u nullglob

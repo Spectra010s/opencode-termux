@@ -19,8 +19,6 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       SOURCE_RUN: ${{ inputs.source_run }}
-      RELEASE_TAG: "v2.0.28"
-      ASSET: "opencode-2.0.28-android-aarch64-source-bun140"
     steps:
       - name: Fetch release workflow commit without broken submodules
         run: |
@@ -30,6 +28,14 @@ jobs:
           git fetch --depth=20 origin "$GITHUB_SHA"
           git checkout --detach FETCH_HEAD
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+
+      - name: Resolve pinned versions from lock
+        run: |
+          set -euo pipefail
+          {
+            printf 'RELEASE_TAG=%s\n' "$(python3 tools/ocver.py tag)"
+            printf 'ASSET=%s\n' "$(python3 tools/ocver.py asset source)"
+          } >> "$GITHUB_ENV"
 
       - name: Confirm tested build provenance
         run: |
@@ -49,7 +55,7 @@ jobs:
           set -euo pipefail
           mkdir dist
           gh run download "$SOURCE_RUN" --repo "$GITHUB_REPOSITORY" \
-            --name "opencode-2.0.28-android-aarch64-source-bun140-candidate" --dir dist
+            --name "$ASSET-candidate" --dir dist
           (cd dist && sha256sum -c SHA256SUMS)
           test "$(awk -v name="$ASSET" '$2 == name && length($1) == 64 { count++ } END { print count+0 }' dist/SHA256SUMS)" -eq 1
           file "dist/$ASSET" | grep -q 'ARM aarch64'
@@ -72,5 +78,5 @@ jobs:
             dist/transplant-report.json \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
-            --title 'OpenCode 2.0.28 native Termux' \
+            --title "OpenCode $(python3 tools/ocver.py current) native Termux" \
             --notes-file RELEASE_NOTES.md

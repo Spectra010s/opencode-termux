@@ -1,8 +1,8 @@
 {
-  "target": "1.4.2",
+  "target": "1.4.4",
   "url_pattern": "https://github.com/oven-sh/bun/releases/download/bun-v{ver}/bun-linux-aarch64-android.zip",
-  "archive_sha256": "a1c7e2983f1bb65146beb256a4d72449f23042412bc2cf278aa6397ba27e0274",
-  "elf_sha256": "f2970336bfccf36e4e8a408b25c627122f210e941672f184198c31f4dbd377a0",
-  "min_base_for_section": "1.4.2",
-  "notes": "OpenCode 2.0.26 is compiled with Bun 1.4.2; the Android base must match it because 1.4.0 misclassifies embedded text assets as JavaScript. <=1.3.x trailer-format graphs require a 1.3.x base (reloc size-mode)."
+  "archive_sha256": "d72e42c60e895ccbc16144bb1e0e0ad7ee384841c35b5501a7ec28b4d6d759c9",
+  "elf_sha256": "461fda703381e03e8856791cd57093cd79b8f05f2ee262bc69f16c27d2c5575e",
+  "min_base_for_section": "1.4.4",
+  "notes": "Pinned Android base for the native B line. 1.4.4 is what OpenCode 2.2.x declares in packageManager and what the murafdev fork has shipped since 2.1.4; there is no 1.4.2 fallback. The base must match the Bun that compiled the graph exactly."
 }

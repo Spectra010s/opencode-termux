@@ -13,7 +13,7 @@
 In Termux:
 
 ```sh
-curl -fsSL https://github.com/Spectra010s/opencode-termux/raw/v2.0.28/install.sh | sh
+curl -fsSL https://github.com/Spectra010s/opencode-termux/raw/native-android/install.sh | sh
 opencode
 ```
 
@@ -42,7 +42,7 @@ rm -f ~/.local/bin/opencode
 
 ## Build from source
 
-The 2.0.28 release is built from pinned source in GitHub Actions, not uploaded from a maintainer's phone. Follow the [native build guide](docs/native-v2-build.md) to reproduce that build or to use the separate on-device build path for supported versions; the [transplant guide](docs/transplant.md) explains the Bionic runtime and native renderer.
+Releases are built from pinned source in GitHub Actions, not uploaded from a maintainer's phone. The pinned OpenCode, Bun and OpenTUI versions live in [`tools/supply-chain-lock.json`](tools/supply-chain-lock.json) (`current` plus a hash per version); `tools/ocver.py` reads them so nothing else repeats a version literal. Follow the [native build guide](docs/native-v2-build.md) to reproduce a build or to use the separate on-device build path; the [transplant guide](docs/transplant.md) explains the Bionic runtime and native renderer.
 
 ## Releases and provenance
 

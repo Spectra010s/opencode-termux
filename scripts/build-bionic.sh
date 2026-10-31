@@ -103,9 +103,10 @@ PTY_VERSION="${NATIVE_VERSIONS[1]}"
 WATCHER_VERSION="${NATIVE_VERSIONS[2]}"
 echo "==> pinned native deps: opentui=$OPENTUI_VERSION pty=$PTY_VERSION watcher=$WATCHER_VERSION"
 
-# Fixes #23 (B line): default to bun-1.4.0 — 1.4.2 panics "Segmentation fault
-# at address 0x40" on Android/bionic during TUI startup (EXIT 139, reproduced).
-# Same pin as tools/transplant/config/bun-bind.json target; override via env ANDROID_BUN.
+# Legacy B-line pin for the 2.0.x source trees this script targets: bun-1.4.0
+# (1.4.2 segfaulted on Android/bionic at TUI startup, #23). The current native
+# line (2.2.5, `make transplant` / CI) uses Android Bun 1.4.4 resolved from
+# tools/transplant/config/bun-bind.json; override via ANDROID_BUN.
 ANDROID_BUN="${ANDROID_BUN:-$ROOT_DIR/artifacts/transplant/android-bun/bun-1.4.0/bun}"
 OPENAT2_SHIM="${OPENAT2_SHIM:-$ROOT_DIR/tools/transplant/toolchain/openat2_shim.so}"
 BUILD_ROOT="${BUILD_ROOT:-$ROOT_DIR/artifacts/build}"

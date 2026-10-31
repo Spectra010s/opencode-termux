@@ -1,11 +1,11 @@
 # PROJECT KNOWLEDGE BASE
 
-## ACTIVE NATIVE V2 WORK (2026-10-11)
+## ACTIVE NATIVE V2 WORK (2026-10-31)
 
-- Native Android/OpenCode v2 `2.0.26` is done and user-facing. Branch `harden-v2.0.26` mirrored to `native-android`.
-- Current user-facing path: `README.md` and `install.sh` installing `~/.local/bin/opencode`. Current build path: `docs/native-v2-build.md` and the native Android workflows.
-- Release builds run in GitHub Actions for reproducibility. On-device local builds are allowed; Termux already is Bionic so no NDK. Needs Termux `python3`, `npm`, `clang`, `make` (`zig` only to rebuild OpenTUI), network, and pinned inputs in `tools/supply-chain-lock.json`. Guide: `docs/transplant.md` + `make transplant VER=2.0.26`.
-- Source/Bun 1.4.0 candidate from Actions run 38142306988 passed on-device TUI, API, session, and real-prompt checks. It remains a prerelease until tested on more devices. Publish from a verified CI artifact only; never upload the phone's local copy.
+- Release candidate: OpenCode `2.2.5` on Android/Bionic Bun `1.4.4` with OpenTUI `0.8.0` (Zig `0.16.0`). Pins live in `tools/supply-chain-lock.json`; `tools/ocver.py` is the only reader, and `current` drives CI, publishing and `install.sh`.
+- Not yet published: needs an on-device smoke test (`--version`, TUI, auth, prompt, clean exit). Publish only from a verified CI artifact; never upload the phone's local copy.
+- Build guide: `docs/native-v2-build.md`; transplant details: `docs/transplant.md`. Release builds run in GitHub Actions for reproducibility. On-device local builds are allowed; Termux already is Bionic so no NDK. Needs Termux `python3`, `npm`, `clang`, `make` (`zig` only to rebuild OpenTUI) and network.
+- History: native v2 `2.0.26`/`2.0.28` on Bun `1.4.0`/`1.4.2` were the previous user-facing line. The Bun 1.4.0 candidate from Actions run 38142306988 passed on-device TUI, API, session and real-prompt checks.
 - Keep third-party Actions pinned to immutable commit SHAs. Use v6 action lines when available; do not downgrade to v4.
 - Do not replace the manual repository fetch with `actions/checkout` until the malformed upstream `termux-packages` gitlink/submodule metadata is repaired.
 
@@ -41,6 +41,9 @@ opencode-termux/
 | Plugin lifecycle | `tools/plugin-manager.sh`, `tools/plugin-selfcheck.sh`, `docs/plugin-management.md` | local file plugin path + snapshot rollback model |
 | Upgrade/downgrade simulation | `tools/upgrade-matrix.sh`, `docs/execution-checklist.md` | machine2 lifecycle validation with cached deb artifacts |
 | Transplant 管线 | `tools/transplant/transplant.py` | 原生 android Bun 拼接 + ELF 复活手术（C1 已复活，见 `docs/transplant.md`） |
+| Pinned versions | `tools/supply-chain-lock.json`, `tools/ocver.py` | single source of truth; `current` drives CI/publish/install |
+| Source-build candidate | `scripts/ci/build-opencode-source.sh`, `tools/patch-opencode-source.py` | lock-driven host Bun compile onto the pinned Android Bun base |
+| OpenTUI Android build | `tools/patch-opentui-android.py`, `patches/opentui/tlsdesc-shim.c`, `tools/transplant/build-libopentui.sh` | version-agnostic bionic hooks + guard verify |
 | CI armv7 handoff | `.github/workflows/prebuild-armv7.yml`, `scripts/ci/*` | attempt-based build evidence, not final Termux release path |
 
 ## CODE MAP

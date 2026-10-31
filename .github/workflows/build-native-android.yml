@@ -7,18 +7,14 @@ on:
         description: Build strategy for the unsigned candidate
         type: choice
         required: true
-        default: source-bun140
+        default: source
         options:
-          - source-bun140
+          - source
 
 permissions:
   contents: read
 
 env:
-  OPENCODE_VERSION: "2.0.28"
-  OPENTUI_VERSION: "0.5.17"
-  OPENTUI_COMMIT: "6f0efd3330978d696b42db3d7d95d2042008312b"
-  ZIG_VERSION: "0.16.0"
   ANDROID_API: "28"
 
 jobs:
@@ -34,6 +30,22 @@ jobs:
           git fetch --depth=1 origin "$GITHUB_SHA"
           git checkout --detach FETCH_HEAD
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+
+      - name: Resolve pinned versions from lock
+        run: |
+          set -euo pipefail
+          python3 - <<'PY' >> "$GITHUB_ENV"
+          import json
+          lock = json.load(open("tools/supply-chain-lock.json", encoding="utf-8"))
+          version = lock["current"]
+          opencode = lock["opencode"][version]
+          opentui_version = opencode["opentui_version"]
+          opentui = lock["opentui"][opentui_version]
+          print(f"OPENCODE_VERSION={version}")
+          print(f"OPENTUI_VERSION={opentui_version}")
+          print(f"OPENTUI_COMMIT={opentui['commit']}")
+          print(f"ZIG_VERSION={opentui['zig_version']}")
+          PY
 
       - name: Fetch pinned OpenTUI source
         run: |
@@ -71,16 +83,11 @@ jobs:
           bun = lock["android_bun"][bun_version]
           assert ot["commit"] == os.environ["OPENTUI_COMMIT"]
           assert ot["zig_version"] == os.environ["ZIG_VERSION"]
-          if os.environ["BUILD_STRATEGY"] == "upstream-transplant":
-              assert bind["target"] == bun_version, (bind["target"], bun_version)
-              assert bind["archive_sha256"] == bun["archive_sha256"]
-              assert bind["elf_sha256"] == bun["elf_sha256"]
-          else:
-              source_bind = json.load(open("tools/transplant/config/bun-bind-source-1.4.0.json", encoding="utf-8"))
-              source_bun = lock["android_bun"]["1.4.0"]
-              assert source_bind["target"] == "1.4.0"
-              assert source_bind["archive_sha256"] == source_bun["archive_sha256"]
-              assert source_bind["elf_sha256"] == source_bun["elf_sha256"]
+          # Source build and upstream transplant both consume the same pinned
+          # Android Bun base, so one config covers both strategies.
+          assert bind["target"] == bun_version, (bind["target"], bun_version)
+          assert bind["archive_sha256"] == bun["archive_sha256"]
+          assert bind["elf_sha256"] == bun["elf_sha256"]
           head = subprocess.check_output(
               ["git", "-C", "work/opentui", "rev-parse", "HEAD"], text=True
           ).strip()
@@ -92,12 +99,10 @@ jobs:
         env:
           BUILD_STRATEGY: ${{ inputs.strategy }}
 
-      - name: Apply version-locked OpenTUI Android hardening
+      - name: Apply OpenTUI Android hardening
         run: |
           set -euo pipefail
-          python3 tools/patch-opentui-0.5.17.py work/opentui
-          patch --fuzz=0 -d work/opentui -p1 < patches/opentui/v0.5.17-file-prefix-map.patch
-          patch --fuzz=0 -d work/opentui -p1 < patches/opentui/tlsdesc-self-resolver.patch
+          python3 tools/patch-opentui-android.py work/opentui
           git -C work/opentui diff --check
 
       - name: Build Bionic OpenTUI library
@@ -190,17 +195,17 @@ jobs:
           assert product.is_file() and product.stat().st_size > 50_000_000
           PY
 
-      - name: Build version-matched Bun 1.4.0 source package and transplant it
-        if: ${{ inputs.strategy == 'source-bun140' }}
-        run: bash scripts/ci/build-opencode-source-bun140.sh
+      - name: Build version-matched source package and transplant it
+        if: ${{ inputs.strategy == 'source' }}
+        run: bash scripts/ci/build-opencode-source.sh
 
       - name: Stage candidate and checksums
         run: |
           set -euo pipefail
           OUT="artifacts/transplant/$OPENCODE_VERSION"
           mkdir -p dist
-          if [ "${{ inputs.strategy }}" = source-bun140 ]; then
-            NAME="opencode-$OPENCODE_VERSION-android-aarch64-source-bun140"
+          if [ "${{ inputs.strategy }}" = source ]; then
+            NAME="$(python3 tools/ocver.py asset source)"
           else
             NAME="opencode-$OPENCODE_VERSION-android-aarch64"
           fi
