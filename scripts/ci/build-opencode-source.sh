@@ -35,7 +35,7 @@ PY
 test "${#locked[@]}" -eq 3
 commit="${locked[0]}"
 
-work="work/source-bun/$BUN_VERSION"
+work="$ROOT/work/source-bun/$BUN_VERSION"
 mkdir -p "$work" artifacts/transplant/android-bun
 
 host_zip="$work/bun-linux-x64.zip"
@@ -78,7 +78,7 @@ cd "$ROOT"
 
 mkdir -p "$work/package/bin"
 cp "$compiled" "$work/package/bin/opencode"
-tgz="$ROOT/$work/opencode-$OPENCODE_VERSION-source.tgz"
+tgz="$work/opencode-$OPENCODE_VERSION-source.tgz"
 tar -C "$work" -czf "$tgz" package
 
 python3 tools/transplant/transplant.py all \
