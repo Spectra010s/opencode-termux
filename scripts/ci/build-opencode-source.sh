@@ -69,9 +69,16 @@ OPENCODE_BUN_VERSION="$BUN_VERSION" python3 tools/patch-opencode-source.py "$src
 cd "$src"
 "$host_bun" install --frozen-lockfile --ignore-scripts --os=linux --cpu='*'
 cd "$src/packages/cli"
+# Upstream 2.2.x selects the compile target from OPENCODE_TARGET (env), not
+# from a --target flag: build.ts compares `targetName(item)` against
+# `${binary}-${requestedTarget}`. Without it `targets` is allTargets (12
+# entries) and the pinned-ELF guard in tools/patch-opencode-source.py trips on
+# the second entry (`unexpected source-build target`). "linux-arm64" resolves
+# to `opencode-linux-arm64`, the only target this pipeline ships.
 OPENCODE_CHANNEL=latest OPENCODE_VERSION="$OPENCODE_VERSION" \
+OPENCODE_TARGET=linux-arm64 \
 BUN_SOURCE_TARGET_ELF="$target_bun" \
-  "$host_bun" script/build.ts --target=opencode-linux-arm64 --skip-install
+  "$host_bun" script/build.ts --skip-install
 compiled="$src/packages/cli/dist/cli-linux-arm64/bin/opencode"
 test -s "$compiled"
 cd "$ROOT"

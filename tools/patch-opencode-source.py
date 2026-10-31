@@ -48,7 +48,7 @@ def main() -> None:
         "async function compileExecutable(item: (typeof allTargets)[number]) {\n"
         ' const pinned = process.env.BUN_SOURCE_TARGET_ELF\n'
         ' if (pinned) {\n'
-        '   if (item.os !== "linux" || item.arch !== "arm64" || item.abi) throw new Error("unexpected source-build target")\n'
+        '   if (item.os !== "linux" || item.arch !== "arm64" || item.abi) throw new Error("unexpected source-build target " + item.os + "-" + item.arch + (item.abi ? "-" + item.abi : "") + " (set OPENCODE_TARGET=linux-arm64)")\n'
         '   if (!(await Bun.file(pinned).exists())) throw new Error("pinned Bun target missing")\n'
         '   return pinned\n'
         ' }\n',
