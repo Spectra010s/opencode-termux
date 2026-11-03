@@ -54,6 +54,27 @@ def main() -> None:
         ' }\n',
     )
 
+    # Bionic has no glibc pty helper: for a cross arm64 build upstream resolves
+    # @opencode/pty-linux-arm64-gnu and embeds that binary. It cannot exec on
+    # Android. build.ts already emits "export default undefined" when the asset
+    # is missing, so resolve it only when host and target agree.
+    replace_once(
+        build,
+        "  const opencodePty = await resolveOpencodePty({\n"
+        "    platform: item.os,\n"
+        "    arch: item.arch,\n"
+        '    ...(item.os === "linux" ? { libc: item.abi ?? "glibc" } : {}),\n'
+        "  })\n",
+        "  const opencodePty: Awaited<ReturnType<typeof resolveOpencodePty>> =\n"
+        "    item.os === process.platform && item.arch === process.arch\n"
+        "      ? await resolveOpencodePty({\n"
+        "          platform: item.os,\n"
+        "          arch: item.arch,\n"
+        '          ...(item.os === "linux" ? { libc: item.abi ?? "glibc" } : {}),\n'
+        "        })\n"
+        "      : undefined\n",
+    )
+
     upgrade = root / "packages/cli/src/commands/handlers/upgrade.ts"
     replace_once(
         upgrade,

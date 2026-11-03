@@ -85,6 +85,9 @@ cd "$ROOT"
 
 mkdir -p "$work/package/bin"
 cp "$compiled" "$work/package/bin/opencode"
+# Keep the pre-transplant ELF: it separates "the Bun graph is broken" from
+# "the transplant/splice onto the Android base is broken" without a rebuild.
+cp "$compiled" "$work/pre-transplant-opencode"
 tgz="$work/opencode-$OPENCODE_VERSION-source.tgz"
 tar -C "$work" -czf "$tgz" package
 

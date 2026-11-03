@@ -226,3 +226,14 @@ jobs:
           path: dist/
           if-no-files-found: error
           retention-days: 14
+
+      # Bisection aid: the compiled-but-not-transplanted ELF. If the candidate
+      # crashes on device, fetching this one too says whether the graph or the
+      # splice onto the Android Bun base is at fault. Download only on demand.
+      - name: Upload pre-transplant ELF for bisection
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: opencode-${{ env.OPENCODE_VERSION }}-android-aarch64-${{ inputs.strategy }}-pre-transplant
+          path: work/source-bun/*/pre-transplant-opencode
+          if-no-files-found: ignore
+          retention-days: 14
