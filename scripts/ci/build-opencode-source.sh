@@ -107,10 +107,28 @@ if [ -z "$strip_bin" ]; then
   strip_bin="$(command -v llvm-strip || command -v strip || true)"
 fi
 test -n "$strip_bin" || { echo "no llvm-strip/strip available" >&2; exit 1; }
+# The guard gate must run on the unstripped build: --strip-unneeded removes the
+# local guard-owner symbols has_ffi_guard() scans for, so the swap is told the
+# check already happened (same contract transplant.py uses).
+python3 - "$tui" <<'PY'
+import sys
+
+sys.path.insert(0, "tools/transplant")
+from swap_tui import has_ffi_guard
+
+with open(sys.argv[1], "rb") as f:
+    lib = f.read()
+if not has_ffi_guard(lib):
+    raise SystemExit(
+        "libopentui lacks the FFI negative-coordinate guard; refusing to strip"
+    )
+print("libopentui: FFI guard verified on the unstripped build")
+PY
 tui_stripped="$work/libopentui-stripped.so"
 "$strip_bin" --strip-unneeded "$tui" -o "$tui_stripped"
 echo "libopentui: $(stat -c%s "$tui") -> $(stat -c%s "$tui_stripped") bytes after strip"
 python3 tools/transplant/swap_tui.py \
+  --guard-preverified \
   --binary "$compiled" \
   --tui-lib "$tui_stripped" \
   --out "$out/opencode-native-tui"
