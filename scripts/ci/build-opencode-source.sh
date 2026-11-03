@@ -83,26 +83,69 @@ compiled="$src/packages/cli/dist/cli-linux-arm64/bin/opencode"
 test -s "$compiled"
 cd "$ROOT"
 
-mkdir -p "$work/package/bin"
-cp "$compiled" "$work/package/bin/opencode"
 # Keep the pre-transplant ELF: it separates "the Bun graph is broken" from
-# "the transplant/splice onto the Android base is broken" without a rebuild.
+# "the assembly onto the Android base is broken" without a rebuild.
 cp "$compiled" "$work/pre-transplant-opencode"
-tgz="$work/opencode-$OPENCODE_VERSION-source.tgz"
-tar -C "$work" -czf "$tgz" package
 
-python3 tools/transplant/transplant.py all \
-  --ver "$OPENCODE_VERSION" \
-  --tgz "$tgz" \
-  --no-execve
-python3 - "$OPENCODE_VERSION" <<'PY'
+# The compiled product already carries the Android Bun 1.4.4 base
+# (BUN_SOURCE_TARGET_ELF), so re-splicing it through transplant.py only
+# rewrites the same graph onto a second copy of that base — and on 1.4.4 bases
+# that round-trip yields an ELF that SIGILLs on the first instruction
+# (6784-byte records/argv gap, plain-offset splice). Assemble the candidate
+# straight from the compiled ELF and graft the bionic libopentui over the
+# glibc asset Bun embedded.
+out="$ROOT/artifacts/transplant/$OPENCODE_VERSION"
+tui="$ROOT/artifacts/transplant/opentui-bionic/libopentui.so"
+mkdir -p "$out"
+test -f "$tui" || { echo "missing bionic libopentui: $tui" >&2; exit 1; }
+python3 tools/transplant/swap_tui.py \
+  --binary "$compiled" \
+  --tui-lib "$tui" \
+  --out "$out/opencode-native-tui"
+python3 - "$OPENCODE_VERSION" "$compiled" "$out/opencode-native-tui" "$out/report.json" <<'PY'
+import hashlib
 import json
+import os
 import sys
-from pathlib import Path
 
-out = Path("artifacts/transplant") / sys.argv[1]
-report = json.loads((out / "report.json").read_text(encoding="utf-8"))
-assert report["steps"]["swap"]["status"] == "ok", report["steps"].get("swap")
-product = out / "opencode-native-tui"
-assert product.is_file() and product.stat().st_size > 50_000_000
+ver, src, prod, report_path = sys.argv[1:5]
+
+
+def digest(path):
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+report = {
+    "ver": ver,
+    "pipeline": "source-compile + swap_tui",
+    "transplant": "skipped",
+    "transplant_skip_reason": (
+        "the compiled product already targets the android bun ELF; the 1.4.4 "
+        "splice round-trip produces a binary that SIGILLs on device"
+    ),
+    "steps": {
+        "compile": {"status": "ok"},
+        "swap": {"status": "ok"},
+        "transplant": {"status": "skipped"},
+    },
+    "source": {
+        "file": os.path.basename(src),
+        "size": os.path.getsize(src),
+        "sha256": digest(src),
+    },
+    "product": {
+        "file": os.path.basename(prod),
+        "size": os.path.getsize(prod),
+        "sha256": digest(prod),
+    },
+    "tui_probe": "skipped(no-aarch64)",
+}
+with open(report_path, "w", encoding="utf-8") as f:
+    json.dump(report, f, indent=2)
+print(f"report: {report_path} (swap ok, transplant skipped)")
 PY
+

@@ -237,3 +237,13 @@ jobs:
           path: work/source-bun/*/pre-transplant-opencode
           if-no-files-found: ignore
           retention-days: 14
+
+      # The bionic renderer library that gets grafted into the candidate. Tiny,
+      # and it lets the swap be reproduced/verified off-CI without a rebuild.
+      - name: Upload bionic libopentui
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: opencode-${{ env.OPENCODE_VERSION }}-android-aarch64-libopentui
+          path: artifacts/transplant/opentui-bionic/libopentui.so
+          if-no-files-found: error
+          retention-days: 14
