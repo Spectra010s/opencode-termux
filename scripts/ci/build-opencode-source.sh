@@ -98,9 +98,21 @@ out="$ROOT/artifacts/transplant/$OPENCODE_VERSION"
 tui="$ROOT/artifacts/transplant/opentui-bionic/libopentui.so"
 mkdir -p "$out"
 test -f "$tui" || { echo "missing bionic libopentui: $tui" >&2; exit 1; }
+# The embedded asset slot in the compiled binary holds the stripped glibc
+# libopentui (~4.8 MB). The zig build carries debug info (~23.8 MB), so apply
+# the same strip the transplant swap used: --strip-unneeded keeps the dynamic
+# exports swap_tui's FFI guard check scans for.
+strip_bin="${LLVM_STRIP:-}"
+if [ -z "$strip_bin" ]; then
+  strip_bin="$(command -v llvm-strip || command -v strip || true)"
+fi
+test -n "$strip_bin" || { echo "no llvm-strip/strip available" >&2; exit 1; }
+tui_stripped="$work/libopentui-stripped.so"
+"$strip_bin" --strip-unneeded "$tui" -o "$tui_stripped"
+echo "libopentui: $(stat -c%s "$tui") -> $(stat -c%s "$tui_stripped") bytes after strip"
 python3 tools/transplant/swap_tui.py \
   --binary "$compiled" \
-  --tui-lib "$tui" \
+  --tui-lib "$tui_stripped" \
   --out "$out/opencode-native-tui"
 python3 - "$OPENCODE_VERSION" "$compiled" "$out/opencode-native-tui" "$out/report.json" <<'PY'
 import hashlib
