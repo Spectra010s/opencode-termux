@@ -68,6 +68,12 @@ OPENCODE_BUN_VERSION="$BUN_VERSION" python3 tools/patch-opencode-source.py "$src
 
 cd "$src"
 "$host_bun" install --frozen-lockfile --ignore-scripts --os=linux --cpu='*'
+# bionic tags heap pointers in the top byte; OpenTUI 0.8.0's FFI shim treats
+# them as "Pointer exceeds safe integer range" and the TUI refuses to start.
+# Patch the installed shim before Bun builds, because build.ts sets
+# bytecode:true -- editing the JS inside the compiled ELF afterwards does
+# nothing.
+python3 "$ROOT/tools/patch-opentui-ffi.py" "$src"
 cd "$src/packages/cli"
 # Upstream 2.2.x selects the compile target from OPENCODE_TARGET (env), not
 # from a --target flag: build.ts compares `targetName(item)` against
@@ -81,6 +87,13 @@ BUN_SOURCE_TARGET_ELF="$target_bun" \
   "$host_bun" script/build.ts --skip-install
 compiled="$src/packages/cli/dist/cli-linux-arm64/bin/opencode"
 test -s "$compiled"
+# source maps keep the bundled JS readable in the ELF, so this proves the
+# pointer mask survived into the build (bytecode:true makes it unpatched at
+# runtime otherwise).
+grep -aq '0x00ffffffffffffffn' "$compiled" || {
+  echo "opentui top-byte pointer mask missing from the compiled ELF" >&2
+  exit 1
+}
 cd "$ROOT"
 
 # Keep the pre-transplant ELF: it separates "the Bun graph is broken" from
