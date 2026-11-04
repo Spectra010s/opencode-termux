@@ -37,6 +37,7 @@ opencode-termux/
 | Build pacman package (wrapper appendix) | `scripts/package/package_pacman.sh`, `packing/pacman/PKGBUILD*` | builds the `opencode-wrapper` pacman package; dynamic pkgver/pkgrel rewrite + makepkg flow |
 | Native provider packaging | `scripts/package/package_deb_native.sh`, `scripts/package/package_pacman_native.sh`, `packing/pacman/PKGBUILD.native` | `opencode-native` deb/pacman providers for the native bionic mainline (stable since 27/28; see docs/guides/dual-track-install.md) |
 | Release APT candidate | `scripts/ci/package-release-deb.sh`, `.github/workflows/build-native-android.yml` | packages the Android binary in CI; publish workflow reuses the verified candidate |
+| Signed APT source | `scripts/ci/sign-apt-index.sh`, `setup-apt.sh`, `apt/opencode-termux.gpg` | CI signs Release; setup installs the scoped public key and source |
 | Standalone rollback packaging | `scripts/package/package_deb_standalone.sh`, `scripts/package/package_pacman_standalone.sh`, `packing/pacman/PKGBUILD.standalone` | `opencode-wrapper-standalone` frozen rollback package (coexists with `opencode`); stage via `STANDALONE=1 ./scripts/build.sh` |
 | System-skill hook behavior | `scripts/hooks/run-system-skills.sh`, `packing/manifests/system-skills/*.json` | strict/network flags default to safe mode |
 | Plugin lifecycle | `tools/plugin-manager.sh`, `tools/plugin-selfcheck.sh`, `docs/guides/plugin-management.md` | local file plugin path + snapshot rollback model |

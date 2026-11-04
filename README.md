@@ -19,10 +19,8 @@ opencode
 
 The installer downloads the [GitHub release](https://github.com/Spectra010s/opencode-termux/releases) binary, checks its SHA-256 against the release checksum file, and installs it as `~/.local/bin/opencode`. If `~/.local/bin` is not on `PATH`, it prints the direct command and the exact PATH line to add; it does not silently edit your shell startup files.
 
-No apt/pacman package for this build has been published by this project.
-The release workflow is prepared to publish a `.deb` and a flat APT source with
-the next verified release; see [APT source instructions](docs/guides/apt-repository.md)
-after those assets appear on the release.
+OpenCode is also available from this project's APT source. Follow the
+[APT setup and install instructions](docs/guides/apt-repository.md).
 
 ## Migrating from v1
 

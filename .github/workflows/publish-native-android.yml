@@ -70,6 +70,15 @@ jobs:
           test "$(dpkg-deb --field "$DEB" Version)" = "$VERSION-1"
           gzip -dc dist-apt/Packages.gz | grep -q "^Version: $VERSION-1$"
 
+      - name: Sign the APT index
+        env:
+          APT_GPG_PRIVATE_KEY: ${{ secrets.APT_GPG_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$APT_GPG_PRIVATE_KEY"
+          printf '%s' "$APT_GPG_PRIVATE_KEY" |
+            bash scripts/ci/sign-apt-index.sh dist-apt/Release apt/opencode-termux.gpg dist-apt
+
       - name: Make bandwidth-saving archive
         run: |
           set -euo pipefail
@@ -79,7 +88,7 @@ jobs:
       - name: Include APT candidate hashes in release checksums
         run: |
           set -euo pipefail
-          (cd dist-apt && sha256sum opencode_*.deb Packages.gz Release) >> dist/SHA256SUMS
+          (cd dist-apt && sha256sum opencode_*.deb Packages.gz Release InRelease Release.gpg) >> dist/SHA256SUMS
 
       - name: Publish release from CI
         run: |
@@ -90,7 +99,8 @@ jobs:
           fi
           gh release create "$RELEASE_TAG" \
             "dist/$ASSET.tar.gz" dist-apt/opencode_*.deb dist-apt/Packages.gz \
-            dist-apt/Release dist-apt/SHA256SUMS-apt dist/SHA256SUMS \
+            dist-apt/Release dist-apt/InRelease dist-apt/Release.gpg \
+            apt/opencode-termux.gpg dist-apt/SHA256SUMS-apt dist/SHA256SUMS \
             dist/supply-chain-lock.json dist/transplant-report.json \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \

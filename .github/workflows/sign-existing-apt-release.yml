@@ -1,0 +1,50 @@
+name: Sign existing APT release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Published release tag to sign
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  sign:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ inputs.tag }}
+    steps:
+      - name: Check out signing files
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+
+      - name: Download and verify the published index
+        run: |
+          set -euo pipefail
+          mkdir dist-apt
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+            --pattern Release --pattern Packages.gz --pattern SHA256SUMS-apt \
+            --dir dist-apt
+          (cd dist-apt && sha256sum -c SHA256SUMS-apt --ignore-missing)
+          test "$(awk '$2 == "Release" { count++ } END { print count+0 }' dist-apt/SHA256SUMS-apt)" -eq 1
+
+      - name: Sign and upload index
+        env:
+          APT_GPG_PRIVATE_KEY: ${{ secrets.APT_GPG_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$APT_GPG_PRIVATE_KEY"
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json assets \
+            --jq '.assets[].name' | grep -qx InRelease; then
+            echo 'Release is already signed; refusing to overwrite it' >&2
+            exit 1
+          fi
+          printf '%s' "$APT_GPG_PRIVATE_KEY" |
+            bash scripts/ci/sign-apt-index.sh dist-apt/Release apt/opencode-termux.gpg dist-apt
+          gh release upload "$RELEASE_TAG" \
+            dist-apt/InRelease dist-apt/Release.gpg apt/opencode-termux.gpg \
+            --repo "$GITHUB_REPOSITORY"

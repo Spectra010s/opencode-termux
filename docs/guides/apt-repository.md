@@ -6,21 +6,23 @@ assets form a flat APT source hosted by this project's latest GitHub release.
 It is independent of the official Termux package repository and of other
 OpenCode Termux projects.
 
-After the first release containing those assets is published, add the source
-in Termux:
+Add the source in Termux:
 
 ```sh
-mkdir -p "$PREFIX/etc/apt/sources.list.d"
-printf '%s\n' 'deb [trusted=yes arch=aarch64] https://github.com/Spectra010s/opencode-termux/releases/latest/download/ ./' > "$PREFIX/etc/apt/sources.list.d/opencode-termux.list"
-apt update
+curl -fsSL https://raw.githubusercontent.com/Spectra010s/opencode-termux/native-android/setup-apt.sh | sh
 apt-cache policy opencode
-apt install opencode
+pkg install opencode
 ```
 
-The source uses `trusted=yes` because it has no APT signing key yet. APT will
-trust packages listed by this URL; only add it if you trust this project's
-GitHub releases. The release also carries SHA-256 checksums for the `.deb` and
-index files.
+The setup script installs this project's public signing key, adds the source
+to Termux, and refreshes APT's package index. It does not install OpenCode;
+`pkg install opencode` does that.
+
+APT verifies the repository's signed `InRelease` file using only the installed
+key (`signed-by=`). Its fingerprint is
+`0E5A71B65EFC2AFFC6096154A2378F99E71DE07E`. The setup script checks the
+downloaded public key against a pinned SHA-256 digest before installing it.
+The release also carries SHA-256 checksums for the `.deb` and index files.
 
 `pkg` is a wrapper around Termux's APT, so `pkg install opencode` uses the same
 package database. The APT package installs to `$PREFIX/bin/opencode`.
@@ -42,5 +44,6 @@ command -v opencode
 ```
 
 For later releases, `apt update && apt install --only-upgrade opencode` uses
-this source. To remove only the source, delete
-`$PREFIX/etc/apt/sources.list.d/opencode-termux.list` and run `apt update`.
+this source. To remove it, delete the source file at
+`$PREFIX/etc/apt/sources.list.d/opencode-termux.list` and key at
+`$PREFIX/etc/apt/keyrings/opencode-termux.gpg`, then run `apt update`.

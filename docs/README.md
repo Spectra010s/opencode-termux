@@ -16,7 +16,7 @@ Some documents are written in Chinese (marked 中文 below); they are kept as-is
 ## Start here
 
 - [`guides/native-v2-build.md`](guides/native-v2-build.md) — current Android build: pinned inputs, CI path, local build.
-- [`guides/apt-repository.md`](guides/apt-repository.md) — Termux APT source backed by releases, and migrating off the curl installer.
+- [`guides/apt-repository.md`](guides/apt-repository.md) — signed Termux APT source backed by releases, and migrating off the curl installer.
 - [`guides/dual-track-install.md`](guides/dual-track-install.md) — which `opencode` package you are installing (native mainline vs wrapper appendix).
 - [`guides/migration-v1-to-v2.md`](guides/migration-v1-to-v2.md) — 中文: v1 → v2 upgrade, rollback, package names, build lines.
 - [`ops/execution-checklist.md`](ops/execution-checklist.md) — install/test runbook (apt first, pacman second).
@@ -25,7 +25,7 @@ Some documents are written in Chinese (marked 中文 below); they are kept as-is
 ## Guides
 
 - [`guides/native-v2-build.md`](guides/native-v2-build.md) — native v2 build pipeline: Bun base, OpenTUI swap, FFI guard checks.
-- [`guides/apt-repository.md`](guides/apt-repository.md) — release-backed Termux APT repository.
+- [`guides/apt-repository.md`](guides/apt-repository.md) — signed release-backed Termux APT repository.
 - [`guides/dual-track-install.md`](guides/dual-track-install.md) — provider selection and the Push-tag/package-name boundary between families.
 - [`guides/migration-v1-to-v2.md`](guides/migration-v1-to-v2.md) — 中文: migration guide for users on v1.
 - [`guides/plugin-management.md`](guides/plugin-management.md) — plugin install, self-update, snapshot rollback.
