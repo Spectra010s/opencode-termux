@@ -135,6 +135,27 @@ def main() -> None:
         '    }\n'
         '    const packageName =\n',
     )
+    replace_once(
+        updater,
+        '        new Error(\n'
+        '          "Could not detect the installation method. Update with your package manager or download the latest release.",\n',
+        '        new Error(\n'
+        '          "Could not detect the installation method. See https://github.com/Spectra010s/opencode-termux#install for manual installation.",\n',
+    )
+    replace_once(
+        updater,
+        '        message:\n'
+        '          "Could not detect the installation method. Update with your package manager or download the latest release.",\n',
+        '        message:\n'
+        '          "Could not detect the installation method. See https://github.com/Spectra010s/opencode-termux#install for manual installation.",\n',
+    )
+
+    upgrade = root / "packages/cli/src/commands/handlers/upgrade.ts"
+    replace_once(
+        upgrade,
+        '          new Error("Could not detect the installation method. Pass --method to choose how to upgrade OpenCode."),\n',
+        '          new Error("Could not detect the installation method. See https://github.com/Spectra010s/opencode-termux#install for manual installation."),\n',
+    )
 
     uninstall = root / "packages/cli/src/commands/handlers/uninstall.ts"
     replace_once(
