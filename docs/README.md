@@ -5,7 +5,7 @@ This directory is the single source of truth for the current Termux packing/runt
 ## Start here
 
 - `native-v2-build.md` — this repository's Android local-build status and GitHub Actions path
-- `apt-repository.md` — this repository's release-backed Termux APT source and migration from the curl installer
+- [apt-repository.md](apt-repository.md) — this repository's release-backed Termux APT source and migration from the curl installer
 - `execution-checklist.md` — install/test runbook (default Termux apt first, pacman path second)
 - `skills-index.md` — concise index for prompts + quick fixes
 - `13-opencode-runtime-build.md` — canonical runtime build path (official `opencode-linux-arm64` + bun-termux-loader)
