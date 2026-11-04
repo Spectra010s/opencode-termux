@@ -43,5 +43,5 @@ fi
 install -m 644 "$key_tmp" "$key_file"
 printf '%s\n' "$source_line" > "$source_file"
 
-apt-get update
+apt-get -o "Dir::Etc::sourcelist=$source_file" -o Dir::Etc::sourceparts=- update
 echo 'OpenCode APT source is ready. Install with: pkg install opencode'
