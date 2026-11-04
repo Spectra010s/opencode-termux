@@ -80,6 +80,12 @@ def main() -> None:
     updater = root / "packages/cli/src/services/updater.ts"
     replace_once(
         updater,
+        'export const methods = ["curl", "npm", "pnpm", "bun", "yarn", "vp", "brew", "winget"] as const\n',
+        'export const methods = ["curl", "npm", "pnpm", "bun", "yarn", "vp", "brew", "winget", "apt"] as const\n',
+    )
+    replace_once(updater, '  winget: "WinGet",\n', '  winget: "WinGet",\n  apt: "APT",\n')
+    replace_once(
+        updater,
         '  const curlBinary = yield* fs.realPath(curlPath).pipe(Effect.orElseSucceed(() => curlPath))\n',
         '  const curlBinary = yield* fs.realPath(curlPath).pipe(Effect.orElseSucceed(() => curlPath))\n'
         '  const termuxPath = path.join(global.home, ".local", "bin", "opencode")\n'
@@ -89,8 +95,20 @@ def main() -> None:
     replace_once(
         updater,
         '    if (executable === curlBinary) return "curl"\n',
+        '    if (executable === curlBinary) return "curl"\n'
+        '    const prefix = process.env.PREFIX\n'
+        '    if (prefix && executable === path.join(prefix, "bin", "opencode")) {\n'
+        '      const owner = yield* exec(["dpkg-query", "-S", executable]).pipe(Effect.orElseSucceed(() => undefined))\n'
+        '      if (owner?.code === 0 && owner.stdout.split("\\n").includes(`opencode: ${executable}`)) return "apt"\n'
+        '    }\n'
         '    if (nativeTermux) return "curl"\n'
-        '    if (executable === curlBinary) return "curl"\n',
+        '    if (prefix) return\n',
+    )
+    replace_once(
+        updater,
+        '    if (method === "winget") return ["winget", "uninstall", ...wingetArgs]\n',
+        '    if (method === "winget") return ["winget", "uninstall", ...wingetArgs]\n'
+        '    if (method === "apt") return ["apt-get", "remove", "--yes", "opencode"]\n',
     )
     replace_once(
         updater,
@@ -109,13 +127,48 @@ def main() -> None:
         '    },\n'
         '    catch: (cause) => new Error(`Could not check native Termux releases: ${errorDetail(cause)}`),\n'
         '  })\n'
+        '  const latest = (selected?: Method) =>\n',
+    )
+    replace_once(
+        updater,
         '  const latest = (selected?: Method) =>\n'
-        '    nativeTermux ? termuxLatest :\n',
+        '    (selected ? Effect.succeed(selected) : method()).pipe(\n'
+        '      Effect.flatMap((method) =>\n'
+        '        method === "winget" ? wingetVersion() : release(method).pipe(Effect.map((data) => data.version)),\n'
+        '      ),\n'
+        '    )\n',
+        '  const latest = (selected?: Method) =>\n'
+        '    (selected ? Effect.succeed(selected) : method()).pipe(\n'
+        '      Effect.flatMap((detected) =>\n'
+        '        nativeTermux || detected === "apt"\n'
+        '          ? termuxLatest\n'
+        '          : detected === "winget" ? wingetVersion() : release(detected).pipe(Effect.map((data) => data.version)),\n'
+        '      ),\n'
+        '    )\n',
     )
     replace_once(
         updater,
         '    const version = input.trim().replace(/^v/, "")\n    const packageName =\n',
         '    const version = input.trim().replace(/^v/, "")\n'
+        '    if (method === "apt") {\n'
+        '      const prefix = process.env.PREFIX\n'
+        '      if (!prefix || executable !== path.join(prefix, "bin", "opencode"))\n'
+        '        return yield* Effect.fail(new Error("This binary is not installed by APT"))\n'
+        '      const owner = yield* exec(["dpkg-query", "-S", executable]).pipe(Effect.orElseSucceed(() => undefined))\n'
+        '      if (!owner || owner.code !== 0 || !owner.stdout.split("\\n").includes(`opencode: ${executable}`))\n'
+        '        return yield* Effect.fail(new Error("This binary is not owned by the OpenCode APT package"))\n'
+        '      yield* Effect.scoped(Effect.gen(function* () {\n'
+        '        yield* flock.acquire("cli-upgrade", undefined, { timeoutMs: Duration.toMillis("5 hours") })\n'
+        '        const updated = yield* exec(["apt-get", "update"], "30 minutes")\n'
+        '        if (updated.code !== 0) return yield* Effect.fail(new Error(resultDetail(updated)))\n'
+        '        const installed = yield* exec(["apt-get", "install", "--only-upgrade", "--yes", "opencode"], "4 hours")\n'
+        '        if (installed.code !== 0) return yield* Effect.fail(new Error(resultDetail(installed)))\n'
+        '        const actual = yield* exec([executable, "--version"])\n'
+        '        if (actual.code !== 0 || actual.stdout.trim() !== version)\n'
+        '          return yield* Effect.fail(new Error(`APT did not install OpenCode ${version}: ${resultDetail(actual)}`))\n'
+        '      }))\n'
+        '      return\n'
+        '    }\n'
         '    if (nativeTermux) {\n'
         '      if (!/^\\d+\\.\\d+\\.\\d+$/.test(version)) return yield* Effect.fail(new Error(`Unsupported native Termux release: ${input}`))\n'
         '      yield* Effect.scoped(Effect.gen(function* () {\n'
@@ -134,6 +187,11 @@ def main() -> None:
         '      return\n'
         '    }\n'
         '    const packageName =\n',
+    )
+    replace_once(
+        updater,
+        '    const commands: Record<Exclude<Method, "bun" | "curl" | "brew" | "winget">, string[]> = {\n',
+        '    const commands: Record<Exclude<Method, "bun" | "curl" | "brew" | "winget" | "apt">, string[]> = {\n',
     )
     replace_once(
         updater,

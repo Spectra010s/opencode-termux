@@ -7,6 +7,11 @@ on:
         description: Successful native Android candidate run to release
         required: true
         type: string
+      replace_existing:
+        description: Replace the existing release assets and tag for this same version
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   actions: read
@@ -94,15 +99,24 @@ jobs:
       - name: Publish release from CI
         run: |
           set -euo pipefail
+          assets=(
+            "dist/$ASSET.tar.gz" dist-apt/opencode_*.deb dist-apt/Packages dist-apt/Packages.gz
+            dist-apt/Release dist-apt/InRelease dist-apt/Release.gpg
+            apt/opencode-termux.gpg dist-apt/SHA256SUMS-apt dist/SHA256SUMS
+            dist/supply-chain-lock.json dist/transplant-report.json
+          )
           if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            echo "Release $RELEASE_TAG already exists; refusing to overwrite it" >&2
-            exit 1
+            if [ '${{ inputs.replace_existing }}' != true ]; then
+              echo "Release $RELEASE_TAG already exists; refusing to overwrite it" >&2
+              exit 1
+            fi
+            gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber --repo "$GITHUB_REPOSITORY"
+            git tag -f "$RELEASE_TAG" "$GITHUB_SHA"
+            git push --force origin "refs/tags/$RELEASE_TAG"
+            exit 0
           fi
           gh release create "$RELEASE_TAG" \
-            "dist/$ASSET.tar.gz" dist-apt/opencode_*.deb dist-apt/Packages dist-apt/Packages.gz \
-            dist-apt/Release dist-apt/InRelease dist-apt/Release.gpg \
-            apt/opencode-termux.gpg dist-apt/SHA256SUMS-apt dist/SHA256SUMS \
-            dist/supply-chain-lock.json dist/transplant-report.json \
+            "${assets[@]}" \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
             --title "OpenCode $(python3 tools/ocver.py current) native Termux" \
