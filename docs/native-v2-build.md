@@ -51,6 +51,11 @@ is the only supported host and base — upstream `package.json` declares
    verifying the artifact. Bump the tag in `install.sh` when preparing each
    release, and keep it aligned with the lock's `current` version.
 
+CI also stages a separate APT package candidate from the verified source
+binary. Test that package on a device before using the publish workflow; the
+publish job verifies and reuses the candidate `.deb` and index files. See
+[`apt-repository.md`](apt-repository.md) for the release-backed source.
+
 The pipeline refuses to produce a product unless the embedded OpenTUI passes the
 FFI guard scan (`clamp=9`, `csel_vs>0`) and the swap reports `status: ok`.
 

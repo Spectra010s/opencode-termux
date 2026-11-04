@@ -20,6 +20,9 @@ opencode
 The installer downloads the [GitHub release](https://github.com/Spectra010s/opencode-termux/releases) binary, checks its SHA-256 against the release checksum file, and installs it as `~/.local/bin/opencode`. If `~/.local/bin` is not on `PATH`, it prints the direct command and the exact PATH line to add; it does not silently edit your shell startup files.
 
 No apt/pacman package for this build has been published by this project.
+The release workflow is prepared to publish a `.deb` and a flat APT source with
+the next verified release; see [APT source instructions](docs/apt-repository.md)
+after those assets appear on the release.
 
 ## Migrating from v1
 
@@ -48,7 +51,7 @@ Releases are built from pinned source in GitHub Actions, not uploaded from a mai
 
 The [build workflow](.github/workflows/build-native-android.yml) produces a candidate. After testing, the [release workflow](.github/workflows/publish-native-android.yml) downloads that CI artifact, verifies its hash, and publishes it. [Build inputs](tools/supply-chain-lock.json) are pinned to specific versions, hashes, or commits. Releases are currently manual, not weekly automatic updates.
 
-This project is derived from [Hope2333/opencode-termux](https://github.com/Hope2333/opencode-termux); OpenCode itself is [upstream](https://github.com/anomalyco/opencode). Older docs in this repository describe upstream package lines and may not apply to this release. See [LICENSE](LICENSE) for this repository; dependencies retain their own licenses.
+This independent repository was derived from [Hope2333/opencode-termux](https://github.com/Hope2333/opencode-termux); OpenCode source comes from [anomalyco/opencode](https://github.com/anomalyco/opencode). Older docs here describe historical package lines and may not apply to this release. See [LICENSE](LICENSE) for this repository; dependencies retain their own licenses.
 
 ## Maintainer
 

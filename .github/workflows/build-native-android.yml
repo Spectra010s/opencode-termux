@@ -23,7 +23,7 @@ jobs:
     timeout-minutes: 60
     steps:
       - name: Check out workflow commit
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Resolve pinned versions from lock
         run: |
@@ -213,11 +213,52 @@ jobs:
           file "dist/$NAME"
           cat dist/SHA256SUMS
 
+      - name: Stage APT package candidate from the verified binary
+        if: ${{ inputs.strategy == 'source' }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist-apt
+          NAME="$(python3 tools/ocver.py asset source)"
+          bash scripts/ci/package-release-deb.sh "dist/$NAME" "$OPENCODE_VERSION" dist-apt
+          python3 tools/gen-packages-index.py dist-apt/Packages.gz dist-apt
+          gzip -dc dist-apt/Packages.gz | grep -q '^Package: opencode$'
+          python3 - <<'PY'
+          from datetime import datetime, timezone
+          from email.utils import format_datetime
+          from hashlib import sha256
+          from pathlib import Path
+
+          index = Path("dist-apt/Packages.gz")
+          data = index.read_bytes()
+          release = "\n".join((
+              "Origin: Spectra010s",
+              "Label: OpenCode Termux",
+              "Suite: stable",
+              "Codename: stable",
+              "Architectures: aarch64",
+              "Date: " + format_datetime(datetime.now(timezone.utc), usegmt=True),
+              "SHA256:",
+              f" {sha256(data).hexdigest()} {len(data)} Packages.gz",
+              "",
+          ))
+          Path("dist-apt/Release").write_text(release, encoding="utf-8")
+          PY
+          (cd dist-apt && sha256sum opencode_*.deb Packages.gz Release > SHA256SUMS-apt)
+
       - name: Upload unsigned runtime-test candidate
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: opencode-${{ env.OPENCODE_VERSION }}-android-aarch64-${{ inputs.strategy }}-candidate
           path: dist/
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload APT package candidate for device testing
+        if: ${{ inputs.strategy == 'source' }}
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: opencode-${{ env.OPENCODE_VERSION }}-android-aarch64-apt-candidate
+          path: dist-apt/
           if-no-files-found: error
           retention-days: 14
 

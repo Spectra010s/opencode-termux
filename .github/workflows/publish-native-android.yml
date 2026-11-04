@@ -21,7 +21,7 @@ jobs:
       SOURCE_RUN: ${{ inputs.source_run }}
     steps:
       - name: Check out release workflow commit
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           fetch-depth: 20
 
@@ -56,11 +56,30 @@ jobs:
           test "$(awk -v name="$ASSET" '$2 == name && length($1) == 64 { count++ } END { print count+0 }' dist/SHA256SUMS)" -eq 1
           file "dist/$ASSET" | grep -q 'ARM aarch64'
 
+      - name: Download and verify the APT candidate
+        run: |
+          set -euo pipefail
+          mkdir dist-apt
+          VERSION="$(python3 tools/ocver.py current)"
+          gh run download "$SOURCE_RUN" --repo "$GITHUB_REPOSITORY" \
+            --name "opencode-$VERSION-android-aarch64-apt-candidate" --dir dist-apt
+          (cd dist-apt && sha256sum -c SHA256SUMS-apt)
+          DEB="dist-apt/opencode_${VERSION}-1_aarch64.deb"
+          test -f "$DEB"
+          test "$(dpkg-deb --field "$DEB" Package)" = opencode
+          test "$(dpkg-deb --field "$DEB" Version)" = "$VERSION-1"
+          gzip -dc dist-apt/Packages.gz | grep -q "^Version: $VERSION-1$"
+
       - name: Make bandwidth-saving archive
         run: |
           set -euo pipefail
           tar -C dist -czf "dist/$ASSET.tar.gz" "$ASSET"
           (cd dist && sha256sum "$ASSET.tar.gz" >> SHA256SUMS)
+
+      - name: Include APT candidate hashes in release checksums
+        run: |
+          set -euo pipefail
+          (cd dist-apt && sha256sum opencode_*.deb Packages.gz Release) >> dist/SHA256SUMS
 
       - name: Publish release from CI
         run: |
@@ -70,8 +89,9 @@ jobs:
             exit 1
           fi
           gh release create "$RELEASE_TAG" \
-            "dist/$ASSET.tar.gz" dist/SHA256SUMS dist/supply-chain-lock.json \
-            dist/transplant-report.json \
+            "dist/$ASSET.tar.gz" dist-apt/opencode_*.deb dist-apt/Packages.gz \
+            dist-apt/Release dist-apt/SHA256SUMS-apt dist/SHA256SUMS \
+            dist/supply-chain-lock.json dist/transplant-report.json \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
             --title "OpenCode $(python3 tools/ocver.py current) native Termux" \
