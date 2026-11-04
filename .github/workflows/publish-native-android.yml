@@ -20,14 +20,10 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       SOURCE_RUN: ${{ inputs.source_run }}
     steps:
-      - name: Fetch release workflow commit without broken submodules
-        run: |
-          set -euo pipefail
-          git init .
-          git remote add origin "https://github.com/$GITHUB_REPOSITORY.git"
-          git fetch --depth=20 origin "$GITHUB_SHA"
-          git checkout --detach FETCH_HEAD
-          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+      - name: Check out release workflow commit
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 20
 
       - name: Resolve pinned versions from lock
         run: |

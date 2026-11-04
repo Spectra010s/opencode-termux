@@ -7,8 +7,7 @@
 - Android bionic tags heap pointers in the top byte; OpenTUI's `toSafeNumberPointer()` rejects them, so `tools/patch-opentui-ffi.py` must run before `Bun.build` (`bytecode:true` makes binary-level JS edits dead).
 - Build guide: `docs/native-v2-build.md`; transplant details: `docs/transplant.md`. Release builds run in GitHub Actions for reproducibility. On-device local builds are allowed; Termux already is Bionic so no NDK. Needs Termux `python3`, `npm`, `clang`, `make` (`zig` only to rebuild OpenTUI) and network.
 - History: native v2 `2.0.26`/`2.0.28` on Bun `1.4.0`/`1.4.2` were the previous user-facing line. The Bun 1.4.0 candidate from Actions run 38142306988 passed on-device TUI, API, session and real-prompt checks.
-- Keep third-party Actions pinned to immutable commit SHAs. Use v6 action lines when available; do not downgrade to v4.
-- Do not replace the manual repository fetch with `actions/checkout` until the malformed upstream `termux-packages` gitlink/submodule metadata is repaired.
+- Keep third-party Actions pinned to immutable commit SHAs except `actions/checkout`, which uses `v6` for current workflows. Do not downgrade current workflows to v4.
 
 **Generated:** 2026-11-11 **Branch:** native-android
 
