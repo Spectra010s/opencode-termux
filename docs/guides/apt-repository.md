@@ -1,7 +1,7 @@
 # OpenCode APT source for Termux
 
 The native Android release workflow publishes `opencode_<version>-1_aarch64.deb`,
-`Packages.gz`, and `Release` alongside the verified binary archive. These
+`Packages`, `Packages.gz`, and signed `Release` metadata alongside the verified binary archive. These
 assets form a flat APT source hosted by this project's latest GitHub release.
 It is independent of the official Termux package repository and of other
 OpenCode Termux projects.

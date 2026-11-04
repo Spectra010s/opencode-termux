@@ -69,6 +69,7 @@ jobs:
           test "$(dpkg-deb --field "$DEB" Package)" = opencode
           test "$(dpkg-deb --field "$DEB" Version)" = "$VERSION-1"
           gzip -dc dist-apt/Packages.gz | grep -q "^Version: $VERSION-1$"
+          cmp dist-apt/Packages <(gzip -dc dist-apt/Packages.gz)
 
       - name: Sign the APT index
         env:
@@ -88,7 +89,7 @@ jobs:
       - name: Include APT candidate hashes in release checksums
         run: |
           set -euo pipefail
-          (cd dist-apt && sha256sum opencode_*.deb Packages.gz Release InRelease Release.gpg) >> dist/SHA256SUMS
+          (cd dist-apt && sha256sum opencode_*.deb Packages Packages.gz Release InRelease Release.gpg) >> dist/SHA256SUMS
 
       - name: Publish release from CI
         run: |
@@ -98,7 +99,7 @@ jobs:
             exit 1
           fi
           gh release create "$RELEASE_TAG" \
-            "dist/$ASSET.tar.gz" dist-apt/opencode_*.deb dist-apt/Packages.gz \
+            "dist/$ASSET.tar.gz" dist-apt/opencode_*.deb dist-apt/Packages dist-apt/Packages.gz \
             dist-apt/Release dist-apt/InRelease dist-apt/Release.gpg \
             apt/opencode-termux.gpg dist-apt/SHA256SUMS-apt dist/SHA256SUMS \
             dist/supply-chain-lock.json dist/transplant-report.json \

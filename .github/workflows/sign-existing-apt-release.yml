@@ -7,6 +7,11 @@ on:
         description: Published release tag to sign
         required: true
         type: string
+      repair:
+        description: Replace signed metadata to add the missing Packages index
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -18,6 +23,7 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       RELEASE_TAG: ${{ inputs.tag }}
+      REPAIR: ${{ inputs.repair }}
     steps:
       - name: Check out signing files
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
@@ -26,11 +32,20 @@ jobs:
         run: |
           set -euo pipefail
           mkdir dist-apt
+          patterns=(--pattern Release --pattern Packages.gz --pattern SHA256SUMS-apt)
+          if [ "$REPAIR" = true ]; then
+            patterns+=(--pattern InRelease --pattern Release.gpg --pattern SHA256SUMS)
+          fi
           gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
-            --pattern Release --pattern Packages.gz --pattern SHA256SUMS-apt \
-            --dir dist-apt
+            "${patterns[@]}" --dir dist-apt
           (cd dist-apt && sha256sum -c SHA256SUMS-apt --ignore-missing)
           test "$(awk '$2 == "Release" { count++ } END { print count+0 }' dist-apt/SHA256SUMS-apt)" -eq 1
+          if [ "$REPAIR" = true ]; then
+            (cd dist-apt && sha256sum -c SHA256SUMS --ignore-missing)
+            gpgv --keyring apt/opencode-termux.gpg dist-apt/InRelease
+            gpgv --keyring apt/opencode-termux.gpg dist-apt/Release.gpg dist-apt/Release
+            python3 scripts/ci/write-flat-apt-release.py dist-apt
+          fi
 
       - name: Sign and upload index
         env:
@@ -38,13 +53,34 @@ jobs:
         run: |
           set -euo pipefail
           test -n "$APT_GPG_PRIVATE_KEY"
-          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json assets \
+          if [ "$REPAIR" != true ] && gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json assets \
             --jq '.assets[].name' | grep -qx InRelease; then
             echo 'Release is already signed; refusing to overwrite it' >&2
             exit 1
           fi
           printf '%s' "$APT_GPG_PRIVATE_KEY" |
             bash scripts/ci/sign-apt-index.sh dist-apt/Release apt/opencode-termux.gpg dist-apt
-          gh release upload "$RELEASE_TAG" \
-            dist-apt/InRelease dist-apt/Release.gpg apt/opencode-termux.gpg \
-            --repo "$GITHUB_REPOSITORY"
+          if [ "$REPAIR" = true ]; then
+            python3 - <<'PY'
+          from hashlib import sha256
+          from pathlib import Path
+
+          root = Path('dist-apt')
+          names = ('Packages', 'Packages.gz', 'Release', 'InRelease', 'Release.gpg')
+          for checksum_file in ('SHA256SUMS-apt', 'SHA256SUMS'):
+              path = root / checksum_file
+              previous = [line for line in path.read_text().splitlines()
+                          if line.split()[-1] not in names]
+              for name in names:
+                  previous.append(f'{sha256((root / name).read_bytes()).hexdigest()}  {name}')
+              path.write_text('\n'.join(previous) + '\n')
+          PY
+            gh release upload "$RELEASE_TAG" \
+              dist-apt/Packages dist-apt/Release dist-apt/InRelease dist-apt/Release.gpg \
+              dist-apt/SHA256SUMS-apt dist-apt/SHA256SUMS \
+              --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release upload "$RELEASE_TAG" \
+              dist-apt/InRelease dist-apt/Release.gpg apt/opencode-termux.gpg \
+              --repo "$GITHUB_REPOSITORY"
+          fi

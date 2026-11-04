@@ -222,28 +222,8 @@ jobs:
           bash scripts/ci/package-release-deb.sh "dist/$NAME" "$OPENCODE_VERSION" dist-apt
           python3 tools/gen-packages-index.py dist-apt/Packages.gz dist-apt
           gzip -dc dist-apt/Packages.gz | grep -q '^Package: opencode$'
-          python3 - <<'PY'
-          from datetime import datetime, timezone
-          from email.utils import format_datetime
-          from hashlib import sha256
-          from pathlib import Path
-
-          index = Path("dist-apt/Packages.gz")
-          data = index.read_bytes()
-          release = "\n".join((
-              "Origin: Spectra010s",
-              "Label: OpenCode Termux",
-              "Suite: stable",
-              "Codename: stable",
-              "Architectures: aarch64",
-              "Date: " + format_datetime(datetime.now(timezone.utc), usegmt=True),
-              "SHA256:",
-              f" {sha256(data).hexdigest()} {len(data)} Packages.gz",
-              "",
-          ))
-          Path("dist-apt/Release").write_text(release, encoding="utf-8")
-          PY
-          (cd dist-apt && sha256sum opencode_*.deb Packages.gz Release > SHA256SUMS-apt)
+          python3 scripts/ci/write-flat-apt-release.py dist-apt
+          (cd dist-apt && sha256sum opencode_*.deb Packages Packages.gz Release > SHA256SUMS-apt)
 
       - name: Upload unsigned runtime-test candidate
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
