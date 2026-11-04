@@ -1,11 +1,11 @@
 # OpenCode 2 native for Termux
 
-[OpenCode](https://opencode.ai) is an AI-powered terminal coding assistant. This project ships it as a native Android/aarch64 Bionic binary for [Termux](https://termux.dev): no PRoot, no glibc. It has been tested on one Android 14 phone; wider device testing is welcome.
+[OpenCode](https://opencode.ai) is an AI-powered terminal coding assistant. This project ships it as a native Android/aarch64 Bionic binary for [Termux](https://termux.dev): no PRoot, no glibc. Wider device testing is welcome.
 
 ## Requirements
 
 - Termux on an Android/aarch64 device running Android 9 (API 28) or newer.
-- About 300 MiB free for the installed binary, plus space for the download during installation.
+- About 700 MiB free during installation or upgrade. The installer temporarily holds the compressed download, an extracted binary, and a replacement copy before it switches binaries.
 - `curl` and `sha256sum` in Termux. No Node.js, npm, root, or PRoot is needed to run it.
 
 ## Install
@@ -42,7 +42,7 @@ rm -f ~/.local/bin/opencode
 
 ## Build from source
 
-Releases are built from pinned source in GitHub Actions, not uploaded from a maintainer's phone. The pinned OpenCode, Bun and OpenTUI versions live in [`tools/supply-chain-lock.json`](tools/supply-chain-lock.json) (`current` plus a hash per version); `tools/ocver.py` reads them so nothing else repeats a version literal. Follow the [native build guide](docs/native-v2-build.md) to reproduce a build or to use the separate on-device build path; the [transplant guide](docs/transplant.md) explains the Bionic runtime and native renderer.
+Releases are built from pinned source in GitHub Actions, not uploaded from a maintainer's phone. The pinned OpenCode, Bun and OpenTUI versions live in [`tools/supply-chain-lock.json`](tools/supply-chain-lock.json) (`current` plus a hash per version); `tools/ocver.py` supplies them to CI. The installer pins its release tag so a tagged copy continues to install the same version. Follow the [native build guide](docs/native-v2-build.md) to reproduce a build or to use the separate on-device build path; the [transplant guide](docs/transplant.md) explains the Bionic runtime and native renderer.
 
 ## Releases and provenance
 

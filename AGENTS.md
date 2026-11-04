@@ -3,14 +3,14 @@
 ## ACTIVE NATIVE V2 WORK (2026-10-31)
 
 - Release candidate: OpenCode `2.2.5` on Android/Bionic Bun `1.4.4` with OpenTUI `0.8.0` (Zig `0.16.0`). Pins live in `tools/supply-chain-lock.json`; `tools/ocver.py` is the only reader, and `current` drives CI, publishing and `install.sh`.
-- Not yet published: needs an on-device smoke test (`--version`, TUI, auth, prompt, clean exit). Publish only from a verified CI artifact; never upload the phone's local copy.
+- `2.2.5` release candidate builds and runs on-device (version, server, TUI); not yet published.
+- Android bionic tags heap pointers in the top byte; OpenTUI's `toSafeNumberPointer()` rejects them, so `tools/patch-opentui-ffi.py` must run before `Bun.build` (`bytecode:true` makes binary-level JS edits dead).
 - Build guide: `docs/native-v2-build.md`; transplant details: `docs/transplant.md`. Release builds run in GitHub Actions for reproducibility. On-device local builds are allowed; Termux already is Bionic so no NDK. Needs Termux `python3`, `npm`, `clang`, `make` (`zig` only to rebuild OpenTUI) and network.
 - History: native v2 `2.0.26`/`2.0.28` on Bun `1.4.0`/`1.4.2` were the previous user-facing line. The Bun 1.4.0 candidate from Actions run 38142306988 passed on-device TUI, API, session and real-prompt checks.
 - Keep third-party Actions pinned to immutable commit SHAs. Use v6 action lines when available; do not downgrade to v4.
 - Do not replace the manual repository fetch with `actions/checkout` until the malformed upstream `termux-packages` gitlink/submodule metadata is repaired.
 
-**Generated:** 2026-06-12  
-**Branch:** pure-android
+**Generated:** 2026-11-11 **Branch:** native-android
 
 ## OVERVIEW
 Termux-first OpenCode build/packaging workspace. Stable mainline since 27/28 is the native bionic line: a single zero-glibc Android ELF produced by the transplant revive pipeline (`tools/transplant/`, `make transplant`; see `docs/transplant.md`). The wrapper line is renamed `opencode-wrapper` and demoted to appendix maintenance (local build path `tools/produce-local.sh` + `scripts/*`); `opencode-wrapper-standalone` is the frozen single-version rollback package that can coexist with `opencode`. `opencode` and `opencode-wrapper` remain mutually exclusive. GitHub Actions workflows are diagnostic/handoff, not final runtime release.

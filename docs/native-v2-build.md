@@ -4,9 +4,9 @@ Target: OpenCode native Android/aarch64 Bionic, no proot and no glibc.
 
 ## Pinned inputs
 
-`tools/supply-chain-lock.json` is the single source of truth for the release
-path. The CI build, the transplant pipeline and the installer read the lock and
-repeat no version literal.
+`tools/supply-chain-lock.json` is the source of truth for CI build inputs.
+The build workflow reads its `current` version. The release installer pins its
+tag so a tagged copy cannot silently install a later release.
 
 | Key | Meaning |
 |---|---|
@@ -44,12 +44,12 @@ is the only supported host and base — upstream `package.json` declares
    missing required anchor fails the build, while guards upstream already fixed
    are skipped.
 4. Runs `scripts/ci/build-opencode-source.sh`, which compiles the CLI with
-   `BUN_SOURCE_TARGET_ELF` set to the pinned Android Bun and then runs
-   `tools/transplant/transplant.py all` to graft the graph and swap in the
-   bionic `libopentui.so`.
+   `BUN_SOURCE_TARGET_ELF` set to the pinned Android Bun, then swaps the
+   bionic `libopentui.so` into that compiled ELF. The 1.4.4 build does not
+   re-splice the already Android-targeted graph.
 5. Publishes through `.github/workflows/publish-native-android.yml` after
-   verifying the artifact. `install.sh` reads the lock on `native-android`, so it
-   downloads the asset name CI produced without a version bump in the installer.
+   verifying the artifact. Bump the tag in `install.sh` when preparing each
+   release, and keep it aligned with the lock's `current` version.
 
 The pipeline refuses to produce a product unless the embedded OpenTUI passes the
 FFI guard scan (`clamp=9`, `csel_vs>0`) and the swap reports `status: ok`.
@@ -75,10 +75,9 @@ The on-device path needs a prebuilt `artifacts/transplant/opentui-bionic/libopen
 for the swap. Without it the Makefile marks the report `tui: absent` — an
 explicit gap, never a silent skip.
 
-## Why `revive` still runs
+## Why the transplant tools remain
 
-For 2.2.x the CLI is compiled directly against the Android Bun ELF, so upstream
-`revive` reports `patch_hit=intentional-noop`: the graph is already bionic and
-nothing is re-grafted. It stays in `transplant.py all` as the compatibility gate
-for older/trailer-format graphs; the step that still does real work for every
-version is the `libopentui.so` swap.
+For 2.2.5, CI compiles directly against the Android Bun ELF and uses only
+`swap_tui.py` from the transplant tools. The older `transplant.py all` path
+remains for supported transplant builds; running it on this already compiled
+1.4.4 ELF produced a binary that failed on device.
