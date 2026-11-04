@@ -26,8 +26,9 @@ command -v clang >/dev/null 2>&1 || {
 	echo "Error: clang not found (pacman -S clang)" >&2
 	exit 1
 }
+# 64-bit ARM Android reports aarch64; other ABIs cannot load this shim.
 [[ "$(uname -m)" == "aarch64" ]] || {
-	echo "Error: aarch64 host required (shim is aarch64-only)" >&2
+	echo "Error: aarch64 host required (shim is 64-bit ARM only)" >&2
 	exit 1
 }
 

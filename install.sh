@@ -15,6 +15,8 @@ asset="opencode-$version-android-aarch64-source"
 archive="$asset.tar.gz"
 base_url="https://github.com/$repo/releases/download/$release_tag"
 
+# 64-bit ARM Android reports aarch64 here; x86, armv7 and 32-bit userspace
+# report something else and cannot run this binary.
 [ "$(uname -m)" = aarch64 ] || { echo 'This release requires Android aarch64.' >&2; exit 1; }
 android_api=$(getprop ro.build.version.sdk)
 case "$android_api" in
