@@ -3,6 +3,14 @@ set -eu
 
 repo=Spectra010s/opencode-termux
 release_tag=v2.2.5
+if [ "$#" -gt 0 ]; then
+  [ "$#" -eq 2 ] && [ "$1" = --version ] || { echo 'Usage: install.sh [--version X.Y.Z]' >&2; exit 2; }
+  case "$2" in
+    *[!0-9.]*|.*|*..*|*.) echo 'Invalid release version.' >&2; exit 2 ;;
+  esac
+  printf '%s\n' "$2" | awk -F. 'NF == 3 && $1 != "" && $2 != "" && $3 != "" { ok = 1 } END { exit !ok }' || { echo 'Invalid release version.' >&2; exit 2; }
+  release_tag=v$2
+fi
 version=${release_tag#v}
 
 destination="$HOME/.local/bin/opencode"

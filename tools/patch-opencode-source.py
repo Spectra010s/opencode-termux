@@ -75,26 +75,65 @@ def main() -> None:
         "      : undefined\n",
     )
 
-    upgrade = root / "packages/cli/src/commands/handlers/upgrade.ts"
+    # The CLI aliases `update` to `upgrade`; the TUI's /update calls Updater.apply.
+    # Keep the native installer in their shared service so both paths use it.
+    updater = root / "packages/cli/src/services/updater.ts"
     replace_once(
-        upgrade,
-        'import { stripVTControlCharacters } from "node:util"\n',
-        'import { stripVTControlCharacters } from "node:util"\n'
-        'import { Global } from "@opencode/util/global"\n'
-        'import path from "node:path"\n',
+        updater,
+        '  const curlBinary = yield* fs.realPath(curlPath).pipe(Effect.orElseSucceed(() => curlPath))\n',
+        '  const curlBinary = yield* fs.realPath(curlPath).pipe(Effect.orElseSucceed(() => curlPath))\n'
+        '  const termuxPath = path.join(global.home, ".local", "bin", "opencode")\n'
+        '  const termuxBinary = yield* fs.realPath(termuxPath).pipe(Effect.orElseSucceed(() => termuxPath))\n'
+        '  const nativeTermux = executable === termuxBinary\n',
     )
     replace_once(
-        upgrade,
-        '      intro("Upgrade")\n      const updater = yield* Updater.Service\n',
-        '      intro("Upgrade")\n'
-        '      const global = yield* Global.Service\n'
-        '      if (process.execPath === path.join(global.home, ".local", "bin", "opencode")) {\n'
-        '        return yield* Effect.fail(new Error(\n'
-        '          "This native Termux build must be upgraded with its verified release installer: " +\n'
-        '          "curl -fsSL https://github.com/Spectra010s/opencode-termux/raw/native-android/install.sh | sh"\n'
-        '        ))\n'
-        '      }\n'
-        '      const updater = yield* Updater.Service\n',
+        updater,
+        '    if (executable === curlBinary) return "curl"\n',
+        '    if (nativeTermux) return "curl"\n'
+        '    if (executable === curlBinary) return "curl"\n',
+    )
+    replace_once(
+        updater,
+        '  const latest = (selected?: Method) =>\n',
+        '  const termuxLatest = Effect.tryPromise({\n'
+        '    try: async (signal) => {\n'
+        '      const response = await fetch("https://api.github.com/repos/Spectra010s/opencode-termux/releases/latest", {\n'
+        '        signal: AbortSignal.any([signal, AbortSignal.timeout(10_000)]),\n'
+        '        headers: { Accept: "application/vnd.github+json" },\n'
+        '      })\n'
+        '      if (!response.ok) throw new Error(`GitHub releases returned HTTP ${response.status}`)\n'
+        '      const data: { tag_name?: string } = await response.json()\n'
+        '      const version = data.tag_name?.replace(/^v/, "")\n'
+        '      if (!version || !/^\\d+\\.\\d+\\.\\d+$/.test(version)) throw new Error("Latest release has no valid version")\n'
+        '      return version\n'
+        '    },\n'
+        '    catch: (cause) => new Error(`Could not check native Termux releases: ${errorDetail(cause)}`),\n'
+        '  })\n'
+        '  const latest = (selected?: Method) =>\n'
+        '    nativeTermux ? termuxLatest :\n',
+    )
+    replace_once(
+        updater,
+        '    const version = input.trim().replace(/^v/, "")\n    const packageName =\n',
+        '    const version = input.trim().replace(/^v/, "")\n'
+        '    if (nativeTermux) {\n'
+        '      if (!/^\\d+\\.\\d+\\.\\d+$/.test(version)) return yield* Effect.fail(new Error(`Unsupported native Termux release: ${input}`))\n'
+        '      yield* Effect.scoped(Effect.gen(function* () {\n'
+        '        yield* flock.acquire("cli-upgrade", undefined, { timeoutMs: Duration.toMillis("5 hours") })\n'
+        '        yield* fs.makeDirectory(global.cache, { recursive: true })\n'
+        '        const directory = yield* temporaryDirectory("update-")\n'
+        '        const installer = path.join(directory, "install.sh")\n'
+        '        yield* runUpgrade({\n'
+        '          method: "curl",\n'
+        '          command: ["curl", "-fsSL", "--retry", "3", "-o", installer, `https://raw.githubusercontent.com/Spectra010s/opencode-termux/v${version}/install.sh`],\n'
+        '          title: "Could not download the native Termux installer",\n'
+        '        })\n'
+        '        const result = yield* exec(["sh", installer, "--version", version], "4 hours")\n'
+        '        if (result.code !== 0) return yield* Effect.fail(new Error(resultDetail(result)))\n'
+        '      }))\n'
+        '      return\n'
+        '    }\n'
+        '    const packageName =\n',
     )
 
     uninstall = root / "packages/cli/src/commands/handlers/uninstall.ts"
