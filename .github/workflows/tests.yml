@@ -1,9 +1,9 @@
 # Shell unit tests (bats)
 #
 # Scope note: this workflow runs unit tests for the build/packaging shell
-# helpers only. Per .github/ACTIONS_DISABLED.md it does NOT build, wrap, or
-# publish final Termux runtime/packages — final packaging authority stays on
-# real Termux devices.
+# helpers only. Release builds and publishing happen in
+# build-native-android.yml and publish-native-android.yml; see
+# .github/ACTIONS_DISABLED.md.
 
 name: Unit Tests
 
