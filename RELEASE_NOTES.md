@@ -34,6 +34,6 @@ Desktop-only changes in these versions (persistent desktop terminals, artifacts,
 
 ## Verified build
 
-The candidate came from [Actions run 41831293488](https://github.com/Spectra010s/opencode-termux/actions/runs/41831293488), built and checked by CI, with `sha256 feca1e0d4076cf68f1dcb9d1819383cc22e1ae4def77b0adda7600cded87b639`. It was tested: `--version` passed, providers and models listed through the server, and the TUI started. Wider device testing is welcome; report problems at [issues](https://github.com/Spectra010s/opencode-termux/issues).
+The candidate came from [Actions run 41906034445](https://github.com/Spectra010s/opencode-termux/actions/runs/41906034445), built and checked by CI, with `sha256 24e9600d80752a31c052135a75677495fcb0ee694580216aa9dc37a89a75d657`. It was tested: `--version` passed, providers and models listed through the server, and the TUI started. Wider device testing is welcome; report problems at [issues](https://github.com/Spectra010s/opencode-termux/issues).
 
 Checksums and build inputs are attached to this release. The [source-build guide](https://github.com/Spectra010s/opencode-termux/blob/native-android/docs/guides/native-v2-build.md) shows how to reproduce the build.
