@@ -7,7 +7,7 @@
 - Android bionic tags heap pointers in the top byte; OpenTUI's `toSafeNumberPointer()` rejects them, so `tools/patch-opentui-ffi.py` must run before `Bun.build` (`bytecode:true` makes binary-level JS edits dead).
 - Build guide: `docs/guides/native-v2-build.md`; transplant details: `docs/reference/transplant.md`. Release builds run in GitHub Actions for reproducibility. On-device local builds are allowed; Termux already is Bionic so no NDK. Needs Termux `python3`, `npm`, `clang`, `make` (`zig` only to rebuild OpenTUI) and network.
 - History: native v2 `2.0.26`/`2.0.28` on Bun `1.4.0`/`1.4.2` were the previous user-facing line. The Bun 1.4.0 candidate from Actions run 38142306988 passed on-device TUI, API, session and real-prompt checks.
-- Pin current native workflow actions to immutable commit SHAs, with the version in a comment. Use v6 where available; leave the legacy armv7 workflow unchanged.
+- Pin current native workflow actions to immutable commit SHAs, with the version in a comment. Use v6 where available.
 
 **Generated:** 2026-11-11 **Branch:** native-android
 
@@ -44,7 +44,6 @@ opencode-termux/
 | Pinned versions | `tools/supply-chain-lock.json`, `tools/ocver.py` | single source of truth; `current` drives CI/publish/install |
 | Source-build candidate | `scripts/ci/build-opencode-source.sh`, `tools/patch-opencode-source.py` | lock-driven host Bun compile onto the pinned Android Bun base |
 | OpenTUI Android build | `tools/patch-opentui-android.py`, `patches/opentui/tlsdesc-shim.c`, `tools/transplant/build-libopentui.sh` | version-agnostic bionic hooks + guard verify |
-| CI armv7 handoff | `.github/workflows/prebuild-armv7.yml`, `scripts/ci/*` | attempt-based build evidence, not final Termux release path |
 
 ## CODE MAP
 | Symbol | Type | Location | Refs | Role |
@@ -64,14 +63,13 @@ opencode-termux/
 
 ## ANTI-PATTERNS (THIS PROJECT)
 - Do not use musl/proot as official Termux final runtime path (`README.md`, `docs/history/local-production.md`).
-- Do not treat CI armv7 handoff artifacts as final release binaries.
+- Do not add a 32-bit (armv7/arm32) target: 32-bit Bun builds fail and were removed.
 - Do not edit generated outputs (`artifacts/`, `packing/dpkg/work/`, `packing/pacman/pkg/`, versioned `.deb` / `.pkg.tar.xz`).
 - Do not run staging/packaging scripts against shared or wrong prefixes: several flows use destructive `rm -rf` cleanup.
 
 ## UNIQUE STYLES
 - Packaging and hook flows are manifest-driven (`packing/manifests/system-skills/*.json`) with idempotency + registry updates.
 - Plugin management is Termux-biased toward local `file://.../index.js` registration instead of bare plugin name mode.
-- CI armv7 jobs emit JSON status artifacts (`status/*.json`) and logs for diagnosis-first iteration.
 
 ## COMMANDS
 ```bash

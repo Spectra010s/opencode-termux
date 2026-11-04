@@ -4,7 +4,7 @@ GitHub Actions is **not** used for final Termux release packaging.
 
 ## Allowed in CI
 
-- armv7 prebuild handoff artifact generation (`.github/workflows/prebuild-armv7.yml`)
+- aarch64 native build, verification and release candidate packaging
 - metadata/checksum/template generation for downstream local packaging
 
 ## Not allowed in CI

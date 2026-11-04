@@ -17,18 +17,17 @@
 | Hook/system-skill model? | `reference/system-skills-hook-architecture.md` | policy defaults, lifecycle, registry/blocklist |
 | Plugin operations? | `guides/plugin-management.md`, `reference/plugin-packaging-design.md` | file-plugin mode + rollback model |
 | Maintainer operations? | `guides/make-maintainer.md` | Make surface, upload, cache |
-| CI armv7 handoff intent? | `ops/ci-prebuild-armv7.md` | attempt-based diagnostic workflow |
 | Incident context? | `history/incidents/` | RCA + follow-up actions |
 | Old wrapper/glibc build path? | `history/11-opencode-build-plan.md`, `history/13-opencode-runtime-build.md` | 中文 in part; superseded |
 
 ## CONVENTIONS
 - Keep docs aligned with current command surfaces (`Makefile`, `scripts/*`, `tools/*`).
 - If adding a workflow-critical document, update `docs/README.md` and the root `AGENTS.md` map.
-- Keep "mainline vs deferred" status explicit (especially armv7 CI/handoff topics).
+- Keep target scope explicit: aarch64 only.
 - Label Chinese documents in the index rather than translating them piecemeal.
 
 ## ANTI-PATTERNS (DOCS)
-- Do not describe CI armv7 handoff as final release path.
+- Do not propose 32-bit (armv7/arm32) targets; 32-bit Bun builds fail.
 - Do not present `history/` material as current instructions.
 - Do not duplicate long command sequences across many files; link to canonical runbook sections.
 - Do not leave numbering/index references stale after moving or adding docs.

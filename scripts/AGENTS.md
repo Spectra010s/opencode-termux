@@ -11,7 +11,6 @@
 | Debian packaging | `package/package_deb.sh` | validates staged tree, writes control/postinst, builds `.deb` |
 | Pacman packaging | `package/package_pacman.sh` | rewrites pkgver/pkgrel and runs `makepkg` |
 | System skill hooks | `hooks/run-system-skills.sh` | manifest load, compatibility gate, idempotency/state logging |
-| armv7 CI attempts | `ci/*.sh` | Bun/opencode compile attempts + JSON status outputs |
 
 ## CONVENTIONS
 - Keep strict shell mode (`set -euo pipefail`) and explicit command checks (`command -v ...`).

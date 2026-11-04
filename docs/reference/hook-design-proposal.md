@@ -15,7 +15,7 @@
 | wrapper (opencode-wrapper，附录) | package_deb.sh / package_pacman.sh | ✗（deb 连 postinst 都不生成） | ✗ | ✗ | ✗ | 已移除（pacman 显式 sed 删除，runner 引用 dropped files） |
 | standalone (冻结回滚包) | package_deb/pacman_standalone.sh | ✗ | ✗ | ✗ | ✗ | ✗ |
 
-遗留残留：`PKGBUILD.aarch64/armv7l` 模板仍带 system-skills post_upgrade，但 wrapper 打包器会 sed 删除全部 hook——模板与打包器语义不一致，属死代码。
+遗留残留：`PKGBUILD.aarch64` 模板仍带 system-skills post_upgrade，但 wrapper 打包器会 sed 删除全部 hook——模板与打包器语义不一致，属死代码。
 
 ## 二、归属原则（提案）
 
@@ -34,7 +34,7 @@
 1. **v1 native 的 stale-serve-kill 默认关**：默认 glob `2.0.[0-3]` 不匹配 1.18.x——但 v1 runtime 同样有 serve 语义（lib/opencode1/runtime/opencode），升级时同样可能被 stale daemon 卡 TUI。→ 是否把默认 glob 放开到两代？或 v1 族一律默认开？
 2. **v1-compressed 的 stale-serve-kill / quarantine**：本次只补了数据迁移 hook（deb 已有项对齐）；这两项 v1 native 有而 compressed 没有，是否需要对齐？
 3. **v2 native 是否彻底零 hook**（去掉 quarantine/gated serve-kill）？涉及升级安全网回退，建议保留，交裁决。
-4. **PKGBUILD.aarch64/armv7l 的 system-skills 残留**：建议下一次清死代码时随 wrapper 线一并删除（模板 hook 与打包器行为已脱节）。
+4. **PKGBUILD.aarch64 的 system-skills 残留**：建议下一次清死代码时随 wrapper 线一并删除（模板 hook 与打包器行为已脱节）。
 5. **hook 幂等性验证自动化**：本次特征化改造靠沙盒场景测试（S/A/B 三组）；建议后续加一个 `tools/hook-selfcheck.sh` 固化六族 hook 的沙盒回归。
 
 ## 四、本次已落地（v1 族，最小 diff）

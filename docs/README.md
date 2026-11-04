@@ -51,8 +51,6 @@ Some documents are written in Chinese (marked 中文 below); they are kept as-is
 
 - [`ops/execution-checklist.md`](ops/execution-checklist.md) — end-to-end install/test validation.
 - [`ops/skills-index.md`](ops/skills-index.md) — concise index of Termux skills and quick fixes.
-- [`ops/ci-prebuild-armv7.md`](ops/ci-prebuild-armv7.md) — armv7 prebuild handoff (diagnostic, not a release path).
-- [`ops/armv7-native-runner-setup.md`](ops/armv7-native-runner-setup.md) — self-hosted armv7 runner setup.
 
 ## History
 
@@ -78,10 +76,9 @@ Wrapper-era and older runtime documents. Useful for archaeology; superseded by t
 ## Ground rules
 
 - Do not use musl or PRoot for the release runtime path.
-- Do not use CI armv7 handoff artifacts as release binaries.
 - Build against the pinned Android Bun base, verify the FFI guard on the unstripped lib, then strip and swap; the legacy `transplant.py all` splice is dead on Bun 1.4.4.
 - Validate `file` output and `--version` from the built binary, then again from the shipped package.
-- armv7 and other portability work is deferred unless explicitly promoted.
+- aarch64 is the only supported target; 32-bit (armv7/arm32) is not supported and its build scripts have been removed.
 
 ## Maintaining these docs
 

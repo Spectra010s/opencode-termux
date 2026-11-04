@@ -1,14 +1,6 @@
 # Execution Checklist
 
-## Phase A (CI armv7 prebuild)
-
-> Status: handoff/deferred track. Not a substitute for local Termux final runtime validation.
-
-1. Run workflow `prebuild-armv7.yml`
-2. Download `prebuild-armv7-bundle`
-3. Verify `manifest.json` and `checksums.txt`
-
-## Phase B (local Termux final package)
+## Phase A (local Termux final package)
 
 > Status: mainline release path.
 
@@ -41,7 +33,7 @@
    - matrix run should emit hook log under `$PREFIX/var/log/opencode-hooks.log`
    - verify system skill manifests are visible in selfcheck output
 
-## Phase C (plugin lifecycle)
+## Phase B (plugin lifecycle)
 
 1. Install plugin package with apt or pacman
 2. Register plugin file entry and verify

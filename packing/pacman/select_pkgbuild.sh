@@ -1,5 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/bash
-# Select appropriate PKGBUILD based on architecture
+# Select the PKGBUILD for the current architecture.
+# aarch64 is the only supported target; anything else is refused.
 
 ARCH=$(uname -m)
 case "$ARCH" in
@@ -7,13 +8,8 @@ case "$ARCH" in
         echo "Using aarch64 PKGBUILD"
         cp PKGBUILD.aarch64 PKGBUILD
         ;;
-    "armv7l"|"arm")
-        echo "Using armv7l PKGBUILD"
-        cp PKGBUILD.armv7l PKGBUILD
-        ;;
     *)
-        echo "Unknown architecture: $ARCH"
-        echo "Using default aarch64 PKGBUILD"
-        cp PKGBUILD.aarch64 PKGBUILD
+        echo "Unsupported architecture: $ARCH (aarch64 only)" >&2
+        exit 1
         ;;
 esac

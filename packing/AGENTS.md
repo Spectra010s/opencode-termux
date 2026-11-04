@@ -19,7 +19,7 @@ packing/
 | Task | Location | Notes |
 |---|---|---|
 | Deb control metadata | `deb/DEBIAN/control` | placeholder-based template consumed during package build |
-| Pacman package behavior | `pacman/PKGBUILD`, `pacman/PKGBUILD.aarch64`, `pacman/PKGBUILD.armv7l` | staged-prefix install + post hooks |
+| Pacman package behavior | `pacman/PKGBUILD`, `pacman/PKGBUILD.aarch64` | staged-prefix install + post hooks |
 | Arch switch logic | `pacman/select_pkgbuild.sh` | selects concrete PKGBUILD by `uname -m` |
 | Hook manifests/policy | `manifests/system-skills/*.json` | events, compatibility gates, idempotency policy |
 
