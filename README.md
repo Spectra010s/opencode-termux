@@ -21,7 +21,7 @@ The installer downloads the [GitHub release](https://github.com/Spectra010s/open
 
 No apt/pacman package for this build has been published by this project.
 The release workflow is prepared to publish a `.deb` and a flat APT source with
-the next verified release; see [APT source instructions](docs/apt-repository.md)
+the next verified release; see [APT source instructions](docs/guides/apt-repository.md)
 after those assets appear on the release.
 
 ## Migrating from v1
@@ -45,7 +45,7 @@ rm -f ~/.local/bin/opencode
 
 ## Build from source
 
-Releases are built from pinned source in GitHub Actions, not uploaded from a maintainer's phone. The pinned OpenCode, Bun and OpenTUI versions live in [`tools/supply-chain-lock.json`](tools/supply-chain-lock.json) (`current` plus a hash per version); `tools/ocver.py` supplies them to CI. The installer pins its release tag so a tagged copy continues to install the same version. Follow the [native build guide](docs/native-v2-build.md) to reproduce a build or to use the separate on-device build path; the [transplant guide](docs/transplant.md) explains the Bionic runtime and native renderer.
+Releases are built from pinned source in GitHub Actions, not uploaded from a maintainer's phone. The pinned OpenCode, Bun and OpenTUI versions live in [`tools/supply-chain-lock.json`](tools/supply-chain-lock.json) (`current` plus a hash per version); `tools/ocver.py` supplies them to CI. The installer pins its release tag so a tagged copy continues to install the same version. Follow the [native build guide](docs/guides/native-v2-build.md) to reproduce a build or to use the separate on-device build path; the [transplant guide](docs/reference/transplant.md) explains the Bionic runtime and native renderer.
 
 ## Releases and provenance
 

@@ -7,13 +7,13 @@
 
 ## 1. UPX R-A 路线（v2 compressed 复活）
 
-- **现状（2026-10-01 更新）**: **T3' 判决已出**——v1 bin + stock upx -4 = VIABLE（33.7%），坐实崩溃=v2 内嵌自省结构（非工具/level/版本）；「外包」确认为误记，v1 配方=本机 `make transplant-upx --best`（Makefile:365）；四假说判决表已入 `docs/upx-v2-fix.md` §6；下一探针=strace `/proc/self/exe` 自省铁证
+- **现状（2026-10-01 更新）**: **T3' 判决已出**——v1 bin + stock upx -4 = VIABLE（33.7%），坐实崩溃=v2 内嵌自省结构（非工具/level/版本）；「外包」确认为误记，v1 配方=本机 `make transplant-upx --best`（Makefile:365）；四假说判决表已入 `docs/reference/upx-v2-fix.md` §6；下一探针=strace `/proc/self/exe` 自省铁证
 - **下一步**: ①跑 `/proc/self/exe` strace 铁证探针（§6）；②按自省结论选修法（剥自省/launcher 挂载/等上游）→ R-A/R-B1/R-B2 三路复测；③`v2-upx-revival.md` T1 可勾（取证已被 recall-pack+§6 承接）
 - **阻塞点**: strace 铁证未跑；修法选型待铁证
 
 ## 2. RC6 = B2 定版（musl 家族）
 
-- **现状**: RC5=B1（gnu continuation）收口中；B1/B2 分类学已入 `docs/native-line-evolution.md`；RFC discussions/29 开放（shipping strategy 投票）
+- **现状**: RC5=B1（gnu continuation）收口中；B1/B2 分类学已入 `docs/history/native-line-evolution.md`；RFC discussions/29 开放（shipping strategy 投票）
 - **下一步**: musl 家族命名（`opencode-compressed` 归属？）+ pkgrel 起始号待 RFC 票决 → 定版后跑 v2-upx-revival 批量
 - **阻塞点**: RFC 票未齐；RC5 队列未收口
 

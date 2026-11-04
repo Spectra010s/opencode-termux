@@ -62,7 +62,7 @@ FFI guard scan (`clamp=9`, `csel_vs>0`) and the swap reports `status: ok`.
 ## Path 2 — on-device (Termux, no NDK)
 
 Termux is already Bionic, so this path needs no NDK. Full guide:
-`docs/transplant.md`.
+`docs/reference/transplant.md`.
 
 ```sh
 pkg install python3 nodejs clang make zig   # zig only to rebuild OpenTUI

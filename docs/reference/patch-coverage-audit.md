@@ -5,7 +5,7 @@
 > 外加 wrapper / standalone / compressed 三个家族的互斥矩阵核对。
 > 方法：**字节级产物审计**（python3 ELF/机器码扫描 + ar/tar 成员枚举），不重跑构建。
 > 前置：TUI-COMMON-FIX 已根治公共层不应用补丁 + 陈旧槽位产物问题（见
-> `docs/tui-common-fix.md`，提交 `17b51a4` → `10afa28` → `faf1334`）。本文回答的是：
+> `docs/reference/tui-common-fix.md`，提交 `17b51a4` → `10afa28` → `faf1334`）。本文回答的是：
 > **其余补丁层有没有同类"批量版没吃到"的缺口。**
 
 ## TL;DR
@@ -168,8 +168,8 @@
 
 ## 六、交叉引用
 
-- `docs/tui-common-fix.md` — TUI 公共层缺陷的根因、修复与三提交链。
-- `docs/transplant.md` — 复活手术与 size-mode 机制。
-- `docs/dual-track-install.md` — 安装矩阵与家族语义。
+- `docs/reference/tui-common-fix.md` — TUI 公共层缺陷的根因、修复与三提交链。
+- `docs/reference/transplant.md` — 复活手术与 size-mode 机制。
+- `docs/guides/dual-track-install.md` — 安装矩阵与家族语义。
 - `tools/transplant/swap_tui.py` — 守卫扫描/拒收实现。
 - `scripts/package/package_deb_compressed.sh` — G2 修复真源。

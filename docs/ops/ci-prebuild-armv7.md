@@ -34,7 +34,7 @@ This keeps CI iterations fast and makes failures actionable.
 
 ## Native runner setup guide
 
-See `docs/armv7-native-runner-setup.md` for the self-hosted armv7 runner checklist (labels, dependencies, verification, and artifact inspection).
+See `docs/ops/armv7-native-runner-setup.md` for the self-hosted armv7 runner checklist (labels, dependencies, verification, and artifact inspection).
 
 ## Native armv7 fallback job
 

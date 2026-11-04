@@ -81,6 +81,6 @@ Note: blocklist source of truth is currently:
 
 - High-level policy: `README.md` (brief)
 - Canonical architecture: this file
-- Operational runbook: `docs/execution-checklist.md`
-- Plugin package model: `docs/plugin-packaging-design.md`
-- Day-to-day plugin operations: `docs/plugin-management.md`
+- Operational runbook: `docs/ops/execution-checklist.md`
+- Plugin package model: `docs/reference/plugin-packaging-design.md`
+- Day-to-day plugin operations: `docs/guides/plugin-management.md`

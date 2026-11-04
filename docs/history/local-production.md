@@ -41,4 +41,4 @@ Use local-plugin mode with online fetch + local build + snapshot rollback:
 ./tools/plugin-manager.sh rollback
 ```
 
-See also: `docs/plugin-management.md`.
+See also: `docs/guides/plugin-management.md`.

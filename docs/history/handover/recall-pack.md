@@ -33,7 +33,7 @@
 ### evidence 路径
 - `.omo/evidence/opencode-compressed-upx-report.txt`（v1 成功 report）
 - `.omo/evidence/rc3-release/ra-forensics.txt`（v1 packed vs rb1 对照 PH 表）
-- `docs/upx-v2-fix.md`（四假说技术文档，检验序列已排好）
+- `docs/reference/upx-v2-fix.md`（四假说技术文档，检验序列已排好）
 - `.omo/plans/v2-upx-revival.md`（三路线计划 R-A/R-B1/R-B2）
 
 ---
@@ -152,7 +152,7 @@ size: 57373256 | ELF type: 3 | entry: 0x40 | phnum: 64
 - 找 UPX stub 的 `p_info` / `l_info` 标记段（v1 有、rb1 可能缺失）
 - 看 `.bun` embed store 段在 UPX 后的 layout（v1 无 embed、v2 有大 embed）
 
-**假设指向**（详见 `docs/upx-v2-fix.md`）：
+**假设指向**（详见 `docs/reference/upx-v2-fix.md`）：
 - v1 A 线 bin = transplant 手术产物，PH 已被人改过
 - v2 B 线 bin = bun compile 直出，未被 transplant 摸过
 - 差异可能在 embed store 段的处理方式
@@ -164,7 +164,7 @@ size: 57373256 | ELF type: 3 | entry: 0x40 | phnum: 64
 | 角色 | 职责 | 产出 |
 |------|------|------|
 | **R-A（老代理）** | 主责 = 回忆拼图 | 本包 ③节 5 个精确提问的答案 → 配方级结论 |
-| **旧代理（当前会话）** | ELF-diff 辅助证据线 | `ra-forensics.txt` + `docs/upx-v2-fix.md` 四假说 |
+| **旧代理（当前会话）** | ELF-diff 辅助证据线 | `ra-forensics.txt` + `docs/reference/upx-v2-fix.md` 四假说 |
 
 **汇合点**：R-A 的答案 + 四假说检验序列 → 收敛到 1-2 个可执行配方 → `v2-upx-revival` T2 实弹验证。
 

@@ -94,7 +94,7 @@ shim 源码在 `tools/bun-pty-splice/shim.c`（canary 需设
 > linker 缺陷（JIT 归因系 bun.report ucontext 错位巧合）；TLSDESC shim graft
 > 后 v1/v2 双代 TUI 均已实证活化（oscar 真 PTY 全渲染 + session LLM 往返），
 > 上行「验证延后」随之关闭。设备侧「任意 Android/内核组合 → TUI 可达性 +
-> 修补清单」判定表见 `docs/tui-reachability.md`。
+> 修补清单」判定表见 `docs/reference/tui-reachability.md`。
 
 ## 过渡期命名注记（2026-10-02）
 

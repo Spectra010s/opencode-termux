@@ -112,9 +112,9 @@ error: Cannot read directory "/data/": AccessDenied
 ### 2.5 原生路线 vs wrapper 基线对比（2026-08-20 todo 13 复测）
 
 **被测产物**: `artifacts/transplant/1.3.13/opencode-native`（152,017,164B）
-**状态**: **C1 证伪** — 纯 Bun 解释器模式，不可作为 opencode 运行（详见 `docs/transplant.md`）。
+**状态**: **C1 证伪** — 纯 Bun 解释器模式，不可作为 opencode 运行（详见 `docs/reference/transplant.md`）。
 实测 `--version` 打印 Bun 版本 `1.3.14`（exit 0），`serve`/`run` 报 `CouldntReadCurrentDirectory`，
-无参运行打印 `bun <command>` 用法横幅。数据源: `docs/measurements/native-baseline-1.3.13.json`。
+无参运行打印 `bun <command>` 用法横幅。数据源: `docs/reference/measurements/native-baseline-1.3.13.json`。
 
 | 指标 | 现状(wrapper) | wrapper优化后 | 原生路线 |
 |---|---|---|---|
@@ -125,7 +125,7 @@ error: Cannot read directory "/data/": AccessDenied
 | 版本升级成本 | 下载即用 | 同左 | 移植配置表登记（规划中，见 §4.2） |
 
 > wrapper 基线数值来源: `$TMPDIR/opencode-bench-baseline-aug20.json`（smoke 2675ms / goal 3047ms / TUI RSS 364-571MB，bench 5 runs）。
-> 原生路线启动耗时仅反映纯 Bun 解释器 `--version` 表现，**不构成 §7.3 目标达成证据**；§7.3 中原生路线预期值（<0.15s / <0.3s / 250-350MB / 零 glibc）在 C1 证伪后需依赖 guysoft 自编译 Bun 路线（见 `docs/transplant.md`）验证。
+> 原生路线启动耗时仅反映纯 Bun 解释器 `--version` 表现，**不构成 §7.3 目标达成证据**；§7.3 中原生路线预期值（<0.15s / <0.3s / 250-350MB / 零 glibc）在 C1 证伪后需依赖 guysoft 自编译 Bun 路线（见 `docs/reference/transplant.md`）验证。
 
 
 ---

@@ -2,7 +2,7 @@
 
 > **状态**: 2026-09-30 提出，待实验裁决  
 > **背景**: v2 (2.0.x) B 线产物 stock UPX 压制双 SIGSEGV（gnu/musl 均崩），v1 (1.18.x) 时代 stock UPX 与外包两条线均成功  
-> **关联**: `docs/handover/recall-pack.md`（老代理回忆包）· `.omo/plans/v2-upx-revival.md`（三路线计划）· `.omo/evidence/opencode-compressed-upx-report.txt`（v1 成功实证）
+> **关联**: `docs/history/handover/recall-pack.md`（老代理回忆包）· `.omo/plans/v2-upx-revival.md`（三路线计划）· `.omo/evidence/opencode-compressed-upx-report.txt`（v1 成功实证）
 
 ---
 
@@ -192,7 +192,7 @@ UPX:   5.2.1 (推测，基于 packaging 时间线)
 
 **并行性**：①③④ 可并行（不同输入），② 依赖 ① 结果（若 ① 坐实则 ② 无需做）。
 
-**汇总路径**：`.omo/evidence/upx-v2-fix/t1-structure-diff.txt` 等，全部证据入 `docs/upx-v2-fix.md` 的「检验记录」章节。
+**汇总路径**：`.omo/evidence/upx-v2-fix/t1-structure-diff.txt` 等，全部证据入 `docs/reference/upx-v2-fix.md` 的「检验记录」章节。
 
 ---
 
@@ -209,7 +209,7 @@ UPX:   5.2.1 (推测，基于 packaging 时间线)
 
 ## 5. 与 recall-pack 的接口
 
-`docs/handover/recall-pack.md` ③节「精确提问」应回收以下问题（当前四假说的盲区）：
+`docs/history/handover/recall-pack.md` ③节「精确提问」应回收以下问题（当前四假说的盲区）：
 
 1. **压制执行的机器与系统**？（Termux 本机 or 实验机 or 其他）
 2. **完整命令行含全部 flags**？（`--best` vs `-4` vs 自定义？）

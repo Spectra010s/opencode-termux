@@ -40,7 +40,7 @@ error: no embedded Bun runtime (missing BUNWRAP1)
 | `zstd -19` 分发压缩 | 减少 60-70% | ✅ 仅用于打包分发 |
 | UPX | 减少 50-70% | ❌ 不可用 |
 
-详见：[12-bun-executable-structure.md](./12-bun-executable-structure.md)
+详见：[12-bun-executable-structure.md](12-bun-executable-structure.md)
 
 ---
 
@@ -62,7 +62,7 @@ error: no embedded Bun runtime (missing BUNWRAP1)
 - HTTP 监听 `0.0.0.0:4096` 已实现（局域网可访问）
 - 可通过 `OPENCODE_SERVER_PASSWORD` 启用 Basic Auth
 
-详见：[22-termux-services-opencode-web.md](./22-termux-services-opencode-web.md)
+详见：[22-termux-services-opencode-web.md](22-termux-services-opencode-web.md)
 
 ---
 

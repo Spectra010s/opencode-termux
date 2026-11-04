@@ -3,7 +3,7 @@
 > [!IMPORTANT] 状态横幅：C1 路线**已复活且全链产品化**（revive 手术实证 + TUI 可用 + stable 正式发布）
 >
 > **C1 路线 = 用官方预编译 android Bun（Bionic 直跑）作为底座，
-> 与 opencode 的 module graph 拼接/嫁接成单个可 execve 的 ELF**（docs/performance-optimization.md §1.2/§4.1）。
+> 与 opencode 的 module graph 拼接/嫁接成单个可 execve 的 ELF**（docs/reference/performance-optimization.md §1.2/§4.1）。
 >
 > **当前结论：可行，已产品化。** 管线一条龙
 > （extract→detect→convert(if 36)→patch→assemble→**revive**→verify），手术实现
@@ -220,7 +220,7 @@ tag → 比对 assets 是否含 aarch64-android.zip → 与 `target` 不同则�
 ## 5. FAQ
 
 **Q: 为何不用源码编译 Bun/WebKit/ICU？**
-A: 源码编译是 guysoft 路线（`docs/performance-optimization.md` §1.1、`docs/native-android-research.md`），
+A: 源码编译是 guysoft 路线（`docs/reference/performance-optimization.md` §1.1、`docs/history/native-android-research.md`），
 工作量级 = 修改 Bun 的 Zig/C++ 构建系统 + WebKit/JavaScriptCore 集成，且需逐个打 Bionic 兼容补丁
 （zig sigaction 152B→直调、.tbss 64B 对齐、seccomp 拦截缺失 syscall、JSC usePollingTraps 等，
 见 performance-optimization.md §4.3）。C1 曾被判证伪，但复活手术（§0.2）证明：
@@ -313,9 +313,9 @@ make transplant-upx VER=1.18.21
 
 ## 7. 引用（不复制报告全文）
 
-- 目标架构 / 自动化方案 / 补丁集 / 7 项验证清单：`docs/performance-optimization.md` §4
-- 优化措施总览与量化预期（启动 <0.3s、TUI RSS <350MB、零 glibc）：`docs/performance-optimization.md` §7
-- 零-glibc 研究历史（2026-05，早于 C1 复活，其"不可行"结论已被 §0.2 推翻）：`docs/native-android-research.md`
+- 目标架构 / 自动化方案 / 补丁集 / 7 项验证清单：`docs/reference/performance-optimization.md` §4
+- 优化措施总览与量化预期（启动 <0.3s、TUI RSS <350MB、零 glibc）：`docs/reference/performance-optimization.md` §7
+- 零-glibc 研究历史（2026-05，早于 C1 复活，其"不可行"结论已被 §0.2 推翻）：`docs/history/native-android-research.md`
 - 7 项验证脚本：`scripts/transplant-verify.sh`（agent-executable，`--runtime <opencode-native>`）
 - golden 回归：`tests/transplant/test_golden.py`（fixtures 由 `scripts/fetch-fixtures.sh` 预下载）
 
@@ -329,7 +329,7 @@ make transplant-upx VER=1.18.21
 在 Termux 上该 binding 是 x86_64 ELF，加载失败 → `watcher()` 返回 undefined →
 `if (!w) return {}` → **完全无文件监听**（连 polling 退化都没有）。
 
-方案 A（docs/performance-optimization.md §5.3）：独立原生 watcher 守护模块
+方案 A（docs/reference/performance-optimization.md §5.3）：独立原生 watcher 守护模块
 （`tools/watcher/watcher.c`，NDK inotify 递归监听）+ 插件侧 shim（`tools/watcher/shim.js`）。
 
 ### 挂钩点（外部信号通路，已实证）

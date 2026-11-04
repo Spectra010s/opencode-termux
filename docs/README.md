@@ -1,77 +1,90 @@
-# opencode-termux Docs (Canonical)
+# opencode-termux documentation
 
-This directory is the single source of truth for the current Termux packing/runtime workflow.
+The mainline is the **native bionic line**: one Android/aarch64 ELF, no PRoot, no glibc. Everything describing the wrapper or the older glibc runtime is kept for history, not for following along.
+
+Docs are grouped by what you need from them:
+
+| Folder | What it answers |
+|---|---|
+| [`guides/`](guides/) | How do I build, install, migrate, manage plugins? |
+| [`reference/`](reference/) | How does the pipeline actually work? Contracts and design notes. |
+| [`ops/`](ops/) | Runbooks: validation, CI handoff, maintainer operations. |
+| [`history/`](history/) | Superseded plans, research snapshots and RC-era records. Do not treat as current instructions. |
+
+Some documents are written in Chinese (marked 中文 below); they are kept as-is because their evidence trails are still referenced.
 
 ## Start here
 
-- `native-v2-build.md` — this repository's Android local-build status and GitHub Actions path
-- [apt-repository.md](apt-repository.md) — this repository's release-backed Termux APT source and migration from the curl installer
-- `execution-checklist.md` — install/test runbook (default Termux apt first, pacman path second)
-- `skills-index.md` — concise index for prompts + quick fixes
-- `13-opencode-runtime-build.md` — canonical runtime build path (official `opencode-linux-arm64` + bun-termux-loader)
-- `20-packaging-deb.md` / `21-packaging-pkg-tar-xz.md` — package layout and build outputs
-- `22-termux-services-opencode-web.md` — service behavior and web mode notes
-- `30-ci-local-build-matrix.md` — local/CI validation matrix
-- `incidents/2026-02-23-opencode-web-termux-so-avalanche.md` — `.so` snowball restart-storm RCA note
-- `local-production.md` — local final packaging policy and boundaries
-- `transplant.md` — native-android transplant pipeline (revived: dual-format revive + TUI + alpha channel)
-- `migration-v1-to-v2.md` — v1 → v2 升级/回退/包名/构建线迁移指南
-- `dual-track-install.md` — opencode provider selection (native mainline `opencode` vs appendix `opencode-wrapper`, full TUI)；包名时代分界（哪个 Push tag 的 `opencode` 资产属于哪个家族）→ [`dual-track-install.md#push-tag--包名家族分界`](./dual-track-install.md#push-tag--包名家族分界)
-- `plugin-management.md` — plugin install/update/rollback commands
-- `make-maintainer.md` — maintainer build/upload/cache operations (Make system doctrine, `tools/maintain.sh`, fleet push, cache cleanup)
-- `ci-prebuild-armv7.md` — Phase A armv7-only CI prebuild handoff scope
-- `ops-lessons-rc3.md` — RC3 发布实战经验（PKGREL 矩阵 / clean-version / chunk 漂移防线 / 网络链路 / v2 native shim open item）
-- `native-line-evolution.md` — native 线演进史（A 线拼接手术 → B 线真编译 → RC3~4 制度化；B/B1 方案对照）
-- `upx-v2-fix.md` — v2 UPX 压制修复：四假说（bin 结构/内嵌 store/crhandler/版本漂移）+ 检验序列 + v1 两成功线辨析（2026-09-30）
-- `compressed-line.md` — compressed 线契约：launcher-only（UPX memfd 下 $ORIGIN 失效）+ 陈旧 runtime 保守隔离规则
-- `handover/recall-pack.md` — 回忆拼图包（交接老代理，五节：现状/拼图/精确提问/检索法/对照基准）
-- `handover/release-runbook.md` — D1 发布运行手册（环境自检→PTY_VARIANT→构建→hygiene→PKGREL→上架→对账→双机→回写）
-- `handover/machine-env.md` — D2 机器与环境手册（fake-IP/glibc 桥接/termux-exec 陷阱/实验机/磁盘纪律/RootDir 双机）
-- `handover/community-state.md` — D3 社区与 issue 状态（开放案/已闭案底/RFC29/语言规则/回帖模板）
-- `handover/open-items.md` — D4 进行中与待决清单（UPX R-A/RC6 定版/原子对上传等 9 项，快照 2026-09-30）
-- `plugin-packaging-design.md` — package-manager-driven plugin model for apt/pacman
-- `OCTPLUGIN-PREBRANCH-RESEARCH.md` — single-file pre-split plugin research baseline
-- `system-skills-hook-architecture.md` — package-mode system skill + hook framework
-- `arch-reference-mapping.md` — reusable parts from Arch plugin packaging approach
-- `ci-prebuild-armv7.md` / `armv7-native-runner-setup.md` — deferred arm32/armv7 planning and debug paths
+- [`guides/native-v2-build.md`](guides/native-v2-build.md) — current Android build: pinned inputs, CI path, local build.
+- [`guides/apt-repository.md`](guides/apt-repository.md) — Termux APT source backed by releases, and migrating off the curl installer.
+- [`guides/dual-track-install.md`](guides/dual-track-install.md) — which `opencode` package you are installing (native mainline vs wrapper appendix).
+- [`guides/migration-v1-to-v2.md`](guides/migration-v1-to-v2.md) — 中文: v1 → v2 upgrade, rollback, package names, build lines.
+- [`ops/execution-checklist.md`](ops/execution-checklist.md) — install/test runbook (apt first, pacman second).
+- [`reference/transplant.md`](reference/transplant.md) — 中文: the native transplant/revive surgery the build depends on.
 
-## Classification
+## Guides
 
-- `mainline/` information in this docs tree reflects the currently maintained local Termux packaging workflow.
-- arm32 and broader armv7 portability implementation work is **deferred/non-mainline** unless explicitly promoted.
-- CI armv7 content should be treated as handoff/prebuild context, not final runtime release proof.
+- [`guides/native-v2-build.md`](guides/native-v2-build.md) — native v2 build pipeline: Bun base, OpenTUI swap, FFI guard checks.
+- [`guides/apt-repository.md`](guides/apt-repository.md) — release-backed Termux APT repository.
+- [`guides/dual-track-install.md`](guides/dual-track-install.md) — provider selection and the Push-tag/package-name boundary between families.
+- [`guides/migration-v1-to-v2.md`](guides/migration-v1-to-v2.md) — 中文: migration guide for users on v1.
+- [`guides/plugin-management.md`](guides/plugin-management.md) — plugin install, self-update, snapshot rollback.
+- [`guides/make-maintainer.md`](guides/make-maintainer.md) — Make surface: build, upload, cache and fleet-push operations.
 
-## Rewrite / maintenance notes
+## Reference
 
-- If implementation behavior and docs diverge, update docs first in this directory and then adjust root README summary.
-- Prefer replacing stale sections rather than appending contradictory notes.
+- [`reference/transplant.md`](reference/transplant.md) — 中文: revive/splice procedure, ELF hooks, TUI lib swap.
+- [`reference/compressed-line.md`](reference/compressed-line.md) — 中文: UPX/compressed launcher contract and stale-runtime isolation rules.
+- [`reference/tui-common-fix.md`](reference/tui-common-fix.md) — 中文: TUI crash analysis (pointer tags, FFI shim, renderer startup).
+- [`reference/tui-reachability.md`](reference/tui-reachability.md) — 中文: TUI reachability matrix for the rc6-b2 build.
+- [`reference/upx-v2-fix.md`](reference/upx-v2-fix.md) — 中文: UPX hypotheses and the verification sequence.
+- [`reference/system-skills-hook-architecture.md`](reference/system-skills-hook-architecture.md) — package-mode system skills and the hook framework.
+- [`reference/hook-design-proposal.md`](reference/hook-design-proposal.md) — 中文: install-time hook ownership and characterisation.
+- [`reference/plugin-packaging-design.md`](reference/plugin-packaging-design.md) — package-manager-driven plugin model.
+- [`reference/arch-reference-mapping.md`](reference/arch-reference-mapping.md) — reusable pieces from the Arch plugin packaging approach.
+- [`reference/patch-coverage-audit.md`](reference/patch-coverage-audit.md) — 中文: patch coverage across eight layers and thirteen versions.
+- [`reference/performance-optimization.md`](reference/performance-optimization.md) — 中文: performance roadmap.
+- [`reference/bundle-list.txt`](reference/bundle-list.txt) — Bun module bundle inventory.
+- [`reference/measurements/native-baseline-1.3.13.json`](reference/measurements/native-baseline-1.3.13.json) — recorded baseline measurements.
 
-## Repository map (current)
+## Operations
 
-- OpenCode Termux repo (canonical): `~/develop/opencode-termux`
-- Workspace root (multi-repo, not single source of truth): `~/develop`
-- Runtime wrapper tool repo: `~/develop/bun-termux` (or legacy `~/bun-termux-loader`, verify active toolchain before release)
-- Runtime config/plugins (user state): `~/.config/opencode/`
+- [`ops/execution-checklist.md`](ops/execution-checklist.md) — end-to-end install/test validation.
+- [`ops/skills-index.md`](ops/skills-index.md) — concise index of Termux skills and quick fixes.
+- [`ops/ci-prebuild-armv7.md`](ops/ci-prebuild-armv7.md) — armv7 prebuild handoff (diagnostic, not a release path).
+- [`ops/armv7-native-runner-setup.md`](ops/armv7-native-runner-setup.md) — self-hosted armv7 runner setup.
 
-## Guardrails (verified)
+## History
 
-- **Do not use musl** for the Termux runtime packaging path
-- **Do not use proot** as the official build path
-- Build runtime from official upstream Linux arm64 binary, then wrap for Android/Bionic
-- Validate final runtime with `file` + `--version` before staging/package
-- Validate versions again from staged/deb/pacman outputs (avoid stale version contamination)
+Wrapper-era and older runtime documents. Useful for archaeology; superseded by the native line.
 
-## Known pitfalls
+- [`history/00-scope-and-target.md`](history/00-scope-and-target.md), [`history/01-env-baseline-termux.md`](history/01-env-baseline-termux.md) — original scope and Termux baseline.
+- [`history/11-opencode-build-plan.md`](history/11-opencode-build-plan.md), [`history/12-bun-executable-structure.md`](history/12-bun-executable-structure.md), [`history/13-opencode-runtime-build.md`](history/13-opencode-runtime-build.md) — 中文 in part: the wrapper-era build path (glibc binary + loader).
+- [`history/20-packaging-deb.md`](history/20-packaging-deb.md), [`history/21-packaging-pkg-tar-xz.md`](history/21-packaging-pkg-tar-xz.md), [`history/22-termux-services-opencode-web.md`](history/22-termux-services-opencode-web.md) — 中文 in part: `.deb` / pacman layout and the `opencode web` service.
+- [`history/30-ci-local-build-matrix.md`](history/30-ci-local-build-matrix.md) — local/CI verification matrix of that era.
+- [`history/99-open-issues-and-upstream-sync.md`](history/99-open-issues-and-upstream-sync.md) — 中文: open issues and upstream sync snapshot.
+- [`history/local-production.md`](history/local-production.md) — local-only production blueprint.
+- [`history/comparison-runtime-lines.md`](history/comparison-runtime-lines.md) — 中文: three-line runtime comparison.
+- [`history/native-line-evolution.md`](history/native-line-evolution.md) — 中文: ELF splice → real bionic compile, RC3/RC4 institutionalisation.
+- [`history/native-android-research.md`](history/native-android-research.md) — native Android Bun research notes.
+- [`history/ops-lessons-rc3.md`](history/ops-lessons-rc3.md) — 中文: RC3 release lessons (PKGREL matrix, network, shim open item).
+- [`history/glibc-min-deps-test-report.md`](history/glibc-min-deps-test-report.md) — glibc dependency reduction test report.
+- [`history/OCTPLUGIN-PREBRANCH-RESEARCH.md`](history/OCTPLUGIN-PREBRANCH-RESEARCH.md) — single-file pre-split plugin research baseline.
+- [`history/upstream-notification-package-rename.md`](history/upstream-notification-package-rename.md) — package rename transition notice.
+- [`history/quick-build.sh`](history/quick-build.sh) — old convenience build script.
+- [`history/handover/`](history/handover/) — 中文: 2026-09-30 handover snapshot (machine env, release runbook, community state, open items, recall pack).
+- [`history/incidents/`](history/incidents/) — incident records, e.g. the `.so` restart-storm RCA.
 
-- Old generated `artifacts/staged`, `packing/dpkg/work`, `packing/pacman/src` can contain stale runtime versions
-- `sv status opencode-web` in Termux should use full service path (`$PREFIX/var/service/opencode-web`)
-- `opencode web` under runit may restart-loop and accumulate `.*-0000*.so` files if startup crashes
-- **statx seccomp crash**: Android's seccomp filter blocks `statx()` syscall → SIGSYS → SIGSEGV. The statx shim (`libstatx-shim.so`) is automatically compiled during staging and preloaded via launcher. Disable with `OPENCODE_DISABLE_STATX_SHIM=1`.
+## Ground rules
 
-## Install policy summary
+- Do not use musl or PRoot for the release runtime path.
+- Do not use CI armv7 handoff artifacts as release binaries.
+- Build against the pinned Android Bun base, verify the FFI guard on the unstripped lib, then strip and swap; the legacy `transplant.py all` splice is dead on Bun 1.4.4.
+- Validate `file` output and `--version` from the built binary, then again from the shipped package.
+- armv7 and other portability work is deferred unless explicitly promoted.
 
-- Default path: the Make system is the highest-priority entry (`make family=wrapper,native,compressed VER=<ver>`); individual tools are help-first.
-- The native mainline `opencode` package has zero glibc runtime dependencies (Android API >= 28).
-- The wrapper appendix `opencode-wrapper` package is self-contained (bash + ncurses only; no glibc/openssl-glibc packages needed).
-- Pacman path: Termux pacman environments use the same package families.
-- `glibc-runner` is optional fallback tooling (not a primary runtime dependency).
+## Maintaining these docs
+
+- When behaviour and docs diverge, fix the doc in the same change as the code.
+- Replace stale sections instead of appending contradictory notes.
+- If you move or add a workflow-critical document, update this index and the root `AGENTS.md` map.

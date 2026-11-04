@@ -1,6 +1,6 @@
 # native 线演进史 — 从 ELF 拼接手术到 bionic 真编译
 
-> 定位：串起 native 线三个阶段的架构叙事。操作手册见 `transplant.md`（A 线）、
+> 定位：串起 native 线三个阶段的架构叙事。操作手册见 `../reference/transplant.md`（A 线）、
 > 本仓 `scripts/build-bionic.sh`（B 线），实战教训见 `ops-lessons-rc3.md`。
 > 生成：2026-09-28（RC4 收口期）。
 
@@ -17,7 +17,7 @@ bun-termux-loader 包装，v1→v2 迁移全程未动、最稳定的线）完全
 
 ## 1. 阶段一：v1 时代 — transplant/revive 拼接手术
 
-`tools/transplant/` + `make transplant`（详见 `transplant.md`）：
+`tools/transplant/` + `make transplant`（详见 `../reference/transplant.md`）：
 
 - **android-bun 底座**（bionic 版 bun 1.4.0）+ 上游 JS bundle **拼接**进 ELF
 - **复活手术（revive）**：处理 `.bun` section 格式（opencode >=1.18 换过格式，task-28 适配）

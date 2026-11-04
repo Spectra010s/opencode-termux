@@ -47,7 +47,7 @@
 
 - **v1-compressed pacman 装 .INSTALL hook 静默不跑**：termux-pacman libalpm 事务临时目录
   落在 `/usr/tmp`（Android 只读），.INSTALL 执行报 `/usr/tmp/alpm_*/.INSTALL: No such file`
-  ——#17 家族 Bug B（上游问题表见 `docs/99-open-issues-and-upstream-sync.md`）。oscar 实测
+  ——#17 家族 Bug B（上游问题表见 `docs/history/99-open-issues-and-upstream-sync.md`）。oscar 实测
   `pacman -U` 时 post_install 报错同属此 scriptlet TMPDIR quirk。
 - **推论：pacman 线 hook 可靠性 = 待解**。在关键逻辑迁 pacman hook 文件（HookDir 真实路径）
   落地之前，本提案中所有 pacman 侧 .INSTALL hook（含 v1 native/v1 compressed 的 migrate、

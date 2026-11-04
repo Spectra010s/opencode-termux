@@ -106,7 +106,7 @@ opencode (v2 native B线) ←→ opencode-wrapper (glibc)
 ## 技术细节
 
 详见：
-- `transplant.md` — A 线移植管线
+- `../reference/transplant.md` — A 线移植管线
 - `dual-track-install.md` — 双轨安装说明
-- `13-opencode-runtime-build.md` — 运行时构建路径
-- `20-packaging-deb.md` / `21-packaging-pkg-tar-xz.md` — 打包布局
+- `../history/13-opencode-runtime-build.md` — 运行时构建路径
+- `../history/20-packaging-deb.md` / `../history/21-packaging-pkg-tar-xz.md` — 打包布局

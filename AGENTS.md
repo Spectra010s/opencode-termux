@@ -5,14 +5,14 @@
 - Release candidate: OpenCode `2.2.5` on Android/Bionic Bun `1.4.4` with OpenTUI `0.8.0` (Zig `0.16.0`). Pins live in `tools/supply-chain-lock.json`; `tools/ocver.py` is the only reader, and `current` drives CI, publishing and `install.sh`.
 - `2.2.5` release candidate builds and runs on-device (version, server, TUI); not yet published.
 - Android bionic tags heap pointers in the top byte; OpenTUI's `toSafeNumberPointer()` rejects them, so `tools/patch-opentui-ffi.py` must run before `Bun.build` (`bytecode:true` makes binary-level JS edits dead).
-- Build guide: `docs/native-v2-build.md`; transplant details: `docs/transplant.md`. Release builds run in GitHub Actions for reproducibility. On-device local builds are allowed; Termux already is Bionic so no NDK. Needs Termux `python3`, `npm`, `clang`, `make` (`zig` only to rebuild OpenTUI) and network.
+- Build guide: `docs/guides/native-v2-build.md`; transplant details: `docs/reference/transplant.md`. Release builds run in GitHub Actions for reproducibility. On-device local builds are allowed; Termux already is Bionic so no NDK. Needs Termux `python3`, `npm`, `clang`, `make` (`zig` only to rebuild OpenTUI) and network.
 - History: native v2 `2.0.26`/`2.0.28` on Bun `1.4.0`/`1.4.2` were the previous user-facing line. The Bun 1.4.0 candidate from Actions run 38142306988 passed on-device TUI, API, session and real-prompt checks.
 - Pin current native workflow actions to immutable commit SHAs, with the version in a comment. Use v6 where available; leave the legacy armv7 workflow unchanged.
 
 **Generated:** 2026-11-11 **Branch:** native-android
 
 ## OVERVIEW
-Termux-first OpenCode build/packaging workspace. Stable mainline since 27/28 is the native bionic line: a single zero-glibc Android ELF produced by the transplant revive pipeline (`tools/transplant/`, `make transplant`; see `docs/transplant.md`). The wrapper line is renamed `opencode-wrapper` and demoted to appendix maintenance (local build path `tools/produce-local.sh` + `scripts/*`); `opencode-wrapper-standalone` is the frozen single-version rollback package that can coexist with `opencode`. `opencode` and `opencode-wrapper` remain mutually exclusive. GitHub Actions workflows are diagnostic/handoff, not final runtime release.
+Termux-first OpenCode build/packaging workspace. Stable mainline since 27/28 is the native bionic line: a single zero-glibc Android ELF produced by the transplant revive pipeline (`tools/transplant/`, `make transplant`; see `docs/reference/transplant.md`). The wrapper line is renamed `opencode-wrapper` and demoted to appendix maintenance (local build path `tools/produce-local.sh` + `scripts/*`); `opencode-wrapper-standalone` is the frozen single-version rollback package that can coexist with `opencode`. `opencode` and `opencode-wrapper` remain mutually exclusive. GitHub Actions workflows are diagnostic/handoff, not final runtime release.
 
 ## STRUCTURE
 ```text
@@ -21,7 +21,7 @@ opencode-termux/
 ├── scripts/                    # staging, packaging, hook runners, CI helper scripts
 ├── tools/                      # operator-facing CLIs (make wrapper, plugin lifecycle, matrix)
 ├── packing/                  # package templates + manifests (mixed with generated outputs)
-├── docs/                       # canonical runbooks, architecture notes, incident records (e.g. docs/transplant.md)
+├── docs/                       # guides/ (how-to), reference/ (internals), ops/ (runbooks), history/ (superseded)
 ├── artifacts/                  # generated runtime/staging outputs (disposable)
 └── .github/workflows/          # CI handoff workflows
 ```
@@ -34,13 +34,13 @@ opencode-termux/
 | Stage install tree | `scripts/build.sh`, `scripts/common.sh` | writes staged prefix + build metadata |
 | Build DEB package (wrapper appendix) | `scripts/package/package_deb.sh`, `packing/deb/DEBIAN/control` | builds the `opencode-wrapper` deb; postinst hook calls system-skill runner |
 | Build pacman package (wrapper appendix) | `scripts/package/package_pacman.sh`, `packing/pacman/PKGBUILD*` | builds the `opencode-wrapper` pacman package; dynamic pkgver/pkgrel rewrite + makepkg flow |
-| Native provider packaging | `scripts/package/package_deb_native.sh`, `scripts/package/package_pacman_native.sh`, `packing/pacman/PKGBUILD.native` | `opencode-native` deb/pacman providers for the native bionic mainline (stable since 27/28; see docs/dual-track-install.md) |
+| Native provider packaging | `scripts/package/package_deb_native.sh`, `scripts/package/package_pacman_native.sh`, `packing/pacman/PKGBUILD.native` | `opencode-native` deb/pacman providers for the native bionic mainline (stable since 27/28; see docs/guides/dual-track-install.md) |
 | Release APT candidate | `scripts/ci/package-release-deb.sh`, `.github/workflows/build-native-android.yml` | packages the Android binary in CI; publish workflow reuses the verified candidate |
 | Standalone rollback packaging | `scripts/package/package_deb_standalone.sh`, `scripts/package/package_pacman_standalone.sh`, `packing/pacman/PKGBUILD.standalone` | `opencode-wrapper-standalone` frozen rollback package (coexists with `opencode`); stage via `STANDALONE=1 ./scripts/build.sh` |
 | System-skill hook behavior | `scripts/hooks/run-system-skills.sh`, `packing/manifests/system-skills/*.json` | strict/network flags default to safe mode |
-| Plugin lifecycle | `tools/plugin-manager.sh`, `tools/plugin-selfcheck.sh`, `docs/plugin-management.md` | local file plugin path + snapshot rollback model |
-| Upgrade/downgrade simulation | `tools/upgrade-matrix.sh`, `docs/execution-checklist.md` | machine2 lifecycle validation with cached deb artifacts |
-| Transplant 管线 | `tools/transplant/transplant.py` | 原生 android Bun 拼接 + ELF 复活手术（C1 已复活，见 `docs/transplant.md`） |
+| Plugin lifecycle | `tools/plugin-manager.sh`, `tools/plugin-selfcheck.sh`, `docs/guides/plugin-management.md` | local file plugin path + snapshot rollback model |
+| Upgrade/downgrade simulation | `tools/upgrade-matrix.sh`, `docs/ops/execution-checklist.md` | machine2 lifecycle validation with cached deb artifacts |
+| Transplant 管线 | `tools/transplant/transplant.py` | 原生 android Bun 拼接 + ELF 复活手术（C1 已复活，见 `docs/reference/transplant.md`） |
 | Pinned versions | `tools/supply-chain-lock.json`, `tools/ocver.py` | single source of truth; `current` drives CI/publish/install |
 | Source-build candidate | `scripts/ci/build-opencode-source.sh`, `tools/patch-opencode-source.py` | lock-driven host Bun compile onto the pinned Android Bun base |
 | OpenTUI Android build | `tools/patch-opentui-android.py`, `patches/opentui/tlsdesc-shim.c`, `tools/transplant/build-libopentui.sh` | version-agnostic bionic hooks + guard verify |
@@ -63,7 +63,7 @@ opencode-termux/
 - Packaging sources live under `packing/*` templates; versioned package files are generated artifacts.
 
 ## ANTI-PATTERNS (THIS PROJECT)
-- Do not use musl/proot as official Termux final runtime path (`README.md`, `docs/local-production.md`).
+- Do not use musl/proot as official Termux final runtime path (`README.md`, `docs/history/local-production.md`).
 - Do not treat CI armv7 handoff artifacts as final release binaries.
 - Do not edit generated outputs (`artifacts/`, `packing/dpkg/work/`, `packing/pacman/pkg/`, versioned `.deb` / `.pkg.tar.xz`).
 - Do not run staging/packaging scripts against shared or wrong prefixes: several flows use destructive `rm -rf` cleanup.

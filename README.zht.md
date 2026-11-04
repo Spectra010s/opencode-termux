@@ -103,7 +103,7 @@ make deb-native VER=2.0.0
 make pacman-native VER=2.0.0
 ```
 
-完整建置參考見 [docs/make-maintainer.md](./docs/make-maintainer.md)。
+完整建置參考見 [docs/guides/make-maintainer.md](./docs/guides/make-maintainer.md)。
 
 ## v1 與 v2（雙代）
 
@@ -118,10 +118,10 @@ pacman -S opencode1           # v1 主線
 
 ## 技術文件
 
-- [docs/transplant.md](./docs/transplant.md) -- 執行時移植管線
-- [docs/comparison-runtime-lines.md](./docs/comparison-runtime-lines.md) -- 執行時方案對比
-- [docs/dual-track-install.md](./docs/dual-track-install.md) -- 雙軌安裝指南
-- [docs/make-maintainer.md](./docs/make-maintainer.md) -- Makefile 參考
+- [docs/reference/transplant.md](./docs/reference/transplant.md) -- 執行時移植管線
+- [docs/history/comparison-runtime-lines.md](./docs/history/comparison-runtime-lines.md) -- 執行時方案對比
+- [docs/guides/dual-track-install.md](./docs/guides/dual-track-install.md) -- 雙軌安裝指南
+- [docs/guides/make-maintainer.md](./docs/guides/make-maintainer.md) -- Makefile 參考
 
 ## 💬 社群與討論
 

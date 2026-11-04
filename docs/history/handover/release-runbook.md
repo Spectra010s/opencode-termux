@@ -1,7 +1,7 @@
 # 发布运行手册（Release Runbook）
 
 > **适用**：opencode-termux 滚动 Push tag 发布全流程（v1 `opencode1*` 1.18.x + v2 `opencode*` 2.0.x 双代）。
-> **来源**：`docs/ops-lessons-rc3.md`（2026-09-28 起 RC3/RC4/RC5 实战）、`docs/native-line-evolution.md`（2026-09-28 RC4 收口期）、`docs/make-maintainer.md`、`.omo/plans/termux-asset-update.md`（v12.x changelog + TL;DR）、`Makefile` help 段。
+> **来源**：`docs/history/ops-lessons-rc3.md`（2026-09-28 起 RC3/RC4/RC5 实战）、`docs/history/native-line-evolution.md`（2026-09-28 RC4 收口期）、`docs/guides/make-maintainer.md`、`.omo/plans/termux-asset-update.md`（v12.x changelog + TL;DR）、`Makefile` help 段。
 > **事实基线**：RC5 = Push260930（2026-09-30，B1/native-gnu 定版，38 件，PKGREL=5）；RC4 = Push260928（2026-09-29，B2/native-musl 定版，96 资产存档）。
 > **旁注**：实验机 10.254.129.10:8022 于 2026-09-30 快照离线，第 9 节双机验证待设备上线。
 

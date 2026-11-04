@@ -10,7 +10,7 @@
 
 本机走 fake-IP 透明代理（TUN 模式），DNS 回答假 IP，真连接由代理侧接管。这决定了所有 GitHub 相关操作的可用性分层。
 
-### 1.1 白名单行为（`docs/ops-lessons-rc3.md:38-42`，2026-09-28 记录）
+### 1.1 白名单行为（`docs/history/ops-lessons-rc3.md:38-42`，2026-09-28 记录）
 
 - **透明代理白名单制**：`api.github.com` 常通；`uploads.github.com` / `github.com` 可能被掐。
   - 被掐症状：`curl` 返回 `code=000`，或 TLS ClientHello 阶段即被 reset。
@@ -18,7 +18,7 @@
   - 注意这条是「真 IP + SNI 组合被掐」的记录；下面 §1.3 的 `--resolve` 法之所以能用，是因为它同时配合了上传专用形态与代理放行窗口，属**另一条实证路径**，两者不矛盾。
 - 分层结论（实证）：`gh` 走 API（`api.github.com`）正常；资产**上传**（`uploads.github.com`）最脆；`git push` 见 §1.4。
 
-### 1.2 codeload 抖动与 git clone 双路（`docs/ops-lessons-rc3.md:64`，2026-09-29；`docs/native-line-evolution.md:67`）
+### 1.2 codeload 抖动与 git clone 双路（`docs/history/ops-lessons-rc3.md:64`，2026-09-29；`docs/history/native-line-evolution.md:67`）
 
 - **codeload.github.com 间歇阻断**（fake-IP 白名单外抖动）——tarball 拉取不可靠。
 - **双路取源**：`git clone --depth 1 --branch vX` 直连 `github.com` 主机稳定（fake-IP 白名单内）。
@@ -58,7 +58,7 @@
 
 ### 1.5 同环境已知副作用
 
-- `fetch.py` 的 `Content-Length` 可能被代理/分块剥掉 → fleet-push 进度条恒 0%（下载本身正常）。已修为控制器传入期望 size 兜底（`f5102fb`），`pct` 封顶 100（`docs/ops-lessons-rc3.md:41`）。
+- `fetch.py` 的 `Content-Length` 可能被代理/分块剥掉 → fleet-push 进度条恒 0%（下载本身正常）。已修为控制器传入期望 size 兜底（`f5102fb`），`pct` 封顶 100（`docs/history/ops-lessons-rc3.md:41`）。
 
 ---
 
@@ -68,7 +68,7 @@
 - **根因**: gpkg glibc 包 payload 路径自带 `data/data/com.termux/files/usr/glibc` 前缀，在 `RootDir=/data/data/com.termux/files` 下装入**双重嵌套路径**（前缀被二次拼接）。
 - **修复（已实施）**: 最小**文件级**符号链接桥接——343 个运行库文件逐个链接回预期位置。
 - **诊断教训**: wrapper 门失败**先测货架旧 wrapper** 是否同样失败，区分「包坏了」vs「机器环境坏了」。
-- 出处: `docs/ops-lessons-rc3.md:69`（§9，2026-09-29）。
+- 出处: `docs/history/ops-lessons-rc3.md:69`（§9，2026-09-29）。
 
 ## 3. termux-exec preload 与 glibc libc.so 脚本陷阱
 
@@ -76,7 +76,7 @@
 - **机制**: glibc 包里的 `libc.so` 是**文本 ld script**（linker script），不是 ELF；若整目录链到 `$PREFIX/lib`/`glibc/lib`，该脚本会被暴露给 **termux-exec preload**（exec 钩子按 ELF 解析一切被加载文件）。
 - **后果**: `bash` 启动即死 `invalid ELF header`（连 shell 都起不来，机器不可用）。
 - **铁律**: 只做文件级 symlink，**显式排除 `libc.so` 文本 ld script**（343 文件清单法，见 §2）。
-- 出处: `docs/ops-lessons-rc3.md:69`（同段记录）。
+- 出处: `docs/history/ops-lessons-rc3.md:69`（同段记录）。
 
 ---
 
@@ -84,7 +84,7 @@
 
 | 项 | 值 | 来源 |
 |---|---|---|
-| 地址/端口 | `10.254.129.10:8022` | `docs/handover/open-items.md:28` |
+| 地址/端口 | `10.254.129.10:8022` | `docs/history/handover/open-items.md:28` |
 | 登录 | `u0_a115` 免密（`ssh -p 8022 u0_a115@10.254.129.10`，BatchMode） | `open-items.md:28`；`.omo/evidence/rc3-release/t5-dual-verify.sh:8-9` |
 | 机型/系统 | oscar/OC105，Android 9，Termux **0.117.18** | `.omo/drafts/ISSUS@001-field-install-layout-anomaly.md:72` |
 | kernel | **3.18.140**（MoKee） | `task-17-rootdir.md`（`--version` 实证行）；`.omo/plans/v2-upx-revival.md:54` |
@@ -99,12 +99,12 @@
 
 **当前状态（交接快照，2026-09-30）**:
 
-- **离线**（2026-09-30 快照）——RC5 实验机验证条款挂起，阻塞点=设备离线（`docs/handover/open-items.md:26-31`）。
+- **离线**（2026-09-30 快照）——RC5 实验机验证条款挂起，阻塞点=设备离线（`docs/history/handover/open-items.md:26-31`）。
 - 设备上线后要跑：v2.0.x compressed 双机安装冒烟（v2-upx-revival T5）。
 
 **补充关联机**:
 
-- `192.168.1.22:8022` = 干净 Termux apt 环境测试机（glibc 最小依赖测试 host，`docs/glibc-min-deps-test-report.md:11`）——与本手册的 10.254.129.10 不是同一台。
+- `192.168.1.22:8022` = 干净 Termux apt 环境测试机（glibc 最小依赖测试 host，`docs/history/glibc-min-deps-test-report.md:11`）——与本手册的 10.254.129.10 不是同一台。
 
 ---
 
@@ -112,7 +112,7 @@
 
 ### 5.1 ENOSPC 病历
 
-- **2026-09-29（RC4 期）**: 13 版批量构建场景下立「ENOSPC 纪律」（`docs/ops-lessons-rc3.md:65`）:
+- **2026-09-29（RC4 期）**: 13 版批量构建场景下立「ENOSPC 纪律」（`docs/history/ops-lessons-rc3.md:65`）:
   1. 批量构建**前**先过 df 闸；
   2. `$TMPDIR/v2src` 源树 / 中间件（`*.pre-crhandler`）**用完即清**；
   3. `~/.bun/install/cache` 单项可达 **3.4G**——必须有上限 GC。
@@ -126,7 +126,7 @@
   2. `bun_cache_gc` —— bun cache 上限 `BUN_CACHE_CAP_KB=2097152`（2 GB），按 mtime 旧者先删（GNU `find -printf`；toybox `ls -t` 方向相反是已录坑）；
   3. `sweep_trees` —— `$TMPDIR/v2src/opencode-*` 源码树只留 `TREE_KEEP=2` 棵。
 - 仍不足 → 返回 1（闸不放行），日志落 `HYG_LOG`（默认 `${TMPDIR}/build-hygiene.log`）。
-- 计划状态: 函数库 `1a2c179` + LRU 修复 `0b3bfd3` 已落；build-hygiene 计划任务 2-6 未跑（`docs/handover/open-items.md:33-36`）。
+- 计划状态: 函数库 `1a2c179` + LRU 修复 `0b3bfd3` 已落；build-hygiene 计划任务 2-6 未跑（`docs/history/handover/open-items.md:33-36`）。
 
 ### 5.3 清理清单
 
@@ -134,14 +134,14 @@
 |---|---|---|
 | `make clean` | 删 `artifacts/staged`、`packing/dpkg/work`、`packing/pacman/{pkg,src}` | `Makefile:690` |
 | `make clean-artifacts VER=<v>` | 只删 `artifacts/transplant/<VER>` | `Makefile:625` |
-| `make clean-version VER=<v>` | **四清**（afb31db）：①`$TMPDIR/v2src/opencode-<ver>` 解包树 ②`artifacts/staged` + 三个 `packing/dpkg*/work` + `packing/pacman/{pkg,src}` ③`artifacts/transplant/<ver>` ④`artifacts/wrapper/<ver>` | `Makefile:634-686`、`docs/ops-lessons-rc3.md:26` |
+| `make clean-version VER=<v>` | **四清**（afb31db）：①`$TMPDIR/v2src/opencode-<ver>` 解包树 ②`artifacts/staged` + 三个 `packing/dpkg*/work` + `packing/pacman/{pkg,src}` ③`artifacts/transplant/<ver>` ④`artifacts/wrapper/<ver>` | `Makefile:634-686`、`docs/history/ops-lessons-rc3.md:26` |
 
 - **保留项**（四清不碰）: `artifacts/build/<ver>`（bin+sha+json）、`packing` 交付包、`$TMPDIR/v2src/*.tgz`、`artifacts/transplant/android-bun`、`artifacts/wrapper/glibc-standalone`。
 - **bin 守卫**: `artifacts/build/<ver>` 在但 `opencode-native-revived` 缺失 → 拒清退出（`Makefile:660`）。
 - **`NOT_CLEAN=1` 全链退出**（batch/batch-v2 循环尾、六 family 尾、子 make 透传）——两条硬规则:
-  1. **`release-upload NATIVE=1` 必须带 `NOT_CLEAN=1`**，否则上传源 `artifacts/transplant/<ver>` 会被自洁吞掉（`docs/ops-lessons-rc3.md:30`、`Makefile:709` 注释）；
-  2. wrapper-only 批次在 bin 已被磁盘清理删掉时，用 `NOT_CLEAN=1` 绕过守卫误伤（`docs/ops-lessons-rc3.md:70`）。
-- **Make 配方陷阱**: make 逐行配方 = 每行独立 shell，`exit 0` 拦不住后续行——守卫/执行/校验必须合并进单个 shell 调用（`docs/ops-lessons-rc3.md:32`）。
+  1. **`release-upload NATIVE=1` 必须带 `NOT_CLEAN=1`**，否则上传源 `artifacts/transplant/<ver>` 会被自洁吞掉（`docs/history/ops-lessons-rc3.md:30`、`Makefile:709` 注释）；
+  2. wrapper-only 批次在 bin 已被磁盘清理删掉时，用 `NOT_CLEAN=1` 绕过守卫误伤（`docs/history/ops-lessons-rc3.md:70`）。
+- **Make 配方陷阱**: make 逐行配方 = 每行独立 shell，`exit 0` 拦不住后续行——守卫/执行/校验必须合并进单个 shell 调用（`docs/history/ops-lessons-rc3.md:32`）。
 
 ---
 
@@ -159,22 +159,22 @@
 
 - **修复**（已实证）: 取消注释 `RootDir = /data/data/com.termux/files` + 补 DBPath 块 + mkdir 各目录 → `pacman -U OK`（需 `--overwrite 'usr/*'` 清掉 stale 无主 `opencode 1.17.9-1` 残留）→ `opencode --version` = v2.0.12，kernel 3.18.140（MoKee）。
 - **self-heal**: `install.sh` self-heal v2 已随 wiki repo commit `49968d0` 出货。
-- **未结**: issue #17 报「`pacman -U` 写 `/usr`」——本机（2.0.18-1）`pacman -U` 正常，需对方提供 `pacman -v`（RootDir/DBPath）判其配置差异（`docs/ops-lessons-rc3.md:50`）。
+- **未结**: issue #17 报「`pacman -U` 写 `/usr`」——本机（2.0.18-1）`pacman -U` 正常，需对方提供 `pacman -v`（RootDir/DBPath）判其配置差异（`docs/history/ops-lessons-rc3.md:50`）。
 
 ### 6.2 .INSTALL /usr/tmp alpm 限制（commit `89d8d4b`）
 
-- **commit**: `89d8d4b`（2026-09-30 01:39:55 +0800）`docs: RC4 field feedback — mirrorlist non-atomic db/pkg pair bug + .INSTALL /usr/tmp alpm limitation (mozzaru 2/2 repro)`——改 `docs/99-open-issues-and-upstream-sync.md` 一处 +9 行。
-- **`.INSTALL` 钩子静默不跑（mozzaru 2/2 复现）**（`docs/99-open-issues-and-upstream-sync.md:131`）:
+- **commit**: `89d8d4b`（2026-09-30 01:39:55 +0800）`docs: RC4 field feedback — mirrorlist non-atomic db/pkg pair bug + .INSTALL /usr/tmp alpm limitation (mozzaru 2/2 repro)`——改 `docs/history/99-open-issues-and-upstream-sync.md` 一处 +9 行。
+- **`.INSTALL` 钩子静默不跑（mozzaru 2/2 复现）**（`docs/history/99-open-issues-and-upstream-sync.md:131`）:
   - 现象: `post_install`/`pre_remove` 报 `/usr/tmp/alpm_*/.INSTALL: No such file`；`pacman -R` 后残留 `$PREFIX/bin/opencode`。
   - 根因: termux-pacman libalpm **事务临时目录落在 `/usr/tmp`**（Android 上只读/不可用）。
   - 处置: **RC5 包装轮**——关键逻辑迁 **pacman hook 文件**（HookDir 是真实路径，§6.1 表中 HookDir 行）；`.INSTALL` 降级 best-effort 并文档化。
   - 现场同源观察: 实验机上 `.INSTALL` `post_upgrade` 同样失败，非致命（2.0.12 不在 stale-serve-kill 区间）（`task-17-rootdir.md` Note 行）。
-- **同 commit 另一条**: mirrorlist db/pkg **非原子对**——Server 走 `releases/latest/download/`，latest 漂移（RC4 上线）期 db 与 pkg 来自不同轮 site-rebuild 自愈（`99-open-issues:130`）。处置: site-rebuild db+pkg 原子成对上传（用户侧自动化，待修）；货架已收敛（`7ec10039` 双向验证）。open item 见 `docs/handover/open-items.md:20-24`。
+- **同 commit 另一条**: mirrorlist db/pkg **非原子对**——Server 走 `releases/latest/download/`，latest 漂移（RC4 上线）期 db 与 pkg 来自不同轮 site-rebuild 自愈（`99-open-issues:130`）。处置: site-rebuild db+pkg 原子成对上传（用户侧自动化，待修）；货架已收敛（`7ec10039` 双向验证）。open item 见 `docs/history/handover/open-items.md:20-24`。
 
 ---
 
 ## 附：本手册的维护规则
 
 1. 新增条目必须带**当日 evidence 或 commit 引用**（`handover-docs` 计划 D2 验收条款，`.omo/plans/handover-docs.md:35`）。
-2. 事实快照类内容（机器在线状态、实验机 kernel）以 `docs/handover/open-items.md` 的快照日期为准；冲突时以新快照覆盖并在条目里写明日期。
+2. 事实快照类内容（机器在线状态、实验机 kernel）以 `docs/history/handover/open-items.md` 的快照日期为准；冲突时以新快照覆盖并在条目里写明日期。
 3. 网络章节（§1）各路径的可用性会随代理策略漂移——每次断流事故后按 §1.1 三症状归类，再决定是否新增回退法。

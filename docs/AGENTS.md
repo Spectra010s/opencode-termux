@@ -1,35 +1,40 @@
 # DOCS KNOWLEDGE BASE
 
 ## OVERVIEW
-`docs/` is the operational runbook corpus: build path, packaging policy, CI handoff, plugin/system-skill architecture, and incidents.
+`docs/` is organised by role, not by lifecycle number: `guides/` (how to), `reference/` (how it works), `ops/` (runbooks), `history/` (superseded material). The wrapper-era numbered series lives in `history/`.
 
 ## NAVIGATION ANCHORS
-- Start at `README.md` (canonical "Start here" + classification map).
-- Use numbered flow for lifecycle context: `00`/`01` (scope+env) → `11`/`12`/`13` (build internals) → `20`/`21`/`22` (packing/service) → `30` (verification matrix) → `99`/`incidents` (failures).
+- Start at `README.md` — it is the index and the language map (several documents are Chinese).
+- Mainline work is the native bionic line; anything under `history/` describes what came before it.
 
 ## WHERE TO LOOK
 | Question | Document | Notes |
 |---|---|---|
-| Mainline release path? | `execution-checklist.md`, `local-production.md` | confirms local Termux path is authoritative |
-| Runtime build details? | `11-opencode-build-plan.md`, `13-opencode-runtime-build.md` | source/wrapper/staging flow |
-| DEB vs pacman packaging? | `20-packaging-deb.md`, `21-packaging-pkg-tar-xz.md` | package layout and verification |
-| Hook/system-skill model? | `system-skills-hook-architecture.md` | policy defaults, lifecycle, registry/blocklist |
-| Plugin operations? | `plugin-management.md`, `plugin-packaging-design.md` | file-plugin mode + rollback model |
-| CI armv7 handoff intent? | `ci-prebuild-armv7.md` | attempt-based diagnostic workflow |
-| Incident context? | `incidents/*` | RCA + follow-up actions |
+| How do I build the Android binary? | `guides/native-v2-build.md` | pinned inputs, CI path, local build |
+| How is the build physically produced? | `reference/transplant.md` | 中文: revive/splice + TUI lib swap |
+| Which package am I installing? | `guides/dual-track-install.md` | native mainline vs wrapper appendix |
+| Validation runbook? | `ops/execution-checklist.md` | install/test, apt then pacman |
+| Hook/system-skill model? | `reference/system-skills-hook-architecture.md` | policy defaults, lifecycle, registry/blocklist |
+| Plugin operations? | `guides/plugin-management.md`, `reference/plugin-packaging-design.md` | file-plugin mode + rollback model |
+| Maintainer operations? | `guides/make-maintainer.md` | Make surface, upload, cache |
+| CI armv7 handoff intent? | `ops/ci-prebuild-armv7.md` | attempt-based diagnostic workflow |
+| Incident context? | `history/incidents/` | RCA + follow-up actions |
+| Old wrapper/glibc build path? | `history/11-opencode-build-plan.md`, `history/13-opencode-runtime-build.md` | 中文 in part; superseded |
 
 ## CONVENTIONS
 - Keep docs aligned with current command surfaces (`Makefile`, `scripts/*`, `tools/*`).
-- If adding a workflow-critical document, update `docs/README.md` classification pointers.
+- If adding a workflow-critical document, update `docs/README.md` and the root `AGENTS.md` map.
 - Keep "mainline vs deferred" status explicit (especially armv7 CI/handoff topics).
+- Label Chinese documents in the index rather than translating them piecemeal.
 
 ## ANTI-PATTERNS (DOCS)
 - Do not describe CI armv7 handoff as final release path.
+- Do not present `history/` material as current instructions.
 - Do not duplicate long command sequences across many files; link to canonical runbook sections.
 - Do not leave numbering/index references stale after moving or adding docs.
 
 ## QUICK CHECK
 ```bash
 # verify docs entrypoints still resolve
-ls docs/README.md docs/execution-checklist.md docs/local-production.md
+ls docs/README.md docs/guides/native-v2-build.md docs/ops/execution-checklist.md docs/reference/transplant.md
 ```

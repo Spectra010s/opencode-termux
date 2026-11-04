@@ -241,9 +241,9 @@ ls -lh $TMPDIR/bun-termux-cache/bunfs-libs/
 
 ## 相关文档
 
-- [11-opencode-build-plan.md](./11-opencode-build-plan.md) - 构建计划
-- [12-bun-executable-structure.md](./12-bun-executable-structure.md) - Bun二进制结构
-- [99-open-issues-and-upstream-sync.md](./99-open-issues-and-upstream-sync.md) - 上游同步
+- [11-opencode-build-plan.md](11-opencode-build-plan.md) - 构建计划
+- [12-bun-executable-structure.md](12-bun-executable-structure.md) - Bun二进制结构
+- [99-open-issues-and-upstream-sync.md](99-open-issues-and-upstream-sync.md) - 上游同步
 
 ## 参考
 
