@@ -68,7 +68,7 @@ OPENCODE_BUN_VERSION="$BUN_VERSION" python3 tools/patch-opencode-source.py "$src
 
 cd "$src"
 "$host_bun" install --frozen-lockfile --ignore-scripts --os=linux --cpu='*'
-# bionic tags heap pointers in the top byte; OpenTUI 0.8.0's FFI shim treats
+# bionic tags heap pointers in the top byte; OpenTUI's FFI shim treats
 # them as "Pointer exceeds safe integer range" and the TUI refuses to start.
 # Patch the installed shim before Bun builds, because build.ts sets
 # bytecode:true -- editing the JS inside the compiled ELF afterwards does

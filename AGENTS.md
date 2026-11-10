@@ -2,8 +2,8 @@
 
 ## ACTIVE NATIVE V2 WORK (2026-10-31)
 
-- Release candidate: OpenCode `2.2.5` on Android/Bionic Bun `1.4.4` with OpenTUI `0.8.0` (Zig `0.16.0`). Pins live in `tools/supply-chain-lock.json`; `tools/ocver.py` is the only reader, and `current` drives CI, publishing and `install.sh`.
-- `2.2.5` release candidate builds and runs on-device (version, server, TUI); not yet published.
+- Release candidate: OpenCode `2.2.6` on Android/Bionic Bun `1.4.4` with OpenTUI `0.8.1` (Zig `0.17.0`). Pins live in `tools/supply-chain-lock.json`; `tools/ocver.py` is the only reader, and `current` drives CI, publishing and `install.sh`.
+- `2.2.5` is published and runs on-device (version, server, TUI). `2.2.6` is the current candidate and is not yet released.
 - Publish only from a CI candidate artifact via `publish-native-android.yml` (it re-checks provenance and checksums); never upload a binary built on a device.
 - Android bionic tags heap pointers in the top byte; OpenTUI's `toSafeNumberPointer()` rejects them, so `tools/patch-opentui-ffi.py` must run before `Bun.build` (`bytecode:true` makes binary-level JS edits dead).
 - Build guide: `docs/guides/native-v2-build.md`; transplant details: `docs/reference/transplant.md`. Release builds run in GitHub Actions for reproducibility. On-device local builds are allowed; Termux already is Bionic so no NDK. Needs Termux `python3`, `npm`, `clang`, `make` (`zig` only to rebuild OpenTUI) and network.

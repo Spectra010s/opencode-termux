@@ -51,8 +51,10 @@ PATCH_DIR="${PATCH_DIR:-$REPO_ROOT/patches/opentui}"
 INSTALL_PATH="${INSTALL_PATH:-$REPO_ROOT/artifacts/transplant/opentui-bionic/libopentui.so}"
 GLIBC_LD="${GLIBC_LD:-/data/data/com.termux/files/usr/glibc/lib/ld-linux-aarch64.so.1}"
 GLIBC_LIB="${GLIBC_LIB:-/data/data/com.termux/files/usr/glibc/lib}"
-# Native profile toolchain (w7b recipe). ZIG 0.16.0 native aarch64 build.
-ZIG_BIN="${ZIG_BIN:-${TMPDIR:-/tmp}/zig-0.16.0/zig}"
+# Native profile toolchain (w7b recipe). Zig version comes from the lock: the
+# pinned OpenTUI needs a specific Zig, and 0.8.1 requires 0.17.0.
+OPENTUI_ZIG_VERSION="$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d["opentui"][d["opencode"][d["current"]]["opentui_version"]]["zig_version"])' "$REPO_ROOT/tools/supply-chain-lock.json")"
+ZIG_BIN="${ZIG_BIN:-${TMPDIR:-/tmp}/zig-${OPENTUI_ZIG_VERSION}/zig}"
 BIONIC_SYSROOT="${BIONIC_SYSROOT:-/data/data/com.termux/files/usr}"
 BIONIC_HDRFIX="${BIONIC_HDRFIX:-${TMPDIR:-/tmp}/w7b-hdrfix}"
 BIONIC_LIBM="${BIONIC_LIBM:-/system/lib64/libm.so}"
