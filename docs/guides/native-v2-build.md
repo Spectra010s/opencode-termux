@@ -19,15 +19,16 @@ tag so a tagged copy cannot silently install a later release.
 `tools/ocver.py` is the only reader. Use it instead of hardcoding:
 
 ```sh
-python3 tools/ocver.py current            # 2.2.6
-python3 tools/ocver.py tag                # v2.2.6
+python3 tools/ocver.py current            # 2.2.7
+python3 tools/ocver.py tag                # v2.2.7
 python3 tools/ocver.py field bun_version  # 1.4.4
-python3 tools/ocver.py asset source       # opencode-2.2.6-android-aarch64-source
+python3 tools/ocver.py asset bundle       # opencode-2.2.7-android-aarch64-bundle
 ```
 
-Current release record: OpenCode `2.2.6` (commit `dc2ffcf8…`) on Bun `1.4.4`,
-OpenTUI `0.8.1` (commit `9a09079c…`), Zig `0.17.0`, `ANDROID_API=28`. Bun `1.4.4`
-is the only supported host and base — upstream `package.json` declares
+Current release record: OpenCode `2.2.7` (commit `fedc6f20…`) on Bun `1.4.4`,
+OpenTUI `0.8.1` (commit `9a09079c…`), bun-pty `0.4.11` against
+`portable-pty 0.9`, Zig `0.17.0`, `ANDROID_API=28`. Bun `1.4.4` is the only
+supported host and base — upstream `package.json` declares
 `packageManager: bun@1.4.4`, and there is no 1.4.2 fallback.
 
 ## Path 1 — CI (release path)
@@ -43,21 +44,29 @@ is the only supported host and base — upstream `package.json` declares
    applies the bionic build hooks and the FFI guards. It is version-agnostic: a
    missing required anchor fails the build, while guards upstream already fixed
    are skipped.
-4. Runs `scripts/ci/build-opencode-source.sh`, which compiles the CLI with
-   `BUN_SOURCE_TARGET_ELF` set to the pinned Android Bun, then swaps the
-   bionic `libopentui.so` into that compiled ELF. The 1.4.4 build does not
-   re-splice the already Android-targeted graph.
-5. Publishes through `.github/workflows/publish-native-android.yml` after
-   verifying the artifact. Bump the tag in `install.sh` when preparing each
-   release, and keep it aligned with the lock's `current` version.
+4. Runs `scripts/ci/build-opencode-bundle.sh`. This is the default strategy
+   (`strategy: bundle`). It patches `build.ts` for a `linux-arm64-android`
+   bundle with install directory `@TERMUX_PREFIX@/lib/opencode`, cross-builds
+   `librust_pty_arm64.so` (`scripts/ci/build-rust-pty-android.sh`), installs the
+   `@parcel/watcher` Android module, and makes every `@opentui/core-linux-*`
+   slot byte-identical so Bun emits one hashed `libopentui` asset instead of
+   four.
+5. Stages the candidate with `scripts/ci/package-release-bundle.sh`: the
+   `.deb`, the `tar.gz`, `Packages`/`Release`, and one `SHA256SUMS`.
+6. Publishes through `.github/workflows/publish-native-android.yml` after a
+   device test. Pushing the version tag resolves the successful candidate run
+   for that commit, re-verifies its checksums, and publishes
+   [`.release/v<version>.md`](../../.release). See
+   [`apt-repository.md`](apt-repository.md) for the release-backed source.
 
-CI also stages a separate APT package candidate from the verified source
-binary. Test that package on a device before using the publish workflow; the
-publish job verifies and reuses the candidate `.deb` and index files. See
-[`apt-repository.md`](apt-repository.md) for the release-backed source.
+The `source` strategy keeps the previous compiled-ELF path
+(`scripts/ci/build-opencode-source.sh`) and runs only when explicitly selected.
 
-The pipeline refuses to produce a product unless the embedded OpenTUI passes the
-FFI guard scan (`clamp=9`, `csel_vs>0`) and the swap reports `status: ok`.
+The bundle build refuses to produce a product unless the embedded OpenTUI passes
+the FFI guard scan (`clamp=9`, `csel_vs>0`; the marker survives because the
+build patches source before `Bun.build`), the `@TERMUX_PREFIX@` placeholder is
+still unsubstituted, and the curated highlights from
+`.release/v<version>-highlights.md` landed in an emitted chunk.
 
 ## Path 2 — on-device (Termux, no NDK)
 
@@ -82,7 +91,8 @@ explicit gap, never a silent skip.
 
 ## Why the transplant tools remain
 
-For 2.2.x, CI compiles directly against the Android Bun ELF and uses only
-`swap_tui.py` from the transplant tools. The older `transplant.py all` path
-remains for supported transplant builds; running it on this already compiled
-1.4.4 ELF produced a binary that failed on device.
+2.2.7 ships a bundle, not a spliced ELF, so the release path no longer touches
+`swap_tui.py`. The `source` strategy and `make transplant` still compile
+against the Android Bun ELF for comparison builds; running `transplant.py all`
+on an already compiled 1.4.4 ELF produced a binary that failed on device, which
+is why the bundle is the default.

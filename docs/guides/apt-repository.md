@@ -25,23 +25,29 @@ downloaded public key against a pinned SHA-256 digest before installing it.
 The release also carries SHA-256 checksums for the `.deb` and index files.
 
 `pkg` is a wrapper around Termux's APT, so `pkg install opencode` uses the same
-package database. The APT package installs to `$PREFIX/bin/opencode`.
-The curl installer installs to `~/.local/bin/opencode` instead. Check which
-one your shell starts:
+package database. Since 2.2.7 both the APT package and the curl installer use
+`$PREFIX/bin/opencode` and `$PREFIX/lib/opencode`, so ownership is what
+separates them, not the path:
 
 ```sh
 command -v opencode
 dpkg -S "$PREFIX/bin/opencode"
 ```
 
-If the command path is `~/.local/bin/opencode` and you want to use the APT
-package, move that earlier manual installation out of the way:
+If that prints `opencode: $PREFIX/bin/opencode`, APT owns the install and
+`opencode upgrade` will refuse to touch it. If it fails with "no path found
+matching pattern", the current launcher came from the curl installer; remove
+it before switching:
 
 ```sh
-mv "$HOME/.local/bin/opencode" "$HOME/.local/bin/opencode.manual-backup"
+rm -f "$PREFIX/bin/opencode"
+rm -rf "$PREFIX/lib/opencode"
 hash -r
-command -v opencode
+pkg install opencode
 ```
+
+A 2.2.6-era install at `~/.local/bin/opencode` is a standalone binary with no
+`lib/opencode` directory; remove it too, or the `PATH` decides which one runs.
 
 For later releases, `apt update && apt install --only-upgrade opencode` uses
 this source. To remove it, delete the source file at

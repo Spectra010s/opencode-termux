@@ -1,6 +1,6 @@
 # opencode-termux documentation
 
-The mainline is the **native bionic line**: one Android/aarch64 ELF, no PRoot, no glibc. Everything describing the wrapper or the older glibc runtime is kept for history, not for following along.
+The mainline is the **native bionic line**: an OpenCode bundle running on Termux's `bun` with bionic natives, no PRoot, no glibc. Everything describing the wrapper or the older glibc runtime is kept for history, not for following along.
 
 Docs are grouped by what you need from them:
 
@@ -20,11 +20,12 @@ Some documents are written in Chinese (marked 中文 below); they are kept as-is
 - [`guides/dual-track-install.md`](guides/dual-track-install.md) — which `opencode` package you are installing (native mainline vs wrapper appendix).
 - [`guides/migration-v1-to-v2.md`](guides/migration-v1-to-v2.md) — 中文: v1 → v2 upgrade, rollback, package names, build lines.
 - [`ops/execution-checklist.md`](ops/execution-checklist.md) — install/test runbook (apt first, pacman second).
+- [`.release/`](../.release) — reviewed release notes and the TUI banner source, one pair per version.
 - [`reference/transplant.md`](reference/transplant.md) — 中文: the native transplant/revive surgery the build depends on.
 
 ## Guides
 
-- [`guides/native-v2-build.md`](guides/native-v2-build.md) — native v2 build pipeline: Bun base, OpenTUI swap, FFI guard checks.
+- [`guides/native-v2-build.md`](guides/native-v2-build.md) — native v2 build pipeline: bundle build on Termux's bun, bionic natives, FFI guard checks.
 - [`guides/apt-repository.md`](guides/apt-repository.md) — signed release-backed Termux APT repository.
 - [`guides/dual-track-install.md`](guides/dual-track-install.md) — provider selection and the Push-tag/package-name boundary between families.
 - [`guides/migration-v1-to-v2.md`](guides/migration-v1-to-v2.md) — 中文: migration guide for users on v1.

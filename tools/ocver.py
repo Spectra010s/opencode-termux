@@ -4,13 +4,13 @@
 The lock file is the single source of truth. Workflows, CI scripts and the
 installer must ask this helper instead of repeating a version literal.
 
-    ocver.py current                 -> 2.2.5
-    ocver.py tag [version]           -> v2.2.5
+    ocver.py current                 -> <version> from the lock
+    ocver.py tag [version]           -> v<version>
     ocver.py field <name> [version]  -> lock["opencode"][version][name]
-    ocver.py asset [strategy]        -> opencode-2.2.5-android-aarch64-source
+    ocver.py asset [strategy]        -> opencode-<version>-android-aarch64-<strategy>
 
 `version` defaults to the lock's "current" entry. `strategy` defaults to
-source; pass upstream-transplant to get the unsuffixed asset name.
+bundle.
 """
 import json
 import sys
