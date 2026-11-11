@@ -34,9 +34,9 @@ trap 'rm -rf -- "$work"' EXIT
 
 # ---- APT package -----------------------------------------------------------
 deb_tree="$work/deb"
-bash "$root/scripts/materialize-bundle.sh" "$TERMUX_PREFIX" "$staged" "$deb_tree/data$TERMUX_PREFIX" "$version"
+bash "$root/scripts/materialize-bundle.sh" "$TERMUX_PREFIX" "$staged" "$deb_tree$TERMUX_PREFIX" "$version"
 mkdir -p "$deb_tree/DEBIAN"
-installed_kib=$(du -sk "$deb_tree/data$TERMUX_PREFIX" | awk '{print $1}')
+installed_kib=$(du -sk "$deb_tree$TERMUX_PREFIX" | awk '{print $1}')
 cat > "$deb_tree/DEBIAN/control" <<EOF
 Package: opencode
 Version: $version-1
@@ -61,13 +61,13 @@ test "$(dpkg-deb --field "$package" Version)" = "$version-1"
 dpkg-deb --field "$package" Depends | grep -q 'bun'
 rm -rf "$work/verify"
 dpkg-deb --extract "$package" "$work/verify"
-test -x "$work/verify/data$TERMUX_PREFIX/bin/opencode"
-test -f "$work/verify/data$TERMUX_PREFIX/lib/opencode/index.js"
-cmp -s "$staged/lib/index.js" "$work/verify/data$TERMUX_PREFIX/lib/opencode/index.js" && {
+test -x "$work/verify$TERMUX_PREFIX/bin/opencode"
+test -f "$work/verify$TERMUX_PREFIX/lib/opencode/index.js"
+cmp -s "$staged/lib/index.js" "$work/verify$TERMUX_PREFIX/lib/opencode/index.js" && {
   echo "install-path substitution did not run" >&2
   exit 1
 }
-diff -rq "$staged/lib" "$work/verify/data$TERMUX_PREFIX/lib/opencode" >/dev/null || true
+diff -rq "$staged/lib" "$work/verify$TERMUX_PREFIX/lib/opencode" >/dev/null || true
 echo "Created $package"
 
 # ---- curl installer tarball ------------------------------------------------
