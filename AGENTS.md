@@ -1,10 +1,11 @@
 # PROJECT KNOWLEDGE BASE
 
-## ACTIVE NATIVE V2 WORK (2026-10-31)
+## ACTIVE NATIVE V2 WORK (2026-11-11)
 
-- Release candidate: OpenCode `2.2.6` on Android/Bionic Bun `1.4.4` with OpenTUI `0.8.1` (Zig `0.17.0`). Pins live in `tools/supply-chain-lock.json`; `tools/ocver.py` is the only reader, and `current` drives CI, publishing and `install.sh`.
-- `2.2.5` is published and runs on-device (version, server, TUI). `2.2.6` is the current candidate and is not yet released.
-- Publish only from a CI candidate artifact via `publish-native-android.yml` (it re-checks provenance and checksums); never upload a binary built on a device.
+- Release candidate: OpenCode `2.2.7` on the Termux `bun` runtime with OpenTUI `0.8.1` (Zig `0.17.0`) and bun-pty `0.4.11`. Pins live in `tools/supply-chain-lock.json`; `tools/ocver.py` is the only reader, and `current` drives CI, publishing and `install.sh`.
+- `2.2.6` is published (single compiled ELF). `2.2.7` switches to a runtime bundle on branch `feat/2.2.7-bun-dep` and is not yet released.
+- The bundle is `$PREFIX/lib/opencode/` plus a `$PREFIX/bin/opencode` launcher that execs `bun`; `bun`, `libc++` and `ripgrep` are dependencies instead of embedded. Build with `scripts/ci/build-opencode-bundle.sh`, package with `scripts/ci/package-release-bundle.sh`.
+- Publish only from a CI candidate artifact: pushing the version tag makes `publish-native-android.yml` resolve the successful candidate run for that commit and re-verify its checksums. Never upload a binary built on a device.
 - Android bionic tags heap pointers in the top byte; OpenTUI's `toSafeNumberPointer()` rejects them, so `tools/patch-opentui-ffi.py` passes the tagged BigInt straight to Bun's FFI (masking the tag makes Scudo abort at `free()` with "Pointer tag … was truncated"). It must run before `Bun.build` (`bytecode:true` makes binary-level JS edits dead); CI greps the built ELF for the `BigInt.asUintN` marker.
 - Zig `0.17.0` needs every field in the `--libc` file (`cc_dir` is mandatory for linux/Android) and its `translate-c` also searches the host `/usr/include`, which bionic's `#include_next <limits.h>` then follows into glibc. `tools/patch-opentui-android.py` injects an empty `src/bionic-include-next/limits.h` to stop that inside the sysroot.
 - Build guide: `docs/guides/native-v2-build.md`; transplant details: `docs/reference/transplant.md`. Release builds run in GitHub Actions for reproducibility. On-device local builds are allowed; Termux already is Bionic so no NDK. Needs Termux `python3`, `npm`, `clang`, `make` (`zig` only to rebuild OpenTUI) and network.
@@ -32,6 +33,9 @@ opencode-termux/
 | Task | Location | Notes |
 |---|---|---|
 | Build orchestration | `Makefile`, `tools/make-opencode` | `make` is source of truth; wrapper maps CLI flags to make vars |
+| Runtime bundle (2.2.7+) | `scripts/ci/build-opencode-bundle.sh`, `tools/patch-opencode-bundle.py`, `tools/patch-opentui-loader.py` | lock-driven bundle + bionic natives; build.ts gets an `android` bundle target |
+| Bundle installer bits | `packing/launcher/opencode`, `scripts/materialize-bundle.sh`, `install.sh` | launcher template, `@TERMUX_PREFIX@` substitution, curl install path |
+| Release notes | `.release/v<version>.md`, `.release/v<version>-highlights.md` | body notes and the embedded TUI banner; publish reads them by lock version |
 | Prepare runtime artifact | `tools/produce-local.sh` | resolves version, wraps runtime, cleans stale generated dirs |
 | Stage install tree | `scripts/build.sh`, `scripts/common.sh` | writes staged prefix + build metadata |
 | Build DEB package (wrapper appendix) | `scripts/package/package_deb.sh`, `packing/deb/DEBIAN/control` | builds the `opencode-wrapper` deb; postinst hook calls system-skill runner |

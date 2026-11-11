@@ -1,16 +1,23 @@
 name: Publish tested native Android build
 
 on:
+  push:
+    tags: ["v*.*.*"]
   workflow_dispatch:
     inputs:
       source_run:
-        description: Successful native Android candidate run to release
-        required: true
+        description: Candidate run ID; empty uses the newest successful run for this commit
+        required: false
+        default: ""
         type: string
 
 permissions:
   actions: read
   contents: write
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   release:
@@ -18,58 +25,82 @@ jobs:
     timeout-minutes: 20
     env:
       GH_TOKEN: ${{ github.token }}
-      SOURCE_RUN: ${{ inputs.source_run }}
+      REQUESTED_RUN: ${{ inputs.source_run }}
     steps:
-      - name: Check out release workflow commit
+      - name: Check out release commit
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
-          fetch-depth: 20
+          fetch-depth: 0
 
       - name: Resolve pinned versions from lock
         run: |
           set -euo pipefail
           {
+            printf 'TARGET_SHA=%s\n' "$(git rev-parse HEAD)"
+            printf 'VERSION=%s\n' "$(python3 tools/ocver.py current)"
             printf 'RELEASE_TAG=%s\n' "$(python3 tools/ocver.py tag)"
-            printf 'ASSET=%s\n' "$(python3 tools/ocver.py asset source)"
           } >> "$GITHUB_ENV"
+
+      - name: Check the release contract
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_REF_TYPE}" = tag ]; then
+            test "$GITHUB_REF_NAME" = "$RELEASE_TAG" || {
+              echo "tag $GITHUB_REF_NAME does not match lock version $RELEASE_TAG" >&2
+              exit 1
+            }
+          fi
+          NOTES=".release/v$VERSION.md"
+          git ls-files --error-unmatch "$NOTES" >/dev/null || {
+            echo "missing release notes: $NOTES" >&2
+            exit 1
+          }
+          echo "NOTES=$NOTES" >> "$GITHUB_ENV"
+          echo "CANDIDATE=opencode-$VERSION-android-aarch64-candidate" >> "$GITHUB_ENV"
+
+      - name: Resolve the candidate run
+        run: |
+          set -euo pipefail
+          SOURCE_RUN="$REQUESTED_RUN"
+          if [ -z "$SOURCE_RUN" ]; then
+            SOURCE_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+              --workflow build-native-android.yml --commit "$TARGET_SHA" \
+              --limit 20 --json databaseId,conclusion \
+              --jq '[.[] | select(.conclusion == "success")][0].databaseId // ""')"
+          fi
+          case "$SOURCE_RUN" in
+            ''|*[!0-9]*) echo "no successful build for $TARGET_SHA; dispatch one first" >&2; exit 1 ;;
+          esac
+          echo "SOURCE_RUN=$SOURCE_RUN" >> "$GITHUB_ENV"
 
       - name: Confirm tested build provenance
         run: |
           set -euo pipefail
-          case "$SOURCE_RUN" in ''|*[!0-9]*) echo 'source_run must be a numeric Actions run ID' >&2; exit 1 ;; esac
           META="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN")"
           test "$(jq -r .conclusion <<<"$META")" = success
           test "$(jq -r .name <<<"$META")" = 'Build locked OpenCode v2 for native Android'
           test "$(jq -r .event <<<"$META")" = workflow_dispatch
-          SOURCE_SHA="$(jq -r .head_sha <<<"$META")"
-          test "${#SOURCE_SHA}" -eq 40
-          git merge-base --is-ancestor "$SOURCE_SHA" HEAD
-          git diff --quiet "$SOURCE_SHA" HEAD -- .github/workflows/build-native-android.yml scripts/ci tools patches
+          test "$(jq -r .head_sha <<<"$META")" = "$TARGET_SHA" || {
+            echo "candidate run $SOURCE_RUN was built from another commit" >&2
+            exit 1
+          }
 
-      - name: Download and verify the successful CI artifact
+      - name: Download and verify the candidate
         run: |
           set -euo pipefail
           mkdir dist
           gh run download "$SOURCE_RUN" --repo "$GITHUB_REPOSITORY" \
-            --name "$ASSET-candidate" --dir dist
+            --name "$CANDIDATE" --dir dist
           (cd dist && sha256sum -c SHA256SUMS)
-          test "$(awk -v name="$ASSET" '$2 == name && length($1) == 64 { count++ } END { print count+0 }' dist/SHA256SUMS)" -eq 1
-          file "dist/$ASSET" | grep -q 'ARM aarch64'
-
-      - name: Download and verify the APT candidate
-        run: |
-          set -euo pipefail
-          mkdir dist-apt
-          VERSION="$(python3 tools/ocver.py current)"
-          gh run download "$SOURCE_RUN" --repo "$GITHUB_REPOSITORY" \
-            --name "opencode-$VERSION-android-aarch64-apt-candidate" --dir dist-apt
-          (cd dist-apt && sha256sum -c SHA256SUMS-apt)
-          DEB="dist-apt/opencode_${VERSION}-1_aarch64.deb"
-          test -f "$DEB"
+          DEB="dist/opencode_${VERSION}-1_aarch64.deb"
           test "$(dpkg-deb --field "$DEB" Package)" = opencode
           test "$(dpkg-deb --field "$DEB" Version)" = "$VERSION-1"
-          gzip -dc dist-apt/Packages.gz | grep -q "^Version: $VERSION-1$"
-          cmp dist-apt/Packages <(gzip -dc dist-apt/Packages.gz)
+          dpkg-deb --field "$DEB" Depends | grep -q 'bun'
+          TARBALL="$(ls dist/*.tar.gz)"
+          test "$(printf '%s\n' "$TARBALL" | wc -l)" -eq 1
+          tar -tzf "$TARBALL" | grep -qx bin/opencode
+          tar -tzf "$TARBALL" | grep -qx lib/opencode/index.js
+          gzip -dc dist/Packages.gz | grep -qx "Version: $VERSION-1"
 
       - name: Sign the APT index
         env:
@@ -78,32 +109,18 @@ jobs:
           set -euo pipefail
           test -n "$APT_GPG_PRIVATE_KEY"
           printf '%s' "$APT_GPG_PRIVATE_KEY" |
-            bash scripts/ci/sign-apt-index.sh dist-apt/Release apt/opencode-termux.gpg dist-apt
+            bash scripts/ci/sign-apt-index.sh dist/Release apt/opencode-termux.gpg dist
+          (cd dist && sha256sum Release.gpg InRelease >> SHA256SUMS)
 
-      - name: Make bandwidth-saving archive
-        run: |
-          set -euo pipefail
-          tar -C dist -czf "dist/$ASSET.tar.gz" "$ASSET"
-          (cd dist && sha256sum "$ASSET.tar.gz" >> SHA256SUMS)
-
-      - name: Include APT candidate hashes in release checksums
-        run: |
-          set -euo pipefail
-          (cd dist-apt && sha256sum opencode_*.deb Packages Packages.gz Release InRelease Release.gpg) >> dist/SHA256SUMS
-
-      - name: Publish release from CI
+      - name: Publish the release
         run: |
           set -euo pipefail
           if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            echo "Release $RELEASE_TAG already exists; refusing to overwrite it" >&2
+            echo "release $RELEASE_TAG already exists; refusing to overwrite it" >&2
             exit 1
           fi
-          gh release create "$RELEASE_TAG" \
-            "dist/$ASSET.tar.gz" dist-apt/opencode_*.deb dist-apt/Packages dist-apt/Packages.gz \
-            dist-apt/Release dist-apt/InRelease dist-apt/Release.gpg \
-            apt/opencode-termux.gpg dist-apt/SHA256SUMS-apt dist/SHA256SUMS \
-            dist/supply-chain-lock.json dist/transplant-report.json \
+          gh release create "$RELEASE_TAG" dist/* apt/opencode-termux.gpg \
             --repo "$GITHUB_REPOSITORY" \
-            --target "$GITHUB_SHA" \
-            --title "OpenCode $(python3 tools/ocver.py current) native Termux" \
-            --notes-file RELEASE_NOTES.md
+            --target "$TARGET_SHA" \
+            --title "OpenCode $VERSION for Termux" \
+            --notes-file "$NOTES"

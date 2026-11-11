@@ -75,6 +75,35 @@ def main() -> None:
         "      : undefined\n",
     )
 
+    # Termux reports process.platform "android" for a bionic userspace that has
+    # inotify, but upstream only names linux here, so recursive watch silently
+    # loses its backend. The @parcel/watcher binary itself is a normal bionic
+    # arm64 module and is selected by OPENCODE_PARCEL_WATCHER_PATH, so only the
+    # backend name needs to cover android.
+    watcher = root / "packages/core/src/filesystem/watcher.ts"
+    replace_once(
+        watcher,
+        '  if (process.platform === "linux") return "inotify"\n',
+        '  if (process.platform === "linux" || process.platform === "android") return "inotify"\n',
+    )
+
+    # @ff-labs/fff-bun ships glibc (gnu) and musl native builds only; neither
+    # dlopens on bionic. Leave it off by default on Android so the file search
+    # falls back to ripgrep instead of failing at startup. Users can still opt
+    # in with OPENCODE_DISABLE_FFF=0.
+    server_process = root / "packages/cli/src/server-process.ts"
+    replace_once(
+        server_process,
+        "            fff:\n"
+        "              process.env.OPENCODE_DISABLE_FFF === undefined\n"
+        '                ? process.platform !== "win32"\n'
+        "                : !truthy(process.env.OPENCODE_DISABLE_FFF),\n",
+        "            fff:\n"
+        "              process.env.OPENCODE_DISABLE_FFF === undefined\n"
+        '                ? process.platform !== "win32" && process.platform !== "android"\n'
+        "                : !truthy(process.env.OPENCODE_DISABLE_FFF),\n",
+    )
+
     # The CLI aliases `update` to `upgrade`; the TUI's /update calls Updater.apply.
     # Keep the native installer in their shared service so both paths use it.
     updater = root / "packages/cli/src/services/updater.ts"
@@ -90,7 +119,8 @@ def main() -> None:
         '  const curlBinary = yield* fs.realPath(curlPath).pipe(Effect.orElseSucceed(() => curlPath))\n'
         '  const termuxPath = path.join(global.home, ".local", "bin", "opencode")\n'
         '  const termuxBinary = yield* fs.realPath(termuxPath).pipe(Effect.orElseSucceed(() => termuxPath))\n'
-        '  const nativeTermux = executable === termuxBinary\n',
+        '  const prefixLauncher = process.env.PREFIX === undefined ? undefined : path.join(process.env.PREFIX, "bin", "opencode")\n'
+        '  const nativeTermux = executable === termuxBinary || (prefixLauncher !== undefined && executable === prefixLauncher)\n',
     )
     replace_once(
         updater,
@@ -215,30 +245,68 @@ def main() -> None:
         '          new Error("Could not detect the installation method. See https://github.com/Spectra010s/opencode-termux#install for manual installation."),\n',
     )
 
+    # The released 2.2.7 bundle runs under `bun`, so process.execPath is the
+    # interpreter, not the launcher. Method detection -- and uninstall, which
+    # would otherwise delete the bun binary -- must use the wrapper the
+    # launcher exports.
+    replace_once(
+        updater,
+        "  const executable = yield* fs.realPath(process.execPath).pipe(Effect.orElseSucceed(() => process.execPath))\n",
+        "  const launcher = process.env.OPENCODE_LAUNCHER\n"
+        "  const executable = yield* fs\n"
+        "    .realPath(launcher ?? process.execPath)\n"
+        "    .pipe(Effect.orElseSucceed(() => launcher ?? process.execPath))\n",
+    )
+
     uninstall = root / "packages/cli/src/commands/handlers/uninstall.ts"
+    text = uninstall.read_text(encoding="utf-8")
+    if "const launcherPath" not in text:
+        anchor = 'import { errorMessage } from "../../util/error"\n'
+        if anchor not in text:
+            raise SystemExit("patch-opencode-source: uninstall.ts imports changed upstream")
+        # Replace first, then add the helper: its own body must keep the raw
+        # process.execPath reference.
+        text = text.replace("process.execPath", "launcherPath()")
+        text = text.replace(
+            anchor,
+            anchor
+            + "\nconst launcherPath = () => process.env.OPENCODE_LAUNCHER ?? process.execPath\n",
+            1,
+        )
+        uninstall.write_text(text, encoding="utf-8")
     replace_once(
         uninstall,
         '    const method = yield* updater.method()\n',
-        '    const nativeBinary = process.execPath === path.join(global.home, ".local", "bin", "opencode")\n'
-        '    const method = yield* updater.method()\n',
+        '    const method = yield* updater.method()\n'
+        '    // A bundle install owns a launcher script, not the interpreter bun.\n'
+        '    const nativeBinary =\n'
+        '      launcherPath() === path.join(global.home, ".local", "bin", "opencode") || method === "curl"\n',
     )
     replace_once(
         uninstall,
-        '    if (method === "curl") log.info(`  Binary (manual removal): ${process.execPath}`)\n'
+        '    if (method === "curl") log.info(`  Binary (manual removal): ${launcherPath()}`)\n'
         '    if (!method) log.warn("Could not detect the installation method. Remove the installation manually after cleanup.")\n',
-        '    if (nativeBinary) log.info(`  Binary: ${process.execPath}`)\n'
-        '    else if (method === "curl") log.info(`  Binary (manual removal): ${process.execPath}`)\n'
+        '    if (nativeBinary) log.info(`  Binary: ${launcherPath()}`)\n'
+        '    else if (method === "curl") log.info(`  Binary (manual removal): ${launcherPath()}`)\n'
         '    if (!method && !nativeBinary) log.warn("Could not detect the installation method. Remove the installation manually after cleanup.")\n',
     )
     replace_once(
         uninstall,
         '    if (method === "curl") {\n      log.message("To finish removing the binary, run:")\n',
         '    if (nativeBinary) {\n'
-        '      yield* fs.remove(process.execPath).pipe(\n'
+        '      yield* fs.remove(launcherPath()).pipe(\n'
         '        Effect.catch((error) => Effect.sync(() => errors.push(`Binary: ${errorMessage(error)}`))),\n'
         '      )\n'
+        '      // The launcher script is not the installation: the module graph and\n'
+        '      // native libraries live in the sibling lib/opencode directory.\n'
+        '      const root = process.env.OPENCODE_ROOT\n'
+        '      if (root) {\n'
+        '        yield* fs.remove(root, { recursive: true, force: true }).pipe(\n'
+        '          Effect.catch((error) => Effect.sync(() => errors.push(`Bundle: ${errorMessage(error)}`))),\n'
+        '        )\n'
+        '      }\n'
         '    }\n'
-        '    if (method === "curl") {\n      log.message("To finish removing the binary, run:")\n',
+        '    if (!nativeBinary && method === "curl") {\n      log.message("To finish removing the binary, run:")\n',
     )
 
 

@@ -49,8 +49,18 @@ def resolve(argv: list[str]) -> str:
     if command == "asset":
         strategy = rest[0] if rest else "source"
         version = rest[1] if len(rest) > 1 else lock["current"]
+        if strategy in ("bundle", "bundle-el"):
+            return f"opencode-{version}-android-aarch64-bundle"
         suffix = "" if strategy == "upstream-transplant" else f"-{strategy}"
         return f"opencode-{version}-android-aarch64{suffix}"
+
+    if command == "bunpty":
+        if not rest:
+            raise SystemExit("ocver: bunpty needs a field (ref, commit, portable_pty)")
+        try:
+            return lock["bun_pty"][rest[0]]
+        except KeyError:
+            raise SystemExit(f"ocver: no bun-pty {rest[0]!r} in the lock")
 
     raise SystemExit(f"ocver: unknown command {command!r}")
 

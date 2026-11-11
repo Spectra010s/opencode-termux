@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "current": "2.2.6",
+  "current": "2.2.7",
   "opencode": {
     "2.0.26": {
       "commit": "9b4ec5714d481559990db0a816d5dec19541a814",
@@ -25,7 +25,18 @@
       "source_sha256": "4dec545d50bfbce8952360b50e6b9487f4c92d822bb5dab14ac698e8bb933e12",
       "bun_version": "1.4.4",
       "opentui_version": "0.8.1"
+    },
+    "2.2.7": {
+      "commit": "fedc6f208aa2bd54c1019227214568083f6380ad",
+      "source_sha256": "493e29d872f1cd9604ef3de609f0278e093c0f8066719e4166efc6544d16f34d",
+      "bun_version": "1.4.4",
+      "opentui_version": "0.8.1"
     }
+  },
+  "bun_pty": {
+    "ref": "v0.4.11",
+    "commit": "a582ae17cc6c41cb890b142c48669936541339c7",
+    "portable_pty": "0.9"
   },
   "android_bun": {
     "1.4.0": {

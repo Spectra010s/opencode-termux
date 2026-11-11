@@ -7,8 +7,9 @@ on:
         description: Build strategy for the unsigned candidate
         type: choice
         required: true
-        default: source
+        default: bundle
         options:
+          - bundle
           - source
 
 permissions:
@@ -79,13 +80,16 @@ jobs:
           assert ot["zig_version"] == os.environ["ZIG_VERSION"]
           # Source build and upstream transplant both consume the same pinned
           # Android Bun base, so one config covers both strategies.
-          assert bind["target"] == bun_version, (bind["target"], bun_version)
-          assert bind["archive_sha256"] == bun["archive_sha256"]
-          assert bind["elf_sha256"] == bun["elf_sha256"]
           head = subprocess.check_output(
               ["git", "-C", "work/opentui", "rev-parse", "HEAD"], text=True
           ).strip()
           assert head == ot["commit"], (head, ot["commit"])
+          # A bundle runs on Termux's bun package, so the pinned Android Bun
+          # base only matters to the strategies that compile an ELF.
+          if os.environ["BUILD_STRATEGY"] != "bundle":
+              assert bind["target"] == bun_version, (bind["target"], bun_version)
+              assert bind["archive_sha256"] == bun["archive_sha256"]
+              assert bind["elf_sha256"] == bun["elf_sha256"]
           if os.environ["BUILD_STRATEGY"] == "upstream-transplant":
               assert len(oc["cli_linux_arm64_sha256"]) == 64
           PY
@@ -107,6 +111,7 @@ jobs:
             NDK="$(find "$ANDROID_SDK_ROOT/ndk" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)"
           fi
           test -d "$NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot"
+          echo "NDK=$NDK" >> "$GITHUB_ENV"
           SYSROOT="$NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot"
           LIBDIR="$SYSROOT/usr/lib/aarch64-linux-android/$ANDROID_API"
           test -d "$LIBDIR"
@@ -169,6 +174,16 @@ jobs:
             exit 1
           fi
 
+      - name: Build Android runtime bundle
+        if: ${{ inputs.strategy == 'bundle' }}
+        run: |
+          set -euo pipefail
+          test -n "$NDK"
+          # bun-pty's rust-pty is cross-built for bionic; the NDK linker it
+          # needs is the same one the OpenTUI step resolved above.
+          rustup target add aarch64-linux-android
+          bash scripts/ci/build-opencode-bundle.sh
+
       - name: Download and verify locked OpenCode v2 package
         if: ${{ inputs.strategy == 'upstream-transplant' }}
         run: |
@@ -203,49 +218,39 @@ jobs:
         if: ${{ inputs.strategy == 'source' }}
         run: bash scripts/ci/build-opencode-source.sh
 
-      - name: Stage candidate and checksums
+      - name: Stage release candidate
         run: |
           set -euo pipefail
-          OUT="artifacts/transplant/$OPENCODE_VERSION"
           mkdir -p dist
-          if [ "${{ inputs.strategy }}" = source ]; then
-            NAME="$(python3 tools/ocver.py asset source)"
+          if [ "${{ inputs.strategy }}" = bundle ]; then
+            bash scripts/ci/package-release-bundle.sh \
+              "artifacts/bundle/$OPENCODE_VERSION" "$OPENCODE_VERSION" dist
+            cp "artifacts/bundle/$OPENCODE_VERSION/report.json" dist/report.json
           else
-            NAME="opencode-$OPENCODE_VERSION-android-aarch64"
+            OUT="artifacts/transplant/$OPENCODE_VERSION"
+            if [ "${{ inputs.strategy }}" = source ]; then
+              NAME="$(python3 tools/ocver.py asset source)"
+            else
+              NAME="opencode-$OPENCODE_VERSION-android-aarch64"
+            fi
+            install -m 0755 "$OUT/opencode-native-tui" "dist/$NAME"
+            file "dist/$NAME" | grep -q 'ARM aarch64'
+            tar -C dist -czf "dist/$NAME.tar.gz" "$NAME"
+            cp "$OUT/report.json" dist/transplant-report.json
+            bash scripts/ci/package-release-deb.sh "dist/$NAME" "$OPENCODE_VERSION" dist
           fi
-          install -m 0755 "$OUT/opencode-native-tui" "dist/$NAME"
-          cp "$OUT/report.json" dist/transplant-report.json
           cp tools/supply-chain-lock.json dist/supply-chain-lock.json
+          python3 tools/gen-packages-index.py dist/Packages.gz dist
+          gzip -dc dist/Packages.gz | grep -q '^Package: opencode$'
+          python3 scripts/ci/write-flat-apt-release.py dist
           (cd dist && sha256sum * > SHA256SUMS)
-          file "dist/$NAME"
           cat dist/SHA256SUMS
-
-      - name: Stage APT package candidate from the verified binary
-        if: ${{ inputs.strategy == 'source' }}
-        run: |
-          set -euo pipefail
-          mkdir -p dist-apt
-          NAME="$(python3 tools/ocver.py asset source)"
-          bash scripts/ci/package-release-deb.sh "dist/$NAME" "$OPENCODE_VERSION" dist-apt
-          python3 tools/gen-packages-index.py dist-apt/Packages.gz dist-apt
-          gzip -dc dist-apt/Packages.gz | grep -q '^Package: opencode$'
-          python3 scripts/ci/write-flat-apt-release.py dist-apt
-          (cd dist-apt && sha256sum opencode_*.deb Packages Packages.gz Release > SHA256SUMS-apt)
 
       - name: Upload unsigned runtime-test candidate
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
-          name: opencode-${{ env.OPENCODE_VERSION }}-android-aarch64-${{ inputs.strategy }}-candidate
+          name: opencode-${{ env.OPENCODE_VERSION }}-android-aarch64-candidate
           path: dist/
-          if-no-files-found: error
-          retention-days: 14
-
-      - name: Upload APT package candidate for device testing
-        if: ${{ inputs.strategy == 'source' }}
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        with:
-          name: opencode-${{ env.OPENCODE_VERSION }}-android-aarch64-apt-candidate
-          path: dist-apt/
           if-no-files-found: error
           retention-days: 14
 

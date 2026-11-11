@@ -32,7 +32,7 @@ One Android/aarch64 Bionic ELF for Termux. No PRoot, no glibc, no wrapper in the
 make selfcheck          # local consistency checks
 ```
 
-The **Unit Tests** workflow runs the `bats` suite on every push and pull request. Release builds are not part of PR CI: they are dispatched by hand through `build-native-android.yml`, which compiles the pinned source, builds the Bionic OpenTUI library, verifies the FFI guard *before* stripping, and produces an unsigned candidate artifact.
+The **Unit Tests** workflow runs the `bats` suite on every push and pull request. Release builds are not part of PR CI: they are dispatched by hand through `build-native-android.yml`, which builds the Bionic OpenTUI library, bundles the pinned source for `bun`, cross-builds the native libraries, and produces an unsigned candidate artifact.
 
 A change to the build pipeline is not done until that workflow is green. A change to the runtime is not done until the candidate runs on a real device: `--version`, TUI, auth, one real prompt, clean exit.
 
@@ -40,9 +40,9 @@ A change to the build pipeline is not done until that workflow is green. A chang
 
 Releases are published from CI, never from a maintainer machine:
 
-1. `build-native-android.yml` produces the candidate plus checksums.
+1. `build-native-android.yml` with `strategy: bundle` produces the candidate plus one `SHA256SUMS` file.
 2. The candidate is smoke-tested on a device.
-3. `publish-native-android.yml` is dispatched with that run ID; it re-checks provenance and checksums, then publishes [`RELEASE_NOTES.md`](RELEASE_NOTES.md) verbatim.
+3. Pushing the version tag (`git tag v2.2.7 && git push origin v2.2.7`) makes `publish-native-android.yml` find the successful candidate for that commit, verify its checksums, and publish it with [`.release/v<version>.md`](.release) as the release notes. The tag must match `current` in the lock.
 
 Do not upload a locally built binary. Do not tag a release that has no verified CI artifact behind it.
 
