@@ -70,9 +70,11 @@ cd "$src"
 "$host_bun" install --frozen-lockfile --ignore-scripts --os=linux --cpu='*'
 # bionic tags heap pointers in the top byte; OpenTUI's FFI shim treats
 # them as "Pointer exceeds safe integer range" and the TUI refuses to start.
-# Patch the installed shim before Bun builds, because build.ts sets
-# bytecode:true -- editing the JS inside the compiled ELF afterwards does
-# nothing.
+# The tag must survive to native free() as well -- Scudo aborts with
+# "Pointer tag ... was truncated" when it does not -- so the shim hands the
+# tagged BigInt to Bun's FFI instead of masking it. Patch the installed shim
+# before Bun builds, because build.ts sets bytecode:true -- editing the JS
+# inside the compiled ELF afterwards does nothing.
 python3 "$ROOT/tools/patch-opentui-ffi.py" "$src"
 cd "$src/packages/cli"
 # Upstream 2.2.x selects the compile target from OPENCODE_TARGET (env), not
@@ -88,10 +90,11 @@ BUN_SOURCE_TARGET_ELF="$target_bun" \
 compiled="$src/packages/cli/dist/cli-linux-arm64/bin/opencode"
 test -s "$compiled"
 # source maps keep the bundled JS readable in the ELF, so this proves the
-# pointer mask survived into the build (bytecode:true makes it unpatched at
-# runtime otherwise).
-grep -aq '0x00ffffffffffffffn' "$compiled" || {
-  echo "opentui top-byte pointer mask missing from the compiled ELF" >&2
+# tagged-pointer passthrough survived into the build (bytecode:true makes it
+# unpatched at runtime otherwise). The marker is the u64 clamp the patched
+# shim returns: minification drops comments but never a global property access.
+grep -aq 'BigInt.asUintN' "$compiled" || {
+  echo "opentui tagged-pointer passthrough missing from the compiled ELF" >&2
   exit 1
 }
 cd "$ROOT"
