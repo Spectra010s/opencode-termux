@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "current": "2.2.5",
+  "current": "2.2.6",
   "opencode": {
     "2.0.26": {
       "commit": "9b4ec5714d481559990db0a816d5dec19541a814",
@@ -19,6 +19,12 @@
       "source_sha256": "04621edf6c47c2c7a36982ef39914d482c16977708fbd7b779f49f928bdc4fba",
       "bun_version": "1.4.4",
       "opentui_version": "0.8.0"
+    },
+    "2.2.6": {
+      "commit": "dc2ffcf8bf26f9e669b6aa22b95f50e12be15e06",
+      "source_sha256": "4dec545d50bfbce8952360b50e6b9487f4c92d822bb5dab14ac698e8bb933e12",
+      "bun_version": "1.4.4",
+      "opentui_version": "0.8.1"
     }
   },
   "android_bun": {
@@ -49,6 +55,11 @@
       "commit": "738067f47e940dcec3f5aab74868908574335c6c",
       "zig_version": "0.16.0",
       "zig_x86_64_linux_sha256": "70e49664a74374b48b51e6f3fdfbf437f6395d42509050588bd49abe52ba3d00"
+    },
+    "0.8.1": {
+      "commit": "9a09079c0c7ad0fb2d55404f66a5c453204328dd",
+      "zig_version": "0.17.0",
+      "zig_x86_64_linux_sha256": "1cbe9df9f27e6b78d14ccbca43b6703a404ef79ef1c463de901d7f088d4e2026"
     }
   },
   "source_build_bun_1_4_4": {

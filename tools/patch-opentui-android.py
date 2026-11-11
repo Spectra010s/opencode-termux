@@ -47,11 +47,22 @@ def main() -> int:
         build,
         "fn addTranslatedCImports(\n    b: *std.Build,",
         """fn addBionicTranslateIncludes(b: *std.Build, step: *std.Build.Step.TranslateC) void {
-    if (b.graph.environ_map.get("BIONIC_ARCH_INCLUDE")) |path| {
+    const arch_inc = b.graph.environ_map.get("BIONIC_ARCH_INCLUDE");
+    const sys_inc = b.graph.environ_map.get("BIONIC_SYS_INCLUDE");
+    if (arch_inc) |path| {
         step.addSystemIncludePath(.{ .cwd_relative = path });
     }
-    if (b.graph.environ_map.get("BIONIC_SYS_INCLUDE")) |path| {
+    if (sys_inc) |path| {
         step.addSystemIncludePath(.{ .cwd_relative = path });
+    }
+    if (arch_inc != null or sys_inc != null) {
+        // Zig 0.17's translate-c also searches the host /usr/include (0.16 did
+        // not). Bionic <limits.h> ends with `#include_next <limits.h>`, which
+        // would then resolve to glibc's limits.h and fail on __GLIBC_USE and
+        // gnu/stubs-32.h. This empty shadow sits right after the NDK dirs, so
+        // include_next stops inside the sysroot. Kept conditional so a
+        // desktop build without the NDK still gets the real limits.h.
+        step.addSystemIncludePath(b.path("src/bionic-include-next"));
     }
     // Nullability is type metadata only. Zig translate-c rejects the NDK's
     // annotated array parameters, so erase these annotations for translation.
@@ -64,6 +75,19 @@ def main() -> int:
 
 fn addTranslatedCImports(
     b: *std.Build,""",
+    )
+
+    # Bionic's <limits.h> ends with `#include_next <limits.h>`. Zig 0.17's
+    # translate-c also searches the host /usr/include (0.16 did not), so that
+    # include_next lands in glibc and dies on __GLIBC_USE / gnu/stubs-32.h.
+    # This empty file is injected as a system include dir after the NDK ones,
+    # so include_next stops at the sysroot boundary instead of the host.
+    shadow = src / "bionic-include-next"
+    shadow.mkdir(parents=True, exist_ok=True)
+    (shadow / "limits.h").write_text(
+        "/* Terminates bionic's `#include_next <limits.h>` inside the NDK.\n"
+        "   Host glibc limits.h is not a valid target for this sysroot. */\n",
+        encoding="utf-8",
     )
 
     replace(
@@ -82,6 +106,24 @@ fn addTranslatedCImports(
         '    yoga_translate.addIncludePath(yoga_dep.path(""));\n'
         "    addBionicTranslateIncludes(b, yoga_translate);\n"
         '    module.addImport("yoga", yoga_translate.createModule());',
+    )
+
+    # The context ABI header is translated too, and it includes system headers
+    # (stdint.h, limits.h). Without the bionic paths its translate-c falls back
+    # to the host headers just like the other two steps did.
+    replace(
+        build,
+        '        .root_source_file = b.path("include/opentui.h"),\n'
+        "        .target = target,\n"
+        "        .optimize = optimize,\n"
+        "    });\n"
+        '    module.addImport("context_abi_c", header.createModule());',
+        '        .root_source_file = b.path("include/opentui.h"),\n'
+        "        .target = target,\n"
+        "        .optimize = optimize,\n"
+        "    });\n"
+        "    addBionicTranslateIncludes(b, header);\n"
+        '    module.addImport("context_abi_c", header.createModule());',
     )
 
     # Bionic has no libpthread stub: pthread lives in libc.

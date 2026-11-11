@@ -115,12 +115,19 @@ jobs:
           echo "LLVM_STRIP=$LLVM_STRIP" >> "$GITHUB_ENV"
           mkdir -p work artifacts/transplant/opentui-bionic
           {
+            # Zig 0.17.0 requires every libc field, including the new
+            # `cc_dir` and `darwin_sdk_dir`, and rejects an empty `cc_dir` for
+            # linux targets. `gcc_dir` is the 0.16 field name and a 0.17 alias
+            # for `cc_dir`, so emitting that spelling keeps one file valid on
+            # either toolchain. cc_dir holds crtbegin_so.o, which for the NDK
+            # is the same API-level lib dir as crt_dir.
             echo "include_dir=$SYSROOT/usr/include/aarch64-linux-android"
             echo "sys_include_dir=$SYSROOT/usr/include"
             echo "crt_dir=$LIBDIR"
             echo "msvc_lib_dir="
             echo "kernel32_lib_dir="
-            echo "gcc_dir="
+            echo "gcc_dir=$LIBDIR"
+            echo "darwin_sdk_dir="
           } > work/android-libc.txt
           sh work/opentui/packages/native/scripts/prepare-zig-deps.sh
           (

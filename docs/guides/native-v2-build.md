@@ -19,14 +19,14 @@ tag so a tagged copy cannot silently install a later release.
 `tools/ocver.py` is the only reader. Use it instead of hardcoding:
 
 ```sh
-python3 tools/ocver.py current            # 2.2.5
-python3 tools/ocver.py tag                # v2.2.5
+python3 tools/ocver.py current            # 2.2.6
+python3 tools/ocver.py tag                # v2.2.6
 python3 tools/ocver.py field bun_version  # 1.4.4
-python3 tools/ocver.py asset source       # opencode-2.2.5-android-aarch64-source
+python3 tools/ocver.py asset source       # opencode-2.2.6-android-aarch64-source
 ```
 
-Current release record: OpenCode `2.2.5` (commit `9bbb8ce1…`) on Bun `1.4.4`,
-OpenTUI `0.8.0` (commit `738067f4…`), Zig `0.16.0`, `ANDROID_API=28`. Bun `1.4.4`
+Current release record: OpenCode `2.2.6` (commit `dc2ffcf8…`) on Bun `1.4.4`,
+OpenTUI `0.8.1` (commit `9a09079c…`), Zig `0.17.0`, `ANDROID_API=28`. Bun `1.4.4`
 is the only supported host and base — upstream `package.json` declares
 `packageManager: bun@1.4.4`, and there is no 1.4.2 fallback.
 
@@ -82,7 +82,7 @@ explicit gap, never a silent skip.
 
 ## Why the transplant tools remain
 
-For 2.2.5, CI compiles directly against the Android Bun ELF and uses only
+For 2.2.x, CI compiles directly against the Android Bun ELF and uses only
 `swap_tui.py` from the transplant tools. The older `transplant.py all` path
 remains for supported transplant builds; running it on this already compiled
 1.4.4 ELF produced a binary that failed on device.

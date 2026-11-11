@@ -2,7 +2,7 @@
 set -eu
 
 repo=Spectra010s/opencode-termux
-release_tag=v2.2.5
+release_tag=v2.2.6
 if [ "$#" -gt 0 ]; then
   [ "$#" -eq 2 ] && [ "$1" = --version ] || { echo 'Usage: install.sh [--version X.Y.Z]' >&2; exit 2; }
   case "$2" in

@@ -1,39 +1,17 @@
-# OpenCode 2.2.5 for Termux
+## What changed upstream (2.2.5 → 2.2.6)
 
-OpenCode v2 as a native Android/aarch64 Bionic binary for Termux: no PRoot, no glibc. This release moves the Android build from 2.0.28 to 2.2.5, and fixes the reason the previous 2.2.x candidates died before drawing a single frame.
+- **Shared MCP connections**: `pool: true` on an MCP server shares one connection across projects with the same setup, so you run fewer processes and start faster.
+- **Scripted runs in worktrees**: `opencode run -w` (or `--worktree=<name>`) starts the session in a new git worktree, and `--archived` keeps CI and scripted sessions out of the inbox, home, and session lists.
+- **Session warming**: provider- and model-specific warming settings, including an `interval: "auto"` mode based on cache TTL.
+- **`opencode run` waits for its background work**: background shells, subagents, and image jobs finish first (it prints `waiting for N background job(s)`) and the model answers their results before the run exits. There is no time limit, so set a timeout on CI jobs.
+- **TUI fixes**: Ctrl+Z suspends while a form or dialog is open, session titles containing newlines no longer crash the TUI, focus stays on an open dialog when a question arrives, and **Scroll on send** keeps your reading position after you submit a prompt.
+- **Security**: file reads and media are served as sandboxed downloads, `/api/*` refuses cross-site navigations and requests from disallowed origins, and webfetch/Code Mode URLs that contain credentials are rejected.
+- **Also**: MCP servers that are still connecting get up to 2 seconds before a model call, OpenCode Console config requests time out after 5 seconds instead of hanging startup, and `opencode acp` no longer leaves empty IDE sessions behind.
 
-## Install
-
-```sh
-curl -fsSL https://github.com/Spectra010s/opencode-termux/raw/v2.2.5/install.sh | sh
-```
-
-Then run `opencode`. The installer checks the compressed download and the executable against the release checksums before replacing `~/.local/bin/opencode`, and keeps your chats, sign-ins, and configuration.
-
-Already on 2.0.28? Run `opencode upgrade`. It points at this verified installer.
-
-Requires Android 9 (API 28) or newer, aarch64, and about 700 MiB free.
-
-## What changed upstream (2.2.0 → 2.2.5)
-
-- **`/goal`**: keep a session working toward an objective until a reviewer confirms it is met (`/goal pause`, `/goal resume`, `/goal clear`).
-- **Image generation**: agents can create or edit images through `experimental_image_generate`, enabled automatically when a connected provider has image models.
-- **Claude Agent**: sign in with Claude Code (`claude auth login`) and select it in `/connect` to use those models.
-- **OpenTUI 0.8**: TUI plugins now require `@opentui/core` and `@opentui/solid` 0.8 or newer; scroll and render-context APIs changed accordingly.
-- **Compaction buffer as a percentage**: `"compaction": { "buffer": "20%" }` keeps part of any model's context window free.
-- **Fixes**: MCP servers sending messages over 10 MiB no longer get disconnected, calls to a tool named `bash` run as `shell` instead of failing, and `read`/`edit` errors now point at the missing folder or the closest matching lines.
-
-Desktop-only changes in these versions (persistent desktop terminals, artifacts, the desktop model picker) do not apply to this Termux build.
+Desktop-only changes in 2.2.6 (mobile composer dock, GUI plugin themes and slots, tab menu actions) do not apply to this Termux build.
 
 ## What changed in this Android build
 
-- Built from pinned OpenCode source with Bun 1.4.4 and OpenTUI 0.8.0 (Zig 0.16.0); versions, hashes, and commits live in [`tools/supply-chain-lock.json`](https://github.com/Spectra010s/opencode-termux/blob/native-android/tools/supply-chain-lock.json).
-- The candidate now compiles directly against the pinned Android Bun base and grafts the bionic OpenTUI library onto it. Re-running the old post-compile transplant on a 1.4.4 base produced a binary that died with SIGILL on the first instruction.
-- **TUI fix**: Android bionic tags heap pointers in the top byte, and OpenTUI's FFI shim rejected those as unsafe (`Pointer exceeds safe integer range`) before the first frame. The build now masks that tag before the check, so the renderer starts normally.
-- `opencode upgrade` still points at this verified installer instead of an incompatible upstream download. `opencode uninstall --dry-run` previews removal; `opencode uninstall` removes the binary and shared cache but keeps user data.
-
-## Verified build
-
-The candidate came from [Actions run 41906034445](https://github.com/Spectra010s/opencode-termux/actions/runs/41906034445), built and checked by CI, with `sha256 24e9600d80752a31c052135a75677495fcb0ee694580216aa9dc37a89a75d657`. It was tested: `--version` passed, providers and models listed through the server, and the TUI started. Wider device testing is welcome; report problems at [issues](https://github.com/Spectra010s/opencode-termux/issues).
-
-Checksums and build inputs are attached to this release. The [source-build guide](https://github.com/Spectra010s/opencode-termux/blob/native-android/docs/guides/native-v2-build.md) shows how to reproduce the build.
+- Built from pinned OpenCode source with Bun 1.4.4 and OpenTUI 0.8.1 (Zig 0.17.0); versions, hashes, and commits live in [`tools/supply-chain-lock.json`](https://github.com/Spectra010s/opencode-termux/blob/native-android/tools/supply-chain-lock.json).
+- **Quiet shutdown**: 2.2.5 cleared the ARM top-byte tag that bionic puts on heap pointers so the renderer would start, but Scudo re-checks that tag when the memory is freed, so quitting printed a pointer-tag message. Pointers are now handed to Bun's FFI unchanged (Bun 1.4 keeps all 64 bits for `ptr` arguments), so nothing is truncated and shutdown prints nothing. Untagged platforms and small allocations still take the plain-number path upstream uses.
+- **OpenTUI 0.8.1 build**: Zig 0.17.0 requires every field in the `--libc` file and its `translate-c` also searches the host include directories. The build now writes the full schema and shadows bionic `limits.h` inside the sysroot, so the Android OpenTUI library builds the same way in CI and on a Termux device.

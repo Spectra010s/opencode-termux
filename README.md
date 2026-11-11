@@ -17,9 +17,9 @@ curl -fsSL https://github.com/Spectra010s/opencode-termux/raw/native-android/ins
 opencode
 ```
 
-The installer downloads the [GitHub release](https://github.com/Spectra010s/opencode-termux/releases) binary, checks its SHA-256 against the release checksum file, and installs it as `~/.local/bin/opencode`. If `~/.local/bin` is not on `PATH`, it prints the direct command and the exact PATH line to add; it does not silently edit your shell startup files.
+The installer downloads the [GitHub release](https://github.com/Spectra010s/opencode-termux/releases) binary, checks its SHA-256 against the release checksum file, and installs it as `~/.local/bin/opencode`, keeping your chats, sign-ins, and configuration. If `~/.local/bin` is not on `PATH`, it prints the direct command and the exact PATH line to add; it does not silently edit your shell startup files.
 
-Once installed this way, `opencode upgrade`, its `opencode update` alias, and the TUI's `/update` use this repository's latest published release and verified installer. To update an APT installation, use `apt update && apt install --only-upgrade opencode`.
+Already on an earlier build? Run `opencode upgrade`; its `opencode update` alias and the TUI's `/update` do the same. They point at this repository's verified installer. To update an APT installation, use `apt update && apt install --only-upgrade opencode`.
 
 OpenCode is also available from this project's APT source. Follow the
 [APT setup and install instructions](docs/guides/apt-repository.md).
