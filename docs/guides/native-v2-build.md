@@ -57,7 +57,7 @@ supported host and base — upstream `package.json` declares
    device test. Pushing the version tag resolves the successful candidate run
    for that commit, re-verifies its checksums, and publishes
    [`.release/v<version>.md`](../../.release). See
-   [`apt-repository.md`](apt-repository.md) for the release-backed source.
+   [`../ops/apt-repository.md`](../ops/apt-repository.md) for the signed source and its failure modes.
 
 The `source` strategy keeps the previous compiled-ELF path
 (`scripts/ci/build-opencode-source.sh`) and runs only when explicitly selected.
