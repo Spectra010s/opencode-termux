@@ -1,0 +1,30 @@
+name: Feature request
+description: Something this packaging should do
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Feature requests about OpenCode itself belong at
+        https://github.com/anomalyco/opencode/issues. This form is for the
+        Termux packaging: install path, packaging, native libraries, release flow.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is missing
+      description: The situation on a Termux device and what it forces you to do instead.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you would change
+    validations:
+      required: false
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope check
+      options:
+        - label: This is Termux/Android specific, not generic OpenCode behaviour
+          required: true

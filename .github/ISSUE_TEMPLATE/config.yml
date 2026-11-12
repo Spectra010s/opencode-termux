@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: OpenCode bugs and features
+    url: https://github.com/anomalyco/opencode/issues
+    about: Anything that is not specific to Termux belongs upstream.
+  - name: Security disclosure
+    url: https://github.com/Spectra010s/opencode-termux/security/advisories/new
+    about: Report packaging or release problems privately.
+  - name: Termux
+    url: https://wiki.termux.com/wiki/Main_Page
+    about: Termux itself — `pkg`, `$PREFIX`, storage, permissions.

@@ -1,0 +1,47 @@
+name: Install or upgrade problem
+description: The installer, the .deb or the APT source failed
+labels: [install]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Version being installed
+      placeholder: 2.2.7
+    validations:
+      required: true
+  - type: dropdown
+    id: path
+    attributes:
+      label: Install path
+      options:
+        - curl installer
+        - APT source (`pkg install opencode`)
+        - manual `dpkg -i`
+        - release tarball
+        - upgrading an older install
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Full output
+      description: The whole command output, including the line you ran.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: state
+    attributes:
+      label: Install state
+      description: Paste the output of these, even if they fail.
+      value: |
+        ```sh
+        uname -m
+        command -v opencode
+        ls -l "$PREFIX/bin/opencode" "$PREFIX/lib/opencode" 2>&1 | head
+        dpkg -S "$PREFIX/bin/opencode"
+        pkg list-installed | grep -E '^(bun|ripgrep|libc\+\+)/'
+        df -h "$PREFIX" | tail -1
+        ```
+    validations:
+      required: true

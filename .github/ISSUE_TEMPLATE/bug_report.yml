@@ -1,0 +1,52 @@
+name: Bug report
+description: Something in the Termux install misbehaves
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This tracker is for the Termux packaging. If the same thing happens with
+        an upstream `opencode` build, it belongs at
+        https://github.com/anomalyco/opencode/issues instead.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output of `opencode --version`
+      placeholder: opencode v2.2.7
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: How is it installed
+      options:
+        - curl installer (`$PREFIX/bin/opencode`, no dpkg owner)
+        - APT source (`pkg install opencode`)
+        - manual `dpkg -i` of a release .deb
+        - tarball extracted by hand
+    validations:
+      required: true
+  - type: textarea
+    id: device
+    attributes:
+      label: Device
+      description: Android version, device model, `uname -m`, and `bun --version`
+      placeholder: Android 14, Pixel 7, aarch64, bun 1.4.4
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happens
+      description: What you ran, what you expected, what happened. Paste the error verbatim.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant output. `opencode --print-logs --log-level DEBUG` for startup problems.
+      render: shell
+    validations:
+      required: false
