@@ -34,10 +34,12 @@ case "$android_api" in
 esac
 [ "$android_api" -ge 28 ] || { echo 'This release requires Android API 28 or newer.' >&2; exit 1; }
 
-# bun and ripgrep are real dependencies now (same pair as the deb `Depends`).
+# bun, ripgrep and libc++ are real dependencies now (same set as the deb `Depends`).
 missing=
 command -v bun >/dev/null 2>&1 || missing="$missing bun"
 command -v rg >/dev/null 2>&1 || missing="$missing ripgrep"
+# libc++ has no binary on PATH; the renderer links against its shared library.
+[ -e "$prefix/lib/libc++_shared.so" ] || missing="$missing libc++"
 if [ -n "$missing" ]; then
   if [ "${OPENCODE_INSTALL_DEPS:-1}" = 0 ] || ! command -v pkg >/dev/null 2>&1; then
     printf 'opencode needs:%s\n' "$missing" >&2
