@@ -10,6 +10,11 @@ on:
         required: false
         default: ""
         type: string
+      target_sha:
+        description: Commit the candidate was built from; empty uses the checked-out commit
+        required: false
+        default: ""
+        type: string
 
 permissions:
   actions: read
@@ -35,8 +40,10 @@ jobs:
       - name: Resolve pinned versions from lock
         run: |
           set -euo pipefail
+          target="${{ inputs.target_sha }}"
+          test -n "$target" || target="$(git rev-parse HEAD)"
           {
-            printf 'TARGET_SHA=%s\n' "$(git rev-parse HEAD)"
+            printf 'TARGET_SHA=%s\n' "$target"
             printf 'VERSION=%s\n' "$(python3 tools/ocver.py current)"
             printf 'RELEASE_TAG=%s\n' "$(python3 tools/ocver.py tag)"
           } >> "$GITHUB_ENV"
@@ -98,8 +105,9 @@ jobs:
           dpkg-deb --field "$DEB" Depends | grep -q 'bun'
           TARBALL="$(ls dist/*.tar.gz)"
           test "$(printf '%s\n' "$TARBALL" | wc -l)" -eq 1
-          tar -tzf "$TARBALL" | grep -qx bin/opencode
-          tar -tzf "$TARBALL" | grep -qx lib/opencode/index.js
+          tar -tzf "$TARBALL" > dist/listing.txt
+          grep -qx bin/opencode dist/listing.txt
+          grep -qx lib/opencode/index.js dist/listing.txt
           gzip -dc dist/Packages.gz | grep -qx "Version: $VERSION-1"
 
       - name: Sign the APT index
