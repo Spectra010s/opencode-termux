@@ -52,9 +52,10 @@ supported host and base — upstream `package.json` declares
    four.
 5. Stages the candidate with `scripts/ci/package-release-bundle.sh`: the
    `.deb`, the `tar.gz`, `Packages`/`Release`, and one `SHA256SUMS`.
-6. Publishes through `.github/workflows/publish-native-android.yml` after a
-   device test. Pushing the version tag resolves the successful candidate run
-   for that commit, re-verifies its checksums, and publishes
+6. Publishes through `.github/workflows/publish-native-android.yml` on a tag
+   push. The publish run calls this same build workflow as its first job, so
+   the released files are the ones that run built: it re-verifies the
+   checksums, signs the APT index, and publishes
    [`.release/v<version>.md`](../../.release). See
    [`../ops/apt-repository.md`](../ops/apt-repository.md) for the signed source and its failure modes.
 

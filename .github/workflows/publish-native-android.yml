@@ -1,23 +1,20 @@
-name: Publish tested native Android build
+name: Publish native Android release
+
+# Tag-driven: pushing v<version> (or v<version>-<revision> after a rebuild)
+# builds the bundle, signs the APT index and publishes the GitHub release in
+# one run, so the released files are always the ones that run built.
+#
+# There is no pre-built candidate to resolve and no provenance lookup: a
+# failed release is fixed and rebuilt under a bumped revision, which is why
+# the tag and the Debian version carry the same number.
 
 on:
   push:
-    tags: ["v*.*.*"]
+    tags: ["v*"]
+  # Retry a failed release without bumping: dispatch with --ref v<version>.
   workflow_dispatch:
-    inputs:
-      source_run:
-        description: Candidate run ID; empty uses the newest successful run for this commit
-        required: false
-        default: ""
-        type: string
-      target_sha:
-        description: Commit the candidate was built from; empty uses the checked-out commit
-        required: false
-        default: ""
-        type: string
 
 permissions:
-  actions: read
   contents: write
 
 concurrency:
@@ -25,91 +22,71 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  build:
+    uses: ./.github/workflows/build-native-android.yml
+
   release:
+    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
       GH_TOKEN: ${{ github.token }}
-      REQUESTED_RUN: ${{ inputs.source_run }}
     steps:
-      - name: Check out release commit
+      - name: Check out the tagged commit
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           fetch-depth: 0
 
-      - name: Resolve pinned versions from lock
+      - name: Resolve the release identity
         run: |
           set -euo pipefail
-          target="${{ inputs.target_sha }}"
-          test -n "$target" || target="$(git rev-parse HEAD)"
-          target="$(git rev-parse --verify "$target^{commit}")"
           {
-            printf 'TARGET_SHA=%s\n' "$target"
             printf 'VERSION=%s\n' "$(python3 tools/ocver.py current)"
+            printf 'REVISION=%s\n' "$(python3 tools/ocver.py revision)"
             printf 'RELEASE_TAG=%s\n' "$(python3 tools/ocver.py tag)"
+            printf 'CANDIDATE=opencode-%s-android-aarch64-candidate\n' "$(python3 tools/ocver.py current)"
           } >> "$GITHUB_ENV"
 
       - name: Check the release contract
         run: |
           set -euo pipefail
-          if [ "${GITHUB_REF_TYPE}" = tag ]; then
-            test "$GITHUB_REF_NAME" = "$RELEASE_TAG" || {
-              echo "tag $GITHUB_REF_NAME does not match lock version $RELEASE_TAG" >&2
-              exit 1
-            }
-          fi
+          test "${GITHUB_REF_TYPE}" = tag || {
+            echo "publishing needs a tag: dispatch this workflow with --ref $RELEASE_TAG" >&2
+            exit 1
+          }
+          test "$GITHUB_REF_NAME" = "$RELEASE_TAG" || {
+            echo "tag $GITHUB_REF_NAME does not match lock version $RELEASE_TAG" >&2
+            exit 1
+          }
           NOTES=".release/v$VERSION.md"
           git ls-files --error-unmatch "$NOTES" >/dev/null || {
             echo "missing release notes: $NOTES" >&2
             exit 1
           }
           echo "NOTES=$NOTES" >> "$GITHUB_ENV"
-          echo "CANDIDATE=opencode-$VERSION-android-aarch64-candidate" >> "$GITHUB_ENV"
 
-      - name: Resolve the candidate run
+      - name: Download the build from this run
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          name: opencode-${{ env.VERSION }}-android-aarch64-candidate
+          path: dist
+
+      - name: Verify the build
         run: |
           set -euo pipefail
-          SOURCE_RUN="$REQUESTED_RUN"
-          if [ -z "$SOURCE_RUN" ]; then
-            SOURCE_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
-              --workflow build-native-android.yml --commit "$TARGET_SHA" \
-              --limit 20 --json databaseId,conclusion \
-              --jq '[.[] | select(.conclusion == "success")][0].databaseId // ""')"
-          fi
-          case "$SOURCE_RUN" in
-            ''|*[!0-9]*) echo "no successful build for $TARGET_SHA; dispatch one first" >&2; exit 1 ;;
-          esac
-          echo "SOURCE_RUN=$SOURCE_RUN" >> "$GITHUB_ENV"
-
-      - name: Confirm tested build provenance
-        run: |
-          set -euo pipefail
-          META="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN")"
-          test "$(jq -r .conclusion <<<"$META")" = success
-          test "$(jq -r .name <<<"$META")" = 'Build locked OpenCode v2 for native Android'
-          test "$(jq -r .event <<<"$META")" = workflow_dispatch
-          test "$(jq -r .head_sha <<<"$META")" = "$TARGET_SHA" || {
-            echo "candidate run $SOURCE_RUN was built from another commit" >&2
-            exit 1
-          }
-
-      - name: Download and verify the candidate
-        run: |
-          set -euo pipefail
-          mkdir dist
-          gh run download "$SOURCE_RUN" --repo "$GITHUB_REPOSITORY" \
-            --name "$CANDIDATE" --dir dist
-          (cd dist && sha256sum -c SHA256SUMS)
-          DEB="dist/opencode_${VERSION}-1_aarch64.deb"
+          cd dist
+          sha256sum -c SHA256SUMS
+          DEB="opencode_${VERSION}-${REVISION}_aarch64.deb"
+          test -f "$DEB"
           test "$(dpkg-deb --field "$DEB" Package)" = opencode
-          test "$(dpkg-deb --field "$DEB" Version)" = "$VERSION-1"
+          test "$(dpkg-deb --field "$DEB" Version)" = "$VERSION-$REVISION"
           dpkg-deb --field "$DEB" Depends | grep -q 'bun'
-          TARBALL="$(ls dist/*.tar.gz)"
+          TARBALL="$(ls ./*.tar.gz)"
           test "$(printf '%s\n' "$TARBALL" | wc -l)" -eq 1
-          tar -tzf "$TARBALL" > dist/listing.txt
-          grep -qx bin/opencode dist/listing.txt
-          grep -qx lib/opencode/index.js dist/listing.txt
-          gzip -dc dist/Packages.gz | grep -qx "Version: $VERSION-1"
+          tar -tzf "$TARBALL" > "$RUNNER_TEMP/listing.txt"
+          grep -qx bin/opencode "$RUNNER_TEMP/listing.txt"
+          grep -qx lib/opencode/index.js "$RUNNER_TEMP/listing.txt"
+          gzip -dc Packages.gz | grep -qx "Version: $VERSION-$REVISION"
 
       - name: Sign the APT index
         env:

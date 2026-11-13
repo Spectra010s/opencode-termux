@@ -2,6 +2,7 @@ name: Build locked OpenCode v2 for native Android
 
 on:
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
@@ -28,6 +29,7 @@ jobs:
           opentui_version = opencode["opentui_version"]
           opentui = lock["opentui"][opentui_version]
           print(f"OPENCODE_VERSION={version}")
+          print(f"OPENCODE_REVISION={lock.get('package_revision', 1)}")
           print(f"OPENTUI_VERSION={opentui_version}")
           print(f"OPENTUI_COMMIT={opentui['commit']}")
           print(f"ZIG_VERSION={opentui['zig_version']}")
@@ -170,7 +172,7 @@ jobs:
           set -euo pipefail
           mkdir -p dist
           bash scripts/ci/package-release-bundle.sh \
-            "artifacts/bundle/$OPENCODE_VERSION" "$OPENCODE_VERSION" dist
+            "artifacts/bundle/$OPENCODE_VERSION" "$OPENCODE_VERSION" dist "$OPENCODE_REVISION"
           cp "artifacts/bundle/$OPENCODE_VERSION/report.json" dist/report.json
           cp tools/supply-chain-lock.json dist/supply-chain-lock.json
           python3 tools/gen-packages-index.py dist/Packages.gz dist

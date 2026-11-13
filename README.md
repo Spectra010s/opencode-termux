@@ -73,7 +73,7 @@ Releases are built from pinned source in GitHub Actions, not uploaded from a mai
 
 ## Releases and provenance
 
-The [build workflow](.github/workflows/build-native-android.yml) produces a candidate. After testing, pushing the release tag makes the [release workflow](.github/workflows/publish-native-android.yml) download that CI artifact, verify its checksums, and publish it with the notes in [`.release/`](.release). Releases are manual, not weekly automatic updates.
+The [build workflow](.github/workflows/build-native-android.yml) produces an unsigned artifact you can install to test. Pushing the release tag makes the [release workflow](.github/workflows/publish-native-android.yml) call that same build, verify its checksums, sign the APT index and publish it with the notes in [`.release/`](.release). A broken release is fixed and republished under a bumped revision (`v2.2.7-2`); releases are manual, not weekly automatic updates.
 
 This independent repository was derived from [Hope2333/opencode-termux](https://github.com/Hope2333/opencode-termux); OpenCode source comes from [anomalyco/opencode](https://github.com/anomalyco/opencode). See [LICENSE](LICENSE) for this repository; dependencies retain their own licenses.
 

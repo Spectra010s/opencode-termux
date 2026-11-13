@@ -64,7 +64,10 @@ have. Compare `Filename:` in the index with `gh release view`.
 A second deploy of the same version, or a version published before its
 `Packages` entry was regenerated, both show up as the two errors above. The
 build workflow asserts the index names `opencode` and the publish job asserts
-`Version: <version>-1`, so check the candidate artifact first.
+`Version: <version>-<revision>` (`-1` for a first build), so check the build
+artifact first. A rebuild of a published version ships as `<version>-2` from the
+tag `v<version>-2`; the flat repository never carries two revisions of one
+version, because the index only names the newest release asset.
 
 ## Removing the source from a device
 

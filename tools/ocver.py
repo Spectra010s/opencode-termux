@@ -5,16 +5,22 @@ The lock file is the single source of truth. Workflows, CI scripts and the
 installer must ask this helper instead of repeating a version literal.
 
     ocver.py current                 -> <version> from the lock
-    ocver.py tag [version]           -> v<version>
+    ocver.py revision                -> <package_revision> from the lock
+    ocver.py debversion [version]    -> <version>-<revision>
+    ocver.py tag [version]           -> v<version>, or v<version>-<revision> past the first build
     ocver.py field <name> [version]  -> lock["opencode"][version][name]
 
-`version` defaults to the lock's "current" entry.
+`version` defaults to the lock's "current" entry. The first build of a
+version publishes as `v<version>` and packages as `<version>-1`; a rebuild
+of the same upstream version bumps the revision, so the tag and the Debian
+version rise together.
 """
 import json
+import os
 import sys
 from pathlib import Path
 
-LOCK = Path(__file__).resolve().parent / "supply-chain-lock.json"
+LOCK = Path(os.environ.get("OCVER_LOCK") or Path(__file__).resolve().parent / "supply-chain-lock.json")
 
 
 def load() -> dict:
@@ -26,12 +32,20 @@ def resolve(argv: list[str]) -> str:
         raise SystemExit(__doc__)
     command, rest = argv[0], argv[1:]
     lock = load()
+    revision = int(lock.get("package_revision", 1))
 
     if command == "current":
         return lock["current"]
 
+    if command == "revision":
+        return str(revision)
+
+    if command == "debversion":
+        return f"{rest[0] if rest else lock['current']}-{revision}"
+
     if command == "tag":
-        return "v" + (rest[0] if rest else lock["current"])
+        version = rest[0] if rest else lock["current"]
+        return f"v{version}" if revision == 1 else f"v{version}-{revision}"
 
     if command == "field":
         if not rest:

@@ -1,23 +1,27 @@
 #!/usr/bin/env bash
 # Package a verified runtime bundle as the release artefacts:
 #
-#   opencode_<version>-1_aarch64.deb                  APT install
+#   opencode_<version>-<revision>_aarch64.deb         APT install
 #   opencode-<version>-android-aarch64-bundle.tar.gz  curl installer
 #
 # The deb installs under the Termux prefix and declares the runtime
 # dependencies; the tarball keeps the @TERMUX_PREFIX@ placeholder so the
 # standalone installer can target any prefix.
 #
-# Usage: package-release-bundle.sh STAGED_DIR VERSION OUTPUT_DIR
+# Usage: package-release-bundle.sh STAGED_DIR VERSION OUTPUT_DIR [REVISION]
+#
+# REVISION is the Debian revision and defaults to 1: the first build of a
+# version. A rebuild of the same upstream version bumps it.
 #
 # STAGED_DIR is the artifacts/bundle/<version> tree from
 # scripts/ci/build-opencode-bundle.sh.
 set -euo pipefail
 
-[[ $# -eq 3 ]] || { echo "Usage: $0 STAGED_DIR VERSION OUTPUT_DIR" >&2; exit 2; }
+[[ $# -ge 3 && $# -le 4 ]] || { echo "Usage: $0 STAGED_DIR VERSION OUTPUT_DIR [REVISION]" >&2; exit 2; }
 staged=$1
 version=$2
 output_dir=$3
+revision=${4:-1}
 
 TERMUX_PREFIX="/data/data/com.termux/files/usr"
 
@@ -26,6 +30,7 @@ for tool in cp dpkg-deb install mktemp stat tar gzip sed; do
 done
 [[ -d "$staged/lib" ]] || { echo "Missing staged bundle: $staged/lib" >&2; exit 1; }
 [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Invalid version: $version" >&2; exit 1; }
+[[ "$revision" =~ ^[1-9][0-9]*$ ]] || { echo "Invalid revision: $revision" >&2; exit 1; }
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 mkdir -p "$output_dir"
@@ -39,7 +44,7 @@ mkdir -p "$deb_tree/DEBIAN"
 installed_kib=$(du -sk "$deb_tree$TERMUX_PREFIX" | awk '{print $1}')
 cat > "$deb_tree/DEBIAN/control" <<EOF
 Package: opencode
-Version: $version-1
+Version: $version-$revision
 Architecture: aarch64
 Maintainer: Spectra010s <Spectra010s@users.noreply.github.com>
 Homepage: https://github.com/Spectra010s/opencode-termux
@@ -54,10 +59,10 @@ Description: OpenCode for Termux on Android aarch64
  runtime and requires Android API 28 or newer.
 EOF
 
-package="$output_dir/opencode_${version}-1_aarch64.deb"
+package="$output_dir/opencode_${version}-${revision}_aarch64.deb"
 dpkg-deb --build --root-owner-group -Zxz "$deb_tree" "$package"
 test "$(dpkg-deb --field "$package" Package)" = opencode
-test "$(dpkg-deb --field "$package" Version)" = "$version-1"
+test "$(dpkg-deb --field "$package" Version)" = "$version-$revision"
 dpkg-deb --field "$package" Depends | grep -q 'bun'
 rm -rf "$work/verify"
 dpkg-deb --extract "$package" "$work/verify"

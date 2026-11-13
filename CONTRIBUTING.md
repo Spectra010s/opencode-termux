@@ -32,19 +32,21 @@ One Android/aarch64 Bionic ELF for Termux. No PRoot, no glibc, no wrapper in the
 make selfcheck          # local consistency checks
 ```
 
-The **Unit Tests** workflow runs the `bats` suite on every push and pull request. Release builds are not part of PR CI: they are dispatched by hand through `build-native-android.yml`, which builds the Bionic OpenTUI library, bundles the pinned source for `bun`, cross-builds the native libraries, and produces an unsigned candidate artifact.
+The **Unit Tests** workflow runs the `bats` suite on every push and pull request. Release builds are not part of PR CI: `build-native-android.yml` builds the Bionic OpenTUI library, bundles the pinned source for `bun`, cross-builds the native libraries and produces an unsigned artifact, either by hand for a pre-tag test or as the first job of the release run.
 
-A change to the build pipeline is not done until that workflow is green. A change to the runtime is not done until the candidate runs on a real device: `--version`, TUI, auth, one real prompt, clean exit.
+A change to the build pipeline is not done until that workflow is green on a hand dispatch. A change to the runtime is not done until the artifact runs on a real device: `--version`, TUI, auth, one real prompt, clean exit.
 
 ## Releases
 
-Releases are published from CI, never from a maintainer machine:
+Releases are built and published by CI, never from a maintainer machine:
 
-1. `build-native-android.yml` with `strategy: bundle` produces the candidate plus one `SHA256SUMS` file.
-2. The candidate is smoke-tested on a device.
-3. Pushing the version tag (`git tag v2.2.7 && git push origin v2.2.7`) makes `publish-native-android.yml` find the successful candidate for that commit, verify its checksums, and publish it with [`.release/v<version>.md`](.release) as the release notes. The tag must match `current` in the lock.
+1. `build-native-android.yml` builds the artefact plus one `SHA256SUMS` file. Dispatch it by hand to test before tagging.
+2. Push the tag (`git tag v2.2.7 && git push origin v2.2.7`). `publish-native-android.yml` then calls that same build workflow, so the run that publishes also built the files it publishes: no candidate lookup, no separate provenance check.
+3. The release job verifies the checksums, signs the APT index and publishes [`.release/v<version>.md`](.release) as the notes. The tag must match `ocver.py tag`.
 
-Do not upload a locally built binary. Do not tag a release that has no verified CI artifact behind it.
+Publishing first means the first install *is* the test. If the release turns out to be broken, fix it, raise `package_revision` in `tools/supply-chain-lock.json`, and tag `v<version>-<revision>` (`v2.2.7-2`). The Debian version moves with it, so `apt` upgrades and the old tag is never reused. To retry a release that failed for infrastructure reasons, dispatch `publish-native-android.yml` with `--ref v<version>` instead of bumping.
+
+Do not upload a locally built binary.
 
 ## Documentation
 

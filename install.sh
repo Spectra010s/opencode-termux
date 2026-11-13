@@ -4,14 +4,20 @@ set -eu
 repo=Spectra010s/opencode-termux
 release_tag=v2.2.7
 if [ "$#" -gt 0 ]; then
-  [ "$#" -eq 2 ] && [ "$1" = --version ] || { echo 'Usage: install.sh [--version X.Y.Z]' >&2; exit 2; }
+  [ "$#" -eq 2 ] && [ "$1" = --version ] || { echo 'Usage: install.sh [--version X.Y.Z[-N]]' >&2; exit 2; }
+  base=${2%%-*}
   case "$2" in
+    *-*) case "${2#*-}" in ''|*[!0-9]*|0*) echo 'Invalid package revision.' >&2; exit 2 ;; esac ;;
+  esac
+  case "$base" in
     *[!0-9.]*|.*|*..*|*.) echo 'Invalid release version.' >&2; exit 2 ;;
   esac
-  printf '%s\n' "$2" | awk -F. 'NF == 3 && $1 != "" && $2 != "" && $3 != "" { ok = 1 } END { exit !ok }' || { echo 'Invalid release version.' >&2; exit 2; }
+  printf '%s\n' "$base" | awk -F. 'NF == 3 && $1 != "" && $2 != "" && $3 != "" { ok = 1 } END { exit !ok }' || { echo 'Invalid release version.' >&2; exit 2; }
   release_tag=v$2
 fi
+# The tarball is named after the version; the revision only moves the tag.
 version=${release_tag#v}
+version=${version%%-*}
 
 prefix=${PREFIX:-/data/data/com.termux/files/usr}
 lib_dir=$prefix/lib/opencode
