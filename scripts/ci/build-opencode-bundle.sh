@@ -123,11 +123,29 @@ test -f "$tui" || {
   echo "missing bionic OpenTUI: $tui (run the libopentui build first)" >&2
   exit 1
 }
-# Bun bundles every linux OpenTUI branch, so make the slots byte-identical
-# and it emits one hashed asset instead of four.
-mapfile -t tui_slots < <(find node_modules/.bun -path '*/node_modules/@opentui/core-linux-*/libopentui.so' | sort)
+# The verified copy keeps its debug info for the guard scan; ship a stripped one.
+strip_bin="${LLVM_STRIP:-llvm-strip}"
+command -v "$strip_bin" >/dev/null 2>&1 || {
+  echo "missing $strip_bin (set LLVM_STRIP)" >&2
+  exit 1
+}
+tui_ship="$work/libopentui.so"
+cp -f "$tui" "$tui_ship"
+"$strip_bin" --strip-unneeded "$tui_ship"
+test "$(stat -c %s "$tui_ship")" -lt "$(stat -c %s "$tui")" || {
+  echo "stripping libopentui did not shrink it" >&2
+  exit 1
+}
+file "$tui_ship" | grep -q 'ARM aarch64' || {
+  echo "stripped libopentui is not aarch64" >&2
+  exit 1
+}
+# Bun bundles a native slot for every platform; identical bytes collapse into
+# one hashed asset, and only the android slot is ever dlopened.
+mapfile -t tui_slots < <(find node_modules/.bun -path '*/@opentui/core-*/*' \
+  \( -name libopentui.so -o -name libopentui.dylib -o -name opentui.dll \) | sort)
 test "${#tui_slots[@]}" -ge 2 || {
-  echo "expected several @opentui/core-linux-* slots, got: ${tui_slots[*]:-none}" >&2
+  echo "expected several @opentui/core-* slots, got: ${tui_slots[*]:-none}" >&2
   exit 1
 }
 printf '%s\n' "${tui_slots[@]}" | grep -q 'core-linux-arm64-musl' || {
@@ -135,9 +153,9 @@ printf '%s\n' "${tui_slots[@]}" | grep -q 'core-linux-arm64-musl' || {
   exit 1
 }
 for slot in "${tui_slots[@]}"; do
-  cp -f "$tui" "$slot"
+  cp -f "$tui_ship" "$slot"
 done
-echo "opentui: installed the bionic build in ${#tui_slots[@]} linux slots"
+echo "opentui: installed the stripped bionic build in ${#tui_slots[@]} slots"
 
 pty="$work/librust_pty_arm64.so"
 NDK="${NDK:-}" ANDROID_API="$api" bash "$ROOT/scripts/ci/build-rust-pty-android.sh" "$pty"
