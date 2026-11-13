@@ -153,7 +153,12 @@ printf '%s\n' "${tui_slots[@]}" | grep -q 'core-linux-arm64-musl' || {
   exit 1
 }
 for slot in "${tui_slots[@]}"; do
-  cp -f "$tui_ship" "$slot"
+  case $slot in
+    # Bun keys the emitted asset on content *and* extension, so the darwin and
+    # win32 slots only dedupe against each other if they are empty.
+    */core-linux-*) cp -f "$tui_ship" "$slot" ;;
+    *) : > "$slot" ;;
+  esac
 done
 echo "opentui: installed the stripped bionic build in ${#tui_slots[@]} slots"
 
