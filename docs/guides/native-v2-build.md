@@ -22,7 +22,6 @@ tag so a tagged copy cannot silently install a later release.
 python3 tools/ocver.py current            # 2.2.7
 python3 tools/ocver.py tag                # v2.2.7
 python3 tools/ocver.py field bun_version  # 1.4.4
-python3 tools/ocver.py asset bundle       # opencode-2.2.7-android-aarch64-bundle
 ```
 
 Current release record: OpenCode `2.2.7` (commit `fedc6f20…`) on Bun `1.4.4`,
@@ -58,9 +57,6 @@ supported host and base — upstream `package.json` declares
    for that commit, re-verifies its checksums, and publishes
    [`.release/v<version>.md`](../../.release). See
    [`../ops/apt-repository.md`](../ops/apt-repository.md) for the signed source and its failure modes.
-
-The `source` strategy keeps the previous compiled-ELF path
-(`scripts/ci/build-opencode-source.sh`) and runs only when explicitly selected.
 
 The bundle build refuses to produce a product unless the embedded OpenTUI passes
 the FFI guard scan (`clamp=9`, `csel_vs>0`; the marker survives because the

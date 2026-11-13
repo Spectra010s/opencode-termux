@@ -41,7 +41,7 @@ opencode-termux/
 | Build DEB package (wrapper appendix) | `scripts/package/package_deb.sh`, `packing/deb/DEBIAN/control` | builds the `opencode-wrapper` deb; postinst hook calls system-skill runner |
 | Build pacman package (wrapper appendix) | `scripts/package/package_pacman.sh`, `packing/pacman/PKGBUILD*` | builds the `opencode-wrapper` pacman package; dynamic pkgver/pkgrel rewrite + makepkg flow |
 | Native provider packaging | `scripts/package/package_deb_native.sh`, `scripts/package/package_pacman_native.sh`, `packing/pacman/PKGBUILD.native` | `opencode-native` deb/pacman providers for the native bionic mainline (stable since 27/28; see docs/guides/dual-track-install.md) |
-| Release APT candidate | `scripts/ci/package-release-deb.sh`, `.github/workflows/build-native-android.yml` | packages the Android binary in CI; publish workflow reuses the verified candidate |
+| Release APT candidate | `scripts/ci/package-release-bundle.sh`, `.github/workflows/build-native-android.yml` | packages the runtime bundle in CI; publish workflow reuses the verified candidate |
 | Signed APT source | `scripts/ci/write-flat-apt-release.py`, `scripts/ci/sign-apt-index.sh`, `setup-apt.sh`, `apt/opencode-termux.gpg` | CI indexes and signs Release; setup installs the scoped public key and source |
 | Standalone rollback packaging | `scripts/package/package_deb_standalone.sh`, `scripts/package/package_pacman_standalone.sh`, `packing/pacman/PKGBUILD.standalone` | `opencode-wrapper-standalone` frozen rollback package (coexists with `opencode`); stage via `STANDALONE=1 ./scripts/build.sh` |
 | System-skill hook behavior | `scripts/hooks/run-system-skills.sh`, `packing/manifests/system-skills/*.json` | strict/network flags default to safe mode |
@@ -49,7 +49,7 @@ opencode-termux/
 | Upgrade/downgrade simulation | `tools/upgrade-matrix.sh`, `docs/ops/execution-checklist.md` | machine2 lifecycle validation with cached deb artifacts |
 | Transplant 管线 | `tools/transplant/transplant.py` | 原生 android Bun 拼接 + ELF 复活手术（C1 已复活，见 `docs/reference/transplant.md`） |
 | Pinned versions | `tools/supply-chain-lock.json`, `tools/ocver.py` | single source of truth; `current` drives CI/publish/install |
-| Source-build candidate | `scripts/ci/build-opencode-source.sh`, `tools/patch-opencode-source.py` | lock-driven host Bun compile onto the pinned Android Bun base |
+| Bundle source patches | `tools/patch-opencode-source.py`, `tools/patch-opentui-ffi.py` | edits applied to the pinned source before the host Bun bundles the graph |
 | OpenTUI Android build | `tools/patch-opentui-android.py`, `patches/opentui/tlsdesc-shim.c`, `tools/transplant/build-libopentui.sh` | version-agnostic bionic hooks + guard verify |
 
 ## CODE MAP

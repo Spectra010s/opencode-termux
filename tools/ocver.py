@@ -7,10 +7,8 @@ installer must ask this helper instead of repeating a version literal.
     ocver.py current                 -> <version> from the lock
     ocver.py tag [version]           -> v<version>
     ocver.py field <name> [version]  -> lock["opencode"][version][name]
-    ocver.py asset [strategy]        -> opencode-<version>-android-aarch64-<strategy>
 
-`version` defaults to the lock's "current" entry. `strategy` defaults to
-bundle.
+`version` defaults to the lock's "current" entry.
 """
 import json
 import sys
@@ -45,14 +43,6 @@ def resolve(argv: list[str]) -> str:
         except KeyError:
             raise SystemExit(f"ocver: no {name!r} for opencode {version}")
         return value if isinstance(value, str) else json.dumps(value)
-
-    if command == "asset":
-        strategy = rest[0] if rest else "source"
-        version = rest[1] if len(rest) > 1 else lock["current"]
-        if strategy in ("bundle", "bundle-el"):
-            return f"opencode-{version}-android-aarch64-bundle"
-        suffix = "" if strategy == "upstream-transplant" else f"-{strategy}"
-        return f"opencode-{version}-android-aarch64{suffix}"
 
     if command == "bunpty":
         if not rest:

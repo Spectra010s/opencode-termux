@@ -2,15 +2,6 @@ name: Build locked OpenCode v2 for native Android
 
 on:
   workflow_dispatch:
-    inputs:
-      strategy:
-        description: Build strategy for the unsigned candidate
-        type: choice
-        required: true
-        default: bundle
-        options:
-          - bundle
-          - source
 
 permissions:
   contents: read
@@ -78,24 +69,15 @@ jobs:
           bun = lock["android_bun"][bun_version]
           assert ot["commit"] == os.environ["OPENTUI_COMMIT"]
           assert ot["zig_version"] == os.environ["ZIG_VERSION"]
-          # Source build and upstream transplant both consume the same pinned
-          # Android Bun base, so one config covers both strategies.
           head = subprocess.check_output(
               ["git", "-C", "work/opentui", "rev-parse", "HEAD"], text=True
           ).strip()
           assert head == ot["commit"], (head, ot["commit"])
-          # A bundle runs on Termux's bun package, so the pinned Android Bun
-          # base only matters to the strategies that compile an ELF.
-          if os.environ["BUILD_STRATEGY"] != "bundle":
-              assert bind["target"] == bun_version, (bind["target"], bun_version)
-              assert bind["archive_sha256"] == bun["archive_sha256"]
-              assert bind["elf_sha256"] == bun["elf_sha256"]
-          if os.environ["BUILD_STRATEGY"] == "upstream-transplant":
-              assert len(oc["cli_linux_arm64_sha256"]) == 64
+          assert bind["target"] == bun_version, (bind["target"], bun_version)
+          assert bind["archive_sha256"] == bun["archive_sha256"]
+          assert bind["elf_sha256"] == bun["elf_sha256"]
           PY
           test "$(zig version)" = "$ZIG_VERSION"
-        env:
-          BUILD_STRATEGY: ${{ inputs.strategy }}
 
       - name: Apply OpenTUI Android hardening
         run: |
@@ -175,7 +157,6 @@ jobs:
           fi
 
       - name: Build Android runtime bundle
-        if: ${{ inputs.strategy == 'bundle' }}
         run: |
           set -euo pipefail
           test -n "$NDK"
@@ -184,61 +165,13 @@ jobs:
           rustup target add aarch64-linux-android
           bash scripts/ci/build-opencode-bundle.sh
 
-      - name: Download and verify locked OpenCode v2 package
-        if: ${{ inputs.strategy == 'upstream-transplant' }}
-        run: |
-          set -euo pipefail
-          mkdir -p work/npm
-          NAME="$(npm pack "@opencode/cli-linux-arm64@$OPENCODE_VERSION" --pack-destination work/npm --silent | tail -1)"
-          TGZ="work/npm/$NAME"
-          test -f "$TGZ"
-          python3 tools/verify-release-input.py \
-            --kind opencode-cli --version "$OPENCODE_VERSION" --file "$TGZ"
-          echo "TGZ=$TGZ" >> "$GITHUB_ENV"
-
-      - name: Transplant onto verified Android Bun
-        if: ${{ inputs.strategy == 'upstream-transplant' }}
-        run: |
-          set -euo pipefail
-          python3 tools/transplant/transplant.py all \
-            --ver "$OPENCODE_VERSION" --tgz "$TGZ" --no-execve
-          python3 - <<'PY'
-          import json
-          import os
-          from pathlib import Path
-
-          out = Path("artifacts/transplant") / os.environ["OPENCODE_VERSION"]
-          report = json.loads((out / "report.json").read_text(encoding="utf-8"))
-          assert report["steps"]["swap"]["status"] == "ok", report["steps"].get("swap")
-          product = out / "opencode-native-tui"
-          assert product.is_file() and product.stat().st_size > 50_000_000
-          PY
-
-      - name: Build version-matched source package and transplant it
-        if: ${{ inputs.strategy == 'source' }}
-        run: bash scripts/ci/build-opencode-source.sh
-
       - name: Stage release candidate
         run: |
           set -euo pipefail
           mkdir -p dist
-          if [ "${{ inputs.strategy }}" = bundle ]; then
-            bash scripts/ci/package-release-bundle.sh \
-              "artifacts/bundle/$OPENCODE_VERSION" "$OPENCODE_VERSION" dist
-            cp "artifacts/bundle/$OPENCODE_VERSION/report.json" dist/report.json
-          else
-            OUT="artifacts/transplant/$OPENCODE_VERSION"
-            if [ "${{ inputs.strategy }}" = source ]; then
-              NAME="$(python3 tools/ocver.py asset source)"
-            else
-              NAME="opencode-$OPENCODE_VERSION-android-aarch64"
-            fi
-            install -m 0755 "$OUT/opencode-native-tui" "dist/$NAME"
-            file "dist/$NAME" | grep -q 'ARM aarch64'
-            tar -C dist -czf "dist/$NAME.tar.gz" "$NAME"
-            cp "$OUT/report.json" dist/transplant-report.json
-            bash scripts/ci/package-release-deb.sh "dist/$NAME" "$OPENCODE_VERSION" dist
-          fi
+          bash scripts/ci/package-release-bundle.sh \
+            "artifacts/bundle/$OPENCODE_VERSION" "$OPENCODE_VERSION" dist
+          cp "artifacts/bundle/$OPENCODE_VERSION/report.json" dist/report.json
           cp tools/supply-chain-lock.json dist/supply-chain-lock.json
           python3 tools/gen-packages-index.py dist/Packages.gz dist
           gzip -dc dist/Packages.gz | grep -q '^Package: opencode$'
@@ -254,24 +187,12 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      # Bisection aid: the compiled-but-not-transplanted ELF. If the candidate
-      # crashes on device, fetching this one too says whether the graph or the
-      # splice onto the Android Bun base is at fault. Download only on demand.
-      - name: Upload pre-transplant ELF for bisection
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        with:
-          name: opencode-${{ env.OPENCODE_VERSION }}-android-aarch64-${{ inputs.strategy }}-pre-transplant
-          path: work/source-bun/*/pre-transplant-opencode
-          if-no-files-found: ignore
-          retention-days: 14
-
-      # The bionic renderer library that gets grafted into the candidate (the
-      # stripped build that actually fits the embedded slot). Tiny, and it lets
-      # the swap be reproduced/verified off-CI without a rebuild.
+      # The bionic renderer the bundle dlopens; lets a device failure be
+      # reproduced without a rebuild.
       - name: Upload bionic libopentui
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: opencode-${{ env.OPENCODE_VERSION }}-android-aarch64-libopentui
-          path: work/source-bun/*/libopentui-stripped.so
+          path: artifacts/transplant/opentui-bionic/libopentui.so
           if-no-files-found: error
           retention-days: 14
