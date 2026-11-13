@@ -49,7 +49,7 @@ opencode-termux/
 | Upgrade/downgrade simulation | `tools/upgrade-matrix.sh`, `docs/ops/execution-checklist.md` | machine2 lifecycle validation with cached deb artifacts |
 | Transplant 管线 | `tools/transplant/transplant.py` | 原生 android Bun 拼接 + ELF 复活手术（C1 已复活，见 `docs/reference/transplant.md`） |
 | Pinned versions | `tools/supply-chain-lock.json`, `tools/ocver.py` | single source of truth; `current` drives CI/publish/install |
-| Bundle source patches | `tools/patch-opencode-source.py`, `tools/patch-opentui-ffi.py` | edits applied to the pinned source before the host Bun bundles the graph |
+| Bundle source patches | `tools/patch-opencode-source.py`, `tools/patch-opentui-ffi.py`, `tools/patch-fff-android.py` | edits applied to the pinned source and installed packages before the host Bun bundles the graph |
 | OpenTUI Android build | `tools/patch-opentui-android.py`, `patches/opentui/tlsdesc-shim.c`, `tools/transplant/build-libopentui.sh` | version-agnostic bionic hooks + guard verify |
 
 ## CODE MAP

@@ -87,23 +87,6 @@ def main() -> None:
         '  if (process.platform === "linux" || process.platform === "android") return "inotify"\n',
     )
 
-    # @ff-labs/fff-bun ships glibc (gnu) and musl native builds only; neither
-    # dlopens on bionic. Leave it off by default on Android so the file search
-    # falls back to ripgrep instead of failing at startup. Users can still opt
-    # in with OPENCODE_DISABLE_FFF=0.
-    server_process = root / "packages/cli/src/server-process.ts"
-    replace_once(
-        server_process,
-        "            fff:\n"
-        "              process.env.OPENCODE_DISABLE_FFF === undefined\n"
-        '                ? process.platform !== "win32"\n'
-        "                : !truthy(process.env.OPENCODE_DISABLE_FFF),\n",
-        "            fff:\n"
-        "              process.env.OPENCODE_DISABLE_FFF === undefined\n"
-        '                ? process.platform !== "win32" && process.platform !== "android"\n'
-        "                : !truthy(process.env.OPENCODE_DISABLE_FFF),\n",
-    )
-
     # The CLI aliases `update` to `upgrade`; the TUI's /update calls Updater.apply.
     # Keep the native installer in their shared service so both paths use it.
     updater = root / "packages/cli/src/services/updater.ts"

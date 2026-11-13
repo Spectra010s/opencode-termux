@@ -116,6 +116,7 @@ cd "$src"
 # installed @opentui/core chunks, so they run before Bun bundles them.
 python3 "$ROOT/tools/patch-opentui-ffi.py" "$src"
 python3 "$ROOT/tools/patch-opentui-loader.py" "$src"
+python3 "$ROOT/tools/patch-fff-android.py" "$src"
 
 # ---- natives ---------------------------------------------------------------
 tui="$ROOT/artifacts/transplant/opentui-bionic/libopentui.so"
@@ -161,6 +162,19 @@ for slot in "${tui_slots[@]}"; do
   esac
 done
 echo "opentui: installed the stripped bionic build in ${#tui_slots[@]} slots"
+
+# fff's bionic build is a plain aarch64 shared object; Bun copies it into the
+# bundle as an asset, so it only has to exist at build time.
+fff_lib="$(find "$src/node_modules" -path '*@ff-labs/fff-bin-android-arm64/libfff_c.so')"
+test "$(printf '%s\n' "$fff_lib" | wc -l)" -eq 1 && [ -f "$fff_lib" ] || {
+  echo "expected one fff android arm64 build, got: ${fff_lib:-none}" >&2
+  exit 1
+}
+file "$fff_lib" | grep -q 'ARM aarch64' || {
+  echo "fff android build is not aarch64: $fff_lib" >&2
+  exit 1
+}
+echo "fff: $(basename "$fff_lib")"
 
 pty="$work/librust_pty_arm64.so"
 NDK="${NDK:-}" ANDROID_API="$api" bash "$ROOT/scripts/ci/build-rust-pty-android.sh" "$pty"
