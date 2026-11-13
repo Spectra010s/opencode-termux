@@ -42,6 +42,7 @@ jobs:
           set -euo pipefail
           target="${{ inputs.target_sha }}"
           test -n "$target" || target="$(git rev-parse HEAD)"
+          target="$(git rev-parse --verify "$target^{commit}")"
           {
             printf 'TARGET_SHA=%s\n' "$target"
             printf 'VERSION=%s\n' "$(python3 tools/ocver.py current)"
