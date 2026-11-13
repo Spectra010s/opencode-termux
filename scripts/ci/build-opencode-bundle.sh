@@ -142,8 +142,8 @@ echo "opentui: installed the bionic build in ${#tui_slots[@]} linux slots"
 pty="$work/librust_pty_arm64.so"
 NDK="${NDK:-}" ANDROID_API="$api" bash "$ROOT/scripts/ci/build-rust-pty-android.sh" "$pty"
 
-watcher="$(find node_modules/.bun -path '*@parcel+watcher-android-arm64@*/node_modules/@parcel/watcher-android-arm64/watcher.node')"
-test "$(printf '%s\n' "$watcher" | wc -l)" -eq 1 && [ -n "$watcher" ] || {
+watcher="$(find "$src/node_modules/.bun" -path '*@parcel+watcher-android-arm64@*/node_modules/@parcel/watcher-android-arm64/watcher.node')"
+test "$(printf '%s\n' "$watcher" | wc -l)" -eq 1 && [ -f "$watcher" ] || {
   echo "expected one @parcel/watcher-android-arm64, got: $watcher" >&2
   exit 1
 }
