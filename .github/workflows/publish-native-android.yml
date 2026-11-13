@@ -1,17 +1,11 @@
 name: Publish native Android release
 
-# Tag-driven: pushing v<version> (or v<version>-<revision> after a rebuild)
-# builds the bundle, signs the APT index and publishes the GitHub release in
-# one run, so the released files are always the ones that run built.
-#
-# There is no pre-built candidate to resolve and no provenance lookup: a
-# failed release is fixed and rebuilt under a bumped revision, which is why
-# the tag and the Debian version carry the same number.
+# Tag driven: pushing v<version> builds, signs and publishes in one run.
 
 on:
   push:
     tags: ["v*"]
-  # Retry a failed release without bumping: dispatch with --ref v<version>.
+  # Retry: dispatch with --ref v<version>.
   workflow_dispatch:
 
 permissions:
