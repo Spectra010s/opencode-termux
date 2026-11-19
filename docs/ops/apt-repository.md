@@ -56,7 +56,7 @@ failure here means the release is already suspect.
 `setup-apt.sh`.
 
 `Hash Sum mismatch` — the `Packages` file and the deb disagree, usually because
-a release was replaced. `apt clean && apt update`.
+a release was replaced. `apt clean && pkg update`.
 
 `404` on the deb — `Packages` points at a basename that the release does not
 have. Compare `Filename:` in the index with `gh release view`.
@@ -74,5 +74,5 @@ version, because the index only names the newest release asset.
 ```sh
 rm -f "$PREFIX/etc/apt/sources.list.d/opencode-termux.list"
 rm -f "$PREFIX/etc/apt/keyrings/opencode-termux.gpg"
-apt update
+pkg update
 ```

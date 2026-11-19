@@ -208,10 +208,12 @@ def main() -> None:
     )
     replace_once(
         updater,
-        '        new Error(\n'
-        '          "Could not detect the installation method. Update with your package manager or download the latest release.",\n',
-        '        new Error(\n'
-        '          "Could not detect the installation method. See https://github.com/Spectra010s/opencode-termux#install for manual installation.",\n',
+        '        error\n'
+        '          ? managedMessage(error)\n'
+        '          : "Could not detect the installation method. Update with your package manager or download the latest release.",\n',
+        '        error\n'
+        '          ? managedMessage(error)\n'
+        '          : "Could not detect the installation method. See https://github.com/Spectra010s/opencode-termux#install for manual installation.",\n',
     )
     replace_once(
         updater,
