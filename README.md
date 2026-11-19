@@ -31,7 +31,7 @@ The setup script adds this project's signed source and its public key; it does n
 
 ## Upgrade
 
-`opencode upgrade` (or its `opencode update` alias, or `/update` in the TUI) runs this project's installer for the requested version. Under APT, use `apt update && apt install --only-upgrade opencode` instead: the launcher refuses to replace a package-owned file.
+`opencode upgrade` (or its `opencode update` alias, or `/update` in the TUI) runs this project's installer for the requested version. Under APT, use `pkg update && pkg install opencode` instead: the launcher refuses to replace a package-owned file.
 
 ## Uninstall
 
