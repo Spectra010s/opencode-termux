@@ -2,7 +2,7 @@
 # Unit tests for install.sh's runtime dependency handling.
 #
 # 2.2.7 runs on Termux's bun package instead of shipping a compiled ELF, so bun
-# and ripgrep are real dependencies: the installer must install them through
+# ripgrep and libc++ are real dependencies: the installer must install them through
 # pkg rather than handing the user a second command to run.
 
 load '../lib/helper'
@@ -50,31 +50,33 @@ teardown() {
 	clean_tmpdir
 }
 
-@test "installs missing bun and ripgrep through pkg" {
+@test "installs missing bun, ripgrep and libc++ through pkg" {
 	run env PATH="$TOOLS" "$BASH_BIN" "$INSTALLER"
-	[[ "$output" == *"Installing dependencies: bun ripgrep"* ]]
-	[ "$(cat "$TEST_TMPDIR/pkg-args")" = "install -y bun ripgrep" ]
+	[[ "$output" == *"Installing dependencies: bun ripgrep libc++"* ]]
+	[ "$(cat "$TEST_TMPDIR/pkg-args")" = "install -y bun ripgrep libc++" ]
 }
 
 @test "skips pkg when the caller opts out" {
 	run env PATH="$TOOLS" OPENCODE_INSTALL_DEPS=0 "$BASH_BIN" "$INSTALLER"
 	[ "$status" -eq 1 ]
-	[[ "$output" == *"opencode needs: bun ripgrep"* ]]
-	[[ "$output" == *"pkg install bun ripgrep"* ]]
+	[[ "$output" == *"opencode needs: bun ripgrep libc++"* ]]
+	[[ "$output" == *"pkg install bun ripgrep libc++"* ]]
 	[ ! -e "$TEST_TMPDIR/pkg-args" ]
 }
 
 @test "reports the manual command when pkg itself fails" {
 	run env PATH="$TOOLS" PKG_STATUS=1 "$BASH_BIN" "$INSTALLER"
 	[ "$status" -eq 1 ]
-	[[ "$output" == *"Run it yourself: pkg install bun ripgrep"* ]]
+	[[ "$output" == *"Run it yourself: pkg install bun ripgrep libc++"* ]]
 }
 
-@test "does not install anything when both are already present" {
+@test "does not install anything when all dependencies are already present" {
 	for tool in bun rg; do
 		printf '#!/bin/sh\nexit 0\n' > "$TOOLS/$tool"
 		chmod 0755 "$TOOLS/$tool"
 	done
+	mkdir -p "$PREFIX/lib"
+	: > "$PREFIX/lib/libc++_shared.so"
 	run env PATH="$TOOLS" "$BASH_BIN" "$INSTALLER"
 	[[ "$output" != *"Installing dependencies"* ]]
 	[ ! -e "$TEST_TMPDIR/pkg-args" ]
