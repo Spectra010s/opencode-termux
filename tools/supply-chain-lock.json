@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "current": "2.3.2",
+  "current": "2.4.1",
   "package_revision": 1,
   "opencode": {
     "2.0.26": {
@@ -44,6 +44,12 @@
       "source_sha256": "cb6486bf0e8a5fb49b5367beca7685e45f311bfe2a38b2ad15c6a3e3bdcf8bc9",
       "bun_version": "1.4.4",
       "opentui_version": "0.8.4"
+    },
+    "2.4.1": {
+      "commit": "6f0514052a3c859894ad01bb14cc14dda1e44b96",
+      "source_sha256": "2e6432bb7c27b03b5bffa170360f6b95210213520ba43c1c7f82fd1d9e2f6f28",
+      "bun_version": "1.4.4",
+      "opentui_version": "0.9.4"
     }
   },
   "bun_pty": {
@@ -89,6 +95,11 @@
       "commit": "d4a2af24ba50636da5f222367f91746a1bf89644",
       "zig_version": "0.17.0",
       "zig_x86_64_linux_sha256": "1cbe9df9f27e6b78d14ccbca43b6703a404ef79ef1c463de901d7f088d4e2026"
+    },
+    "0.9.4": {
+      "commit": "ff939592dc7bd102a4665bf340c4960b868b306b",
+      "zig_version": "0.17.1",
+      "zig_x86_64_linux_sha256": "3581863e3cbcfd0fce0efc682ce7e9e93da96668a977791d356a26d2a7e9b17a"
     }
   },
   "source_build_bun_1_4_4": {
