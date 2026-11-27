@@ -1,4 +1,4 @@
-name: Build locked OpenCode v2 for native Android
+name: Build OpenCode v2 for native Android
 
 on:
   workflow_dispatch:
@@ -18,7 +18,7 @@ jobs:
       - name: Check out workflow commit
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
-      - name: Resolve pinned versions from lock
+      - name: Resolve versions from lock
         run: |
           set -euo pipefail
           python3 - <<'PY' >> "$GITHUB_ENV"
@@ -35,7 +35,7 @@ jobs:
           print(f"ZIG_VERSION={opentui['zig_version']}")
           PY
 
-      - name: Fetch pinned OpenTUI source
+      - name: Fetch OpenTUI source
         run: |
           set -euo pipefail
           mkdir -p work/opentui
@@ -55,7 +55,7 @@ jobs:
           tar -xJf work/zig.tar.xz -C work
           echo "$GITHUB_WORKSPACE/work/zig-x86_64-linux-$ZIG_VERSION" >> "$GITHUB_PATH"
 
-      - name: Verify locked metadata
+      - name: Verify metadata
         run: |
           set -euo pipefail
           python3 - <<'PY'
@@ -125,7 +125,7 @@ jobs:
           SO="work/opentui/packages/native/lib/aarch64-linux-android.28/libopentui.so"
           test -f "$SO"
           python3 scripts/remap-binary-prefix.py "$SO" "$GITHUB_WORKSPACE" /usr/src
-          # Keep this lib unstripped: the guard gate scans local guard-owner
+          # Keep this lib unstripped: the guard gate scans guard-owner
           # symbols, and llvm-strip --strip-unneeded deletes them. The
           # transplant swap verifies the unstripped build, then strips to fit
           # the embedded slot.
