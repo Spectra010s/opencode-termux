@@ -87,23 +87,12 @@ Los paquetes se publican en [GitHub Releases](https://github.com/Hope2333/openco
 
 ## Compilar desde el código fuente
 
-Requiere `make`, `python3`, `clang` y `upx` (opcional).
+El bundle se compila en CI; en local hacen falta `NDK` y `llvm-strip`.
 
 ```bash
-# Compilar binario bionic nativo
-make build-native VER=2.0.0
-
-# Compilar variante comprimida (UPX)
-make build-native-upx VER=2.0.0
-
-# Compilar paquete deb
-make deb-native VER=2.0.0
-
-# Compilar paquete pacman
-make pacman-native VER=2.0.0
+make bundle   # artifacts/bundle/<version>
+make deb      # artefactos de release
 ```
-
-Consulta [docs/guides/make-maintainer.md](./docs/guides/make-maintainer.md) para la referencia completa de compilación.
 
 ## v1 y v2 (dos generaciones)
 
@@ -119,9 +108,6 @@ Dentro de una generación, native / wrapper / compressed son mutuamente excluyen
 ## Documentación técnica
 
 - [docs/reference/transplant.md](./docs/reference/transplant.md) -- Pipeline de trasplante del runtime
-- [docs/history/comparison-runtime-lines.md](./docs/history/comparison-runtime-lines.md) -- Comparación de líneas de runtime
-- [docs/guides/dual-track-install.md](./docs/guides/dual-track-install.md) -- Guía de instalación de doble vía
-- [docs/guides/make-maintainer.md](./docs/guides/make-maintainer.md) -- Referencia del Makefile
 
 ## 💬 Comunidad y Discussions
 

@@ -87,23 +87,12 @@ pacman -Syu opencode
 
 ## ソースからビルド
 
-`make`、`python3`、`clang`、`upx`（任意）が必要です。
+バンドルは CI でビルドされます。ローカルでは `NDK` と `llvm-strip` が必要です。
 
 ```bash
-# ネイティブ bionic バイナリをビルド
-make build-native VER=2.0.0
-
-# UPX 圧縮バリアントをビルド
-make build-native-upx VER=2.0.0
-
-# deb パッケージをビルド
-make deb-native VER=2.0.0
-
-# pacman パッケージをビルド
-make pacman-native VER=2.0.0
+make bundle   # artifacts/bundle/<version>
+make deb      # リリース成果物
 ```
-
-ビルドの詳細は [docs/guides/make-maintainer.md](./docs/guides/make-maintainer.md) を参照。
 
 ## v1 と v2（二世代）
 
@@ -119,9 +108,6 @@ pacman -S opencode1           # v1 メインライン
 ## 技術ドキュメント
 
 - [docs/reference/transplant.md](./docs/reference/transplant.md) -- ランタイム移植パイプライン
-- [docs/history/comparison-runtime-lines.md](./docs/history/comparison-runtime-lines.md) -- ランタイムライン比較
-- [docs/guides/dual-track-install.md](./docs/guides/dual-track-install.md) -- デュアルトラックインストールガイド
-- [docs/guides/make-maintainer.md](./docs/guides/make-maintainer.md) -- Makefile リファレンス
 
 ## 💬 コミュニティ & Discussions
 

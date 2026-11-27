@@ -176,7 +176,7 @@ glibc（旧 wrapper 路线基底）
 
 - 新增 opencode 版本 → 仅需验证其内置 Bun 是否落入已覆盖区间；否则逆向一次并登记新区间表
 - 移植配置表 + 探测脚本入库 `tools/transplant/`（新脚本目录，与现有 tools/ 风格一致）
-- 自动化管线挂入 `make release-upload` 之前的 `make transplant VER=...`
+- 自动化管线挂入发布之前的 `transplant.py all --ver ...`
 
 ### 4.3 移植所需补丁集（取自 guysoft 已验证清单，按需裁剪）
 
@@ -279,7 +279,7 @@ packing/manifests/watcher.json # 安装清单 (随包安装到 $PREFIX/lib/openc
 ### 7.2 原生路线（pure-android 转型, 中期主线）
 
 1. 官方 android Bun 底座（已实证可用）
-2. 移植手术自动化（§4.2）集成到 `make transplant`
+2. 移植手术自动化（§4.2）集成到 `transplant.py all`
 3. watcher 模块（§5）
 4. 真 native launcher（不需要 bash）
 

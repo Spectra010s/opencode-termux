@@ -87,23 +87,12 @@ pacman -Syu opencode
 
 ## 从源码构建
 
-需要 `make`、`python3`、`clang` 与 `upx`（可选）。
+bundle 在 CI 中构建；本地需要 `NDK` 与 `llvm-strip`。
 
 ```bash
-# 构建原生 bionic 二进制
-make build-native VER=2.0.0
-
-# 构建 UPX 压缩变体
-make build-native-upx VER=2.0.0
-
-# 构建 deb 包
-make deb-native VER=2.0.0
-
-# 构建 pacman 包
-make pacman-native VER=2.0.0
+make bundle   # artifacts/bundle/<version>
+make deb      # 发布产物
 ```
-
-完整构建参考见 [docs/guides/make-maintainer.md](./docs/guides/make-maintainer.md)。
 
 ## v1 与 v2（双代）
 
@@ -119,9 +108,6 @@ pacman -S opencode1           # v1 主线
 ## 技术文档
 
 - [docs/reference/transplant.md](./docs/reference/transplant.md) -- 运行时移植管线
-- [docs/history/comparison-runtime-lines.md](./docs/history/comparison-runtime-lines.md) -- 运行时方案对比
-- [docs/guides/dual-track-install.md](./docs/guides/dual-track-install.md) -- 双轨安装指南
-- [docs/guides/make-maintainer.md](./docs/guides/make-maintainer.md) -- Makefile 参考
 
 ## 💬 社区与讨论
 

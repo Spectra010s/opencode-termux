@@ -22,7 +22,7 @@ One Android/aarch64 Bionic ELF for Termux. No PRoot, no glibc, no wrapper in the
 
 - **aarch64 only.** Do not add a 32-bit (armv7/arm32) target or re-introduce its scripts; that track failed and was removed.
 - **Pinned inputs.** Versions, commits and hashes live in [`tools/supply-chain-lock.json`](tools/supply-chain-lock.json), read through [`tools/ocver.py`](tools/ocver.py). Never hardcode a version in a script, workflow or installer — read it from the lock. A version bump means a new lock entry, not an edit to existing pins.
-- **Do not edit generated output.** `artifacts/`, `packing/dpkg/work/`, `packing/pacman/pkg/` and versioned packages are build products.
+- **Do not edit generated output.** `artifacts/`, `packing/dpkg/work/` and versioned packages are build products.
 - **Actions are pinned** to immutable commit SHAs with the version in a trailing comment. Use the v6 line where it exists.
 - **Shell scripts** use `set -euo pipefail` and fail fast on missing binaries or files.
 
@@ -57,7 +57,6 @@ Docs are grouped by purpose under [`docs/`](docs/):
 | `guides/` | How to build, install, migrate, manage plugins |
 | `reference/` | How the pipeline works, contracts, design notes |
 | `ops/` | Runbooks and maintainer operations |
-| `history/` | Superseded material, kept for archaeology |
 
 When behaviour and docs disagree, fix the doc in the same change as the code. When you add or move a workflow-critical document, update the [`docs/README.md`](docs/README.md) index and the root [`AGENTS.md`](AGENTS.md) map.
 

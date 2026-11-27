@@ -128,11 +128,11 @@ python3 tools/transplant/transplant.py detect --mg artifacts/transplant/1.3.13/m
 # ② 一键管线（extract→detect→convert(if 36)→patch→assemble→revive→verify）
 python3 tools/transplant/transplant.py all --ver 1.3.13 --tgz /tmp/opencode-linux-arm64-1.3.13.tgz
 
-# ③ make 入口（内部自动 npm pack 到 $TMPDIR；现产 opencode-native-revived）
-make transplant VER=1.3.13
+# ③ 直接调 CLI（内部自动 npm pack 到 $TMPDIR；现产 opencode-native-revived）
+python3 tools/transplant/transplant.py all --ver 1.3.13
 
 # 回归（golden-file，fixtures 需先 scripts/fetch-fixtures.sh 预下载）
-make transplant-check
+python3 tests/transplant/test_golden.py --fixtures-dir tests/transplant/fixtures/tgz
 ```
 
 每步失败打印可操作错误并以非 0 退出；`verify` 子命令重跑 execve 断言版本串一致
@@ -220,7 +220,7 @@ tag → 比对 assets 是否含 aarch64-android.zip → 与 `target` 不同则�
 ## 5. FAQ
 
 **Q: 为何不用源码编译 Bun/WebKit/ICU？**
-A: 源码编译是 guysoft 路线（`docs/reference/performance-optimization.md` §1.1、`docs/history/native-android-research.md`），
+A: 源码编译是 guysoft 路线（`docs/reference/performance-optimization.md` §1.1），
 工作量级 = 修改 Bun 的 Zig/C++ 构建系统 + WebKit/JavaScriptCore 集成，且需逐个打 Bionic 兼容补丁
 （zig sigaction 152B→直调、.tbss 64B 对齐、seccomp 拦截缺失 syscall、JSC usePollingTraps 等，
 见 performance-optimization.md §4.3）。C1 曾被判证伪，但复活手术（§0.2）证明：
@@ -315,7 +315,6 @@ make transplant-upx VER=1.18.21
 
 - 目标架构 / 自动化方案 / 补丁集 / 7 项验证清单：`docs/reference/performance-optimization.md` §4
 - 优化措施总览与量化预期（启动 <0.3s、TUI RSS <350MB、零 glibc）：`docs/reference/performance-optimization.md` §7
-- 零-glibc 研究历史（2026-05，早于 C1 复活，其"不可行"结论已被 §0.2 推翻）：`docs/history/native-android-research.md`
 - 7 项验证脚本：`scripts/transplant-verify.sh`（agent-executable，`--runtime <opencode-native>`）
 - golden 回归：`tests/transplant/test_golden.py`（fixtures 由 `scripts/fetch-fixtures.sh` 预下载）
 

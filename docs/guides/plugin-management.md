@@ -42,7 +42,7 @@ External plugin builder route (recommended for reproducible plugin packaging):
 git clone https://github.com/Hope2333/opencode-plugins-termux.git
 cd opencode-plugins-termux
 make list
-make all PLUGIN=omo MODE=source
+make all PLUGIN=omo MODE=source   # in that repo
 ```
 
 ## Recovery model (self patch + rollback)

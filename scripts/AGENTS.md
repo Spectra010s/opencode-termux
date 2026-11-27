@@ -9,7 +9,6 @@
 | Stage install prefix | `build.sh`, `common.sh` | copies sources/runtime into staged prefix and writes build metadata |
 | Runtime launcher behavior | `launcher.sh` | tty cleanup, lock cleanup, runtime/CLI dispatch |
 | Debian packaging | `package/package_deb.sh` | validates staged tree, writes control/postinst, builds `.deb` |
-| Pacman packaging | `package/package_pacman.sh` | rewrites pkgver/pkgrel and runs `makepkg` |
 | System skill hooks | `hooks/run-system-skills.sh` | manifest load, compatibility gate, idempotency/state logging |
 
 ## CONVENTIONS
@@ -29,9 +28,9 @@
 # stage prefix
 ./scripts/build.sh
 
-# package builds
-./scripts/package/package_deb.sh
-./scripts/package/package_pacman.sh
+# release bundle (CI runs the same script)
+bash scripts/ci/build-opencode-bundle.sh
+bash scripts/ci/package-release-bundle.sh artifacts/bundle/<ver> <ver> artifacts/release
 
 # manual hook run
 OPENCODE_HOOK_STRICT=0 OPENCODE_HOOK_ENABLE_NETWORK=0 \
