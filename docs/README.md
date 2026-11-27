@@ -13,7 +13,6 @@ itself is documented upstream at [opencode.ai/docs](https://opencode.ai/docs).
 ## Packaging and runtime
 
 - [`guides/plugin-management.md`](guides/plugin-management.md) — plugin install, self-update, snapshot rollback.
-- [`reference/plugin-packaging-design.md`](reference/plugin-packaging-design.md) — package-manager-driven plugin model.
 
 ## Operations
 

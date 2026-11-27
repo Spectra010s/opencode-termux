@@ -1,7 +1,7 @@
 # DOCS KNOWLEDGE BASE
 
 ## OVERVIEW
-`docs/` is organised by role: `guides/` (how to), `reference/` (how it works), `ops/` (runbooks).
+`docs/` is organised by role: `guides/` (how to), `ops/` (runbooks).
 
 ## NAVIGATION ANCHORS
 - Start at `README.md` — it is the index.
@@ -12,7 +12,7 @@
 | How do I build the Android bundle? | `guides/native-v2-build.md` | pinned inputs, CI path, OpenTUI step |
 | What does a release publish? | `ops/apt-repository.md` | signed flat APT repo, failure modes |
 | Validation runbook? | `ops/execution-checklist.md` | tag run, install paths, on-device checks |
-| Plugin operations? | `guides/plugin-management.md`, `reference/plugin-packaging-design.md` | file-plugin mode + rollback model |
+| Plugin operations? | `guides/plugin-management.md` | file-plugin mode + rollback model |
 
 ## CONVENTIONS
 - Keep docs aligned with current command surfaces (`scripts/ci/*`, `scripts/*`).

@@ -55,7 +55,6 @@ Docs are grouped by purpose under [`docs/`](docs/):
 | Folder | Contents |
 |---|---|
 | `guides/` | How to build, install, migrate, manage plugins |
-| `reference/` | How the pipeline works, contracts, design notes |
 | `ops/` | Runbooks and maintainer operations |
 
 When behaviour and docs disagree, fix the doc in the same change as the code. When you add or move a workflow-critical document, update the [`docs/README.md`](docs/README.md) index and the root [`AGENTS.md`](AGENTS.md) map.

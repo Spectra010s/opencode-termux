@@ -24,7 +24,7 @@ Termux-first OpenCode build/packaging workspace. Since 2.2.7 the mainline is a r
 opencode-termux/
 ├── scripts/                    # CI entrypoints, transforms, lock reader, plugin CLIs
 ├── packing/                    # launcher template
-├── docs/                       # guides/ (how-to), reference/ (internals), ops/ (runbooks)
+├── docs/                       # guides/ (how-to), ops/ (runbooks)
 ├── artifacts/                  # generated runtime/staging outputs (disposable)
 └── .github/workflows/          # CI handoff workflows
 ```
