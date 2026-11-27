@@ -2,7 +2,9 @@
 set -eu
 
 repo=Spectra010s/opencode-termux
-release_tag=v2.2.7
+# This script is also served standalone from a raw URL, so it cannot read the
+# lock. Bump this with every release.
+release_tag=v2.4.2
 if [ "$#" -gt 0 ]; then
   [ "$#" -eq 2 ] && [ "$1" = --version ] || { echo 'Usage: install.sh [--version X.Y.Z[-N]]' >&2; exit 2; }
   base=${2%%-*}
@@ -92,6 +94,14 @@ find "$temporary_dir/lib" -type f -name '*.js' -exec \
   sed -i "s|@TERMUX_PREFIX@/lib/opencode|$lib_dir|g" {} +
 if grep -rlq '@TERMUX_PREFIX@' "$temporary_dir/lib"; then
   echo 'Release bundle contains an unexpected placeholder path.' >&2
+  exit 1
+fi
+
+# The launcher is a template too; materialize-bundle.sh stamps it for the deb,
+# and the curl path has to do the same.
+sed -i "s|__OPENCODE_VERSION__|$version|g" "$temporary_dir/bin/opencode"
+if grep -q '__OPENCODE_VERSION__' "$temporary_dir/bin/opencode"; then
+  echo 'Release launcher contains an unexpected version placeholder.' >&2
   exit 1
 fi
 
