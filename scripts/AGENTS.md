@@ -15,7 +15,7 @@
 
 ## CONVENTIONS
 - Strict shell mode (`set -euo pipefail`) and explicit `command -v` checks.
-- Versions come from `tools/supply-chain-lock.json`; never hardcode them.
+- Versions come from `supply-chain-lock.json`; never hardcode them.
 - Scripts must run from the repo root, because CI calls them that way.
 
 ## ANTI-PATTERNS (SCRIPTS)

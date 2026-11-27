@@ -6,7 +6,7 @@ packaging maintainer.
 
 This is not a fork of OpenCode. The source comes from
 [anomalyco/opencode](https://github.com/anomalyco/opencode) at the commit pinned
-in `tools/supply-chain-lock.json`, and this repository carries only the Android
+in `supply-chain-lock.json`, and this repository carries only the Android
 compatibility delta needed to run it on Termux: the bionic native builds, the
 package target, the launcher, and the release pipeline. The repository was
 derived from [Hope2333/opencode-termux](https://github.com/Hope2333/opencode-termux).
@@ -20,7 +20,7 @@ In scope:
 - the `$PREFIX/lib/opencode` bundle plus its `$PREFIX/bin/opencode` launcher
 - packaging and release: the tarball, the `.deb`, the signed APT source, the
   installer, and the CI workflows that produce them
-- keeping the pins in `tools/supply-chain-lock.json` current
+- keeping the pins in `supply-chain-lock.json` current
 
 Out of scope:
 

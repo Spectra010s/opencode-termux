@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read pinned versions from tools/supply-chain-lock.json.
+"""Read pinned versions from supply-chain-lock.json.
 
 The lock file is the single source of truth. Workflows, CI scripts and the
 installer must ask this helper instead of repeating a version literal.
@@ -20,7 +20,7 @@ import os
 import sys
 from pathlib import Path
 
-LOCK = Path(os.environ.get("OCVER_LOCK") or Path(__file__).resolve().parent / "supply-chain-lock.json")
+LOCK = Path(os.environ.get("OCVER_LOCK") or Path(__file__).resolve().parent.parent / "supply-chain-lock.json")
 
 
 def load() -> dict:

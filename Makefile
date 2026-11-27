@@ -1,7 +1,7 @@
 # OpenCode for Termux — targets for the bundle line (2.2.7+).
 #
 # CI does not call make: it runs scripts/ci/*.sh directly. These targets are the
-# same steps for a local run, reading the version from tools/supply-chain-lock.json.
+# same steps for a local run, reading the version from supply-chain-lock.json.
 
 SHELL := /bin/bash
 

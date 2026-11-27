@@ -4,7 +4,7 @@
 setup() {
   repo="$(cd "$BATS_TEST_DIRNAME/../.." && pwd)"
   tmp="$(mktemp -d)"
-  python3 - "$repo/tools/supply-chain-lock.json" "$tmp/lock.json" <<'PY'
+  python3 - "$repo/supply-chain-lock.json" "$tmp/lock.json" <<'PY'
 import json, sys
 lock = json.load(open(sys.argv[1]))
 lock["current"] = "9.9.9"

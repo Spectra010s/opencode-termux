@@ -14,7 +14,7 @@
 #   bin/opencode                            shell wrapper, execs bun
 #
 # Everything is lock-driven: the OpenCode commit, Bun version, OpenTUI pin and
-# bun-pty ref all come from tools/supply-chain-lock.json.
+# bun-pty ref all come from supply-chain-lock.json.
 #
 # Asset paths are baked at build time, so the bundle is built against the
 # placeholder `@TERMUX_PREFIX@` and rewritten when it is packaged or installed.
@@ -34,7 +34,7 @@ import json
 import sys
 
 version, bun_version = sys.argv[1], sys.argv[2]
-lock = json.load(open("tools/supply-chain-lock.json", encoding="utf-8"))
+lock = json.load(open("supply-chain-lock.json", encoding="utf-8"))
 opencode = lock["opencode"][version]
 host = lock["source_build_bun_" + bun_version.replace(".", "_")]
 print(opencode["commit"])
@@ -97,7 +97,7 @@ expected = {"opentui": opentui, "bun-pty": bunpty}
 drift = {name: (found[name], expected[name]) for name in found if found[name] != expected[name]}
 if drift:
     raise SystemExit(
-        "upstream pins moved; update tools/supply-chain-lock.json and the natives: "
+        "upstream pins moved; update supply-chain-lock.json and the natives: "
         + ", ".join(f"{k} {a} != {b}" for k, (a, b) in drift.items())
     )
 print(f"pins: opentui {opentui}, bun-pty {bunpty}")

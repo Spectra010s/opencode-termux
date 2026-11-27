@@ -11,7 +11,7 @@ import os
 import sys
 from pathlib import Path
 
-LOCK = Path(__file__).resolve().parent / "supply-chain-lock.json"
+LOCK = Path(__file__).resolve().parent.parent / "supply-chain-lock.json"
 
 
 def lock_bun_version(root: Path) -> str:

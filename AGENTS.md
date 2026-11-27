@@ -2,7 +2,7 @@
 
 ## ACTIVE NATIVE V2 WORK (2026-11-27)
 
-- Released: `2.3.2` is the newest published bundle (tag `v2.3.2`, merged into `native-android` as `583151d`). Pins live in `tools/supply-chain-lock.json`; `tools/ocver.py` is the only reader, and `current`/`package_revision` drive CI, publishing and `install.sh`.
+- Released: `2.3.2` is the newest published bundle (tag `v2.3.2`, merged into `native-android` as `583151d`). Pins live in `supply-chain-lock.json`; `tools/ocver.py` is the only reader, and `current`/`package_revision` drive CI, publishing and `install.sh`.
 - In flight: branch `feat/2.4.2`, lock `current: 2.4.2` (commit `fc31a48`), `package_revision: 1`, OpenTUI `0.9.9`, Zig `0.17.1`, `bun_version 1.4.4` (CI bundling only; the deb depends on `bun (>= 1.4.4)` and never pins it).
 - `2.4.1` never shipped: its build (Actions run 45446416586) failed at the OpenTUI step because 0.9.4 added a `bundle-libcxx` step that is not wired to the `--libc` file (`zig build-lib`: `unable to provide libc for target "aarch64-linux.5.10...7.2-android.28"`). The lock therefore skips it, and `.release/v2.4.2.md` covers `2.3.2 → 2.4.2` in one range.
 - `bundle-libcxx` fix: `tools/patch-opentui-android.py` skips OpenTUI's static archive on Android. That archive spawns a nested `zig build-lib` which never sees this build's bionic `--libc` file, and Zig has no bundled bionic libc. The bundle ships only the shared `libopentui.so`. Verified against the pinned 0.9.9 tree with Zig `0.17.1` (patch idempotent, `zig fmt --check` clean, build.zig compiles); no full CI build has run yet. Zig stays `0.17.1`; 0.9.9's `build.zig.zon` requires exactly that.
@@ -41,7 +41,7 @@ opencode-termux/
 | Release packaging | `scripts/ci/package-release-bundle.sh`, `.github/workflows/build-native-android.yml` | packages the runtime bundle in CI; takes `REVISION` from the lock |
 | Signed APT source | `scripts/ci/write-flat-apt-release.py`, `scripts/ci/sign-apt-index.sh`, `setup-apt.sh`, `apt/opencode-termux.gpg` | CI indexes and signs Release; setup installs the scoped public key and source |
 | Plugin lifecycle | `tools/plugin-manager.sh`, `tools/plugin-selfcheck.sh`, `docs/guides/plugin-management.md` | local file plugin path + snapshot rollback model |
-| Pinned versions | `tools/supply-chain-lock.json`, `tools/ocver.py` | single source of truth; `current` drives CI/publish/install |
+| Pinned versions | `supply-chain-lock.json`, `tools/ocver.py` | single source of truth; `current` drives CI/publish/install |
 | Bundle source patches | `tools/patch-opencode-source.py`, `tools/patch-opentui-ffi.py`, `tools/patch-fff-android.py` | edits applied to the pinned source and installed packages before the host Bun bundles the graph |
 | OpenTUI Android build | `tools/patch-opentui-android.py`, `patches/opentui/tlsdesc-shim.c` | build.zig hooks + the TLSDESC shim the workflow compiles |
 | Guard verification | `tools/transplant/swap_tui.py` | `has_ffi_guard()` is the gate the workflow runs on the unstripped .so |
@@ -55,7 +55,7 @@ opencode-termux/
 
 ## CONVENTIONS
 - Shell scripts use strict mode (`set -euo pipefail`) and fail-fast checks for required binaries/files.
-- Build scripts read versions from `tools/supply-chain-lock.json`; never hardcode them.
+- Build scripts read versions from `supply-chain-lock.json`; never hardcode them.
 - The launcher template lives at `packing/launcher/opencode`; the deb is assembled by `scripts/ci/package-release-bundle.sh`.
 
 ## ANTI-PATTERNS (THIS PROJECT)

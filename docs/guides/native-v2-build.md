@@ -4,7 +4,7 @@ Target: OpenCode native Android/aarch64 Bionic, no proot and no glibc.
 
 ## Pinned inputs
 
-`tools/supply-chain-lock.json` is the source of truth for CI build inputs.
+`supply-chain-lock.json` is the source of truth for CI build inputs.
 The build workflow reads its `current` version. The release installer pins its
 tag so a tagged copy cannot silently install a later release.
 

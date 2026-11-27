@@ -23,7 +23,7 @@ jobs:
           set -euo pipefail
           python3 - <<'PY' >> "$GITHUB_ENV"
           import json
-          lock = json.load(open("tools/supply-chain-lock.json", encoding="utf-8"))
+          lock = json.load(open("supply-chain-lock.json", encoding="utf-8"))
           version = lock["current"]
           opencode = lock["opencode"][version]
           opentui_version = opencode["opentui_version"]
@@ -48,7 +48,7 @@ jobs:
         run: |
           set -euo pipefail
           URL="https://ziglang.org/download/$ZIG_VERSION/zig-x86_64-linux-$ZIG_VERSION.tar.xz"
-          SHA="$(python3 -c 'import json,os; print(json.load(open("tools/supply-chain-lock.json"))["opentui"][os.environ["OPENTUI_VERSION"]]["zig_x86_64_linux_sha256"])')"
+          SHA="$(python3 -c 'import json,os; print(json.load(open("supply-chain-lock.json"))["opentui"][os.environ["OPENTUI_VERSION"]]["zig_x86_64_linux_sha256"])')"
           mkdir -p work
           curl -fsSLo work/zig.tar.xz "$URL"
           echo "$SHA  work/zig.tar.xz" | sha256sum -c -
@@ -63,7 +63,7 @@ jobs:
           import os
           import subprocess
 
-          lock = json.load(open("tools/supply-chain-lock.json", encoding="utf-8"))
+          lock = json.load(open("supply-chain-lock.json", encoding="utf-8"))
           bind = json.load(open("tools/transplant/config/bun-bind.json", encoding="utf-8"))
           oc = lock["opencode"][os.environ["OPENCODE_VERSION"]]
           ot = lock["opentui"][os.environ["OPENTUI_VERSION"]]
@@ -174,7 +174,7 @@ jobs:
           bash scripts/ci/package-release-bundle.sh \
             "artifacts/bundle/$OPENCODE_VERSION" "$OPENCODE_VERSION" dist "$OPENCODE_REVISION"
           cp "artifacts/bundle/$OPENCODE_VERSION/report.json" dist/report.json
-          cp tools/supply-chain-lock.json dist/supply-chain-lock.json
+          cp supply-chain-lock.json dist/supply-chain-lock.json
           python3 tools/gen-packages-index.py dist/Packages.gz dist
           gzip -dc dist/Packages.gz | grep -q '^Package: opencode$'
           python3 scripts/ci/write-flat-apt-release.py dist
