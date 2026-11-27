@@ -11,7 +11,6 @@
 |---|---|---|
 | How do I build the Android bundle? | `guides/native-v2-build.md` | pinned inputs, CI path, OpenTUI step |
 | What does a release publish? | `apt-repository.md` | flat APT repo setup, signed index, failure modes |
-| Plugin operations? | `guides/plugin-management.md` | file-plugin mode + rollback model |
 
 ## CONVENTIONS
 - Keep docs aligned with current command surfaces (`scripts/ci/*`, `scripts/*`).

@@ -10,10 +10,6 @@ itself is documented upstream at [opencode.ai/docs](https://opencode.ai/docs).
 - [`guides/native-v2-build.md`](guides/native-v2-build.md) — pinned inputs, the bundle build and the OpenTUI step.
 - [`apt-repository.md`](apt-repository.md) — flat-release repo layout, index generation, signing key and source setup.
 
-## Packaging and runtime
-
-- [`guides/plugin-management.md`](guides/plugin-management.md) — plugin install, self-update, snapshot rollback.
-
 ## Ground rules
 
 - The release artifact is a bundle plus a launcher on Termux's `bun`; nothing glibc, nothing proot, nothing musl.

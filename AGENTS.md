@@ -22,7 +22,7 @@ Termux-first OpenCode build/packaging workspace. Since 2.2.7 the mainline is a r
 ## STRUCTURE
 ```text
 opencode-termux/
-├── scripts/                    # CI entrypoints, transforms, lock reader, plugin CLIs
+├── scripts/                    # CI entrypoints, transforms, lock reader, guard check
 ├── packing/                    # launcher template
 ├── docs/                       # index, guides/ (how-to), APT repo runbook
 ├── artifacts/                  # generated runtime/staging outputs (disposable)
@@ -38,17 +38,10 @@ opencode-termux/
 | Release notes | `.release/v<version>.md`, `.release/v<version>-highlights.md` | body notes and the embedded TUI banner; publish reads them by lock version |
 | Release packaging | `scripts/ci/package-release-bundle.sh`, `.github/workflows/build-native-android.yml` | packages the runtime bundle in CI; takes `REVISION` from the lock |
 | Signed APT source | `scripts/ci/write-flat-apt-release.py`, `scripts/ci/sign-apt-index.sh`, `setup-apt.sh`, `apt/opencode-termux.gpg` | CI indexes and signs Release; setup installs the scoped public key and source |
-| Plugin lifecycle | `scripts/plugin-manager.sh`, `scripts/plugin-selfcheck.sh`, `docs/guides/plugin-management.md` | local file plugin path + snapshot rollback model |
 | Pinned versions | `supply-chain-lock.json`, `scripts/ocver.py` | single source of truth; `current` drives CI/publish/install |
 | Bundle source patches | `scripts/patch-opencode-source.py`, `scripts/patch-opentui-ffi.py`, `scripts/patch-fff-android.py` | edits applied to the pinned source and installed packages before the host Bun bundles the graph |
 | OpenTUI Android build | `scripts/patch-opentui-android.py`, `scripts/opentui/tlsdesc-shim.c` | build.zig hooks + the TLSDESC shim the workflow compiles |
 | Guard verification | `scripts/opentui/check-ffi-guard.py` | CLI gate the workflow runs on the unstripped .so |
-
-## CODE MAP
-| Symbol | Type | Location | Refs | Role |
-|---|---|---|---:|---|
-| `build_plugin` | shell function | `scripts/plugin-manager.sh` | medium | plugin build pipeline (bun/npm + fallback) |
-| `cmd_install` / `cmd_update` / `cmd_rollback` | shell functions | `scripts/plugin-manager.sh` | high | plugin lifecycle commands |
 
 ## CONVENTIONS
 - Shell scripts use strict mode (`set -euo pipefail`) and fail-fast checks for required binaries/files.
@@ -61,9 +54,6 @@ opencode-termux/
 - Do not edit generated outputs (`artifacts/`, versioned `.deb` / `.tar.gz`).
 - Do not run staging/packaging scripts against shared or wrong prefixes: several flows use destructive `rm -rf` cleanup.
 
-## UNIQUE STYLES
-- Plugin management is Termux-biased toward local `file://.../index.js` registration instead of bare plugin name mode.
-
 ## COMMANDS
 ```bash
 # Runtime bundle, then the release artefacts (NDK + llvm-strip)
@@ -73,7 +63,6 @@ bash scripts/ci/build-opencode-bundle.sh
 bash scripts/ci/package-release-bundle.sh "artifacts/bundle/$VER" "$VER" artifacts/release "$REV"
 
 # Validation
-./scripts/plugin-selfcheck.sh
 ./tests/run.sh
 
 # What the lock says is current

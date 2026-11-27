@@ -28,10 +28,6 @@ One Android/aarch64 Bionic ELF for Termux. No PRoot, no glibc, no wrapper in the
 
 ## Testing
 
-```sh
-./scripts/plugin-selfcheck.sh    # local consistency checks
-```
-
 The **Unit Tests** workflow runs the `bats` suite on every push and pull request. Release builds are not part of PR CI: `build-native-android.yml` builds the Bionic OpenTUI library, bundles the pinned source for `bun`, cross-builds the native libraries and produces an unsigned artifact, either by hand for a pre-tag test or as the first job of the release run.
 
 A change to the build pipeline is not done until that workflow is green on a hand dispatch. A change to the runtime is not done until the artifact runs on a real device: `--version`, TUI, auth, one real prompt, clean exit.
