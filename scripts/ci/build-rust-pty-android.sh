@@ -13,7 +13,7 @@
 # Usage: build-rust-pty-android.sh OUTPUT_SO [SOURCE_DIR]
 #
 # Env:
-#   BUN_PTY_REF   git ref to build (default from tools/ocver.py, lock key
+#   BUN_PTY_REF   git ref to build (default from scripts/ocver.py, lock key
 #                 bun_pty.ref) -- a tag or commit
 #   BUN_PTY_SRC   checkout directory (default work/bun-pty)
 #   ANDROID_API   API level for the cross linker (default 28)
@@ -25,7 +25,7 @@ cd "$ROOT"
 
 OUT="${1:?usage: build-rust-pty-android.sh OUTPUT_SO [SOURCE_DIR]}"
 SRC="${2:-${BUN_PTY_SRC:-work/bun-pty}}"
-REF="${BUN_PTY_REF:-$(python3 tools/ocver.py bunpty ref)}"
+REF="${BUN_PTY_REF:-$(python3 scripts/ocver.py bunpty ref)}"
 ANDROID_API="${ANDROID_API:-28}"
 
 for tool in cargo git readelf; do

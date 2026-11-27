@@ -35,10 +35,10 @@ jobs:
         run: |
           set -euo pipefail
           {
-            printf 'VERSION=%s\n' "$(python3 tools/ocver.py current)"
-            printf 'REVISION=%s\n' "$(python3 tools/ocver.py revision)"
-            printf 'RELEASE_TAG=%s\n' "$(python3 tools/ocver.py tag)"
-            printf 'CANDIDATE=opencode-%s-android-aarch64-candidate\n' "$(python3 tools/ocver.py current)"
+            printf 'VERSION=%s\n' "$(python3 scripts/ocver.py current)"
+            printf 'REVISION=%s\n' "$(python3 scripts/ocver.py revision)"
+            printf 'RELEASE_TAG=%s\n' "$(python3 scripts/ocver.py tag)"
+            printf 'CANDIDATE=opencode-%s-android-aarch64-candidate\n' "$(python3 scripts/ocver.py current)"
           } >> "$GITHUB_ENV"
 
       - name: Check the release contract

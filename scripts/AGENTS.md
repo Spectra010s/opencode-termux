@@ -1,39 +1,43 @@
 # SCRIPTS KNOWLEDGE BASE
 
 ## OVERVIEW
-`scripts/` owns staging, packaging invocation, hook execution, and CI helper scripts.
+`scripts/` holds the release entrypoints, source transforms, the lock reader,
+native helpers and the guard gate. Actions call these scripts directly; there
+is no top-level wrapper.
+
+## STRUCTURE
+```text
+scripts/
+├── ci/                     # release entrypoints
+├── opentui/                # tlsdesc shim + FFI guard check
+├── patch-*.py              # source and native transforms
+├── ocver.py                # only reader of supply-chain-lock.json
+├── gen-packages-index.py   # writes Packages.gz
+├── remap-binary-prefix.py  # rewrites build path in the .so
+└── materialize-bundle.sh   # launcher substitution
+```
 
 ## WHERE TO LOOK
 | Task | Location | Notes |
 |---|---|---|
-| Stage install prefix | `build.sh`, `common.sh` | copies sources/runtime into staged prefix and writes build metadata |
-| Runtime launcher behavior | `launcher.sh` | tty cleanup, lock cleanup, runtime/CLI dispatch |
-| Debian packaging | `package/package_deb.sh` | validates staged tree, writes control/postinst, builds `.deb` |
-| Pacman packaging | `package/package_pacman.sh` | rewrites pkgver/pkgrel and runs `makepkg` |
-| System skill hooks | `hooks/run-system-skills.sh` | manifest load, compatibility gate, idempotency/state logging |
+| Build the runtime bundle | `ci/build-opencode-bundle.sh` | patches source, installs bionic natives, bundles with host Bun |
+| Build bun-pty | `ci/build-rust-pty-android.sh` | cargo cross-build against the NDK |
+| Package the release | `ci/package-release-bundle.sh` | deb + tarball from `artifacts/bundle/<ver>` |
+| APT index | `ci/write-flat-apt-release.py`, `ci/sign-apt-index.sh`, `gen-packages-index.py` | `Packages`, `Release`, `InRelease` |
+| Launcher substitution | `materialize-bundle.sh` | `__OPENCODE_VERSION__` in the launcher |
+| Pinned versions | `ocver.py` | reads the root `supply-chain-lock.json` |
+| Source patches | `patch-opencode-source.py`, `patch-opencode-bundle.py` | Android bundle target, bun dependency, watcher/PTY |
+| Native patches | `patch-opentui-android.py`, `patch-opentui-ffi.py`, `patch-opentui-loader.py`, `patch-fff-android.py` | bionic hooks, pointer tags, asset slots |
+| Path remap | `remap-binary-prefix.py` | replaces workspace path without changing file size |
+| Guard gate | `opentui/check-ffi-guard.py` | scans unstripped `.so` before strip |
 
 ## CONVENTIONS
-- Keep strict shell mode (`set -euo pipefail`) and explicit command checks (`command -v ...`).
-- Keep staging/package scripts deterministic: validate staged runtime/launcher before packaging.
-- Hook invocations in package lifecycle stay safe-by-default (`OPENCODE_HOOK_STRICT=0`, `OPENCODE_HOOK_ENABLE_NETWORK=0`).
-- Shared helpers belong in `common.sh`; avoid duplicating logging/path helpers across scripts.
+- Strict shell mode; explicit `command -v` checks.
+- Versions come from the lock; never hardcode them.
+- Scripts run from the repo root, because CI calls them that way.
+- Patch transforms must be idempotent and run before `Bun.build`.
 
-## ANTI-PATTERNS (SCRIPTS)
-- Do not point staging prefixes to shared install trees; `build.sh` removes target subtrees with `rm -rf`.
-- Do not run `package_*` scripts before `scripts/build.sh` (missing staged runtime/launcher fails packaging).
-- Do not assume CI helper outputs (`scripts/ci/*`) are final release artifacts.
-- Do not bypass hook compatibility/idempotency checks in `hooks/run-system-skills.sh`.
-
-## COMMANDS
-```bash
-# stage prefix
-./scripts/build.sh
-
-# package builds
-./scripts/package/package_deb.sh
-./scripts/package/package_pacman.sh
-
-# manual hook run
-OPENCODE_HOOK_STRICT=0 OPENCODE_HOOK_ENABLE_NETWORK=0 \
-  ./scripts/hooks/run-system-skills.sh post_install
-```
+## ANTI-PATTERNS
+- Do not assume CI helper outputs are published artifacts; the tag run publishes.
+- Do not add a build path that skips the guard scan on the unstripped `.so`.
+- Do not mask bionic pointer tags before they reach Bun's FFI.

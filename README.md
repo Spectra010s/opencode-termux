@@ -69,7 +69,7 @@ The installer replaces the launcher and the bundle directory; it does not delete
 
 ## Build from source
 
-Releases are built from pinned source in GitHub Actions, not uploaded from a maintainer's phone. The pinned OpenCode, Bun and OpenTUI versions live in [`tools/supply-chain-lock.json`](tools/supply-chain-lock.json) (`current` plus a hash per version); `tools/ocver.py` supplies them to CI. Follow the [native build guide](docs/guides/native-v2-build.md) to reproduce a build.
+Releases are built from pinned source in GitHub Actions, not uploaded from a maintainer's phone. The pinned OpenCode, Bun and OpenTUI versions live in [`supply-chain-lock.json`](supply-chain-lock.json) (`current` plus a hash per version); `scripts/ocver.py` supplies them to CI. Follow the [native build guide](docs/native-v2-build.md) to reproduce a build.
 
 ## Releases and provenance
 

@@ -1,4 +1,4 @@
-name: Build locked OpenCode v2 for native Android
+name: Build OpenCode v2 for native Android
 
 on:
   workflow_dispatch:
@@ -18,12 +18,12 @@ jobs:
       - name: Check out workflow commit
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
-      - name: Resolve pinned versions from lock
+      - name: Resolve versions from lock
         run: |
           set -euo pipefail
           python3 - <<'PY' >> "$GITHUB_ENV"
           import json
-          lock = json.load(open("tools/supply-chain-lock.json", encoding="utf-8"))
+          lock = json.load(open("supply-chain-lock.json", encoding="utf-8"))
           version = lock["current"]
           opencode = lock["opencode"][version]
           opentui_version = opencode["opentui_version"]
@@ -35,7 +35,7 @@ jobs:
           print(f"ZIG_VERSION={opentui['zig_version']}")
           PY
 
-      - name: Fetch pinned OpenTUI source
+      - name: Fetch OpenTUI source
         run: |
           set -euo pipefail
           mkdir -p work/opentui
@@ -48,14 +48,14 @@ jobs:
         run: |
           set -euo pipefail
           URL="https://ziglang.org/download/$ZIG_VERSION/zig-x86_64-linux-$ZIG_VERSION.tar.xz"
-          SHA="$(python3 -c 'import json,os; print(json.load(open("tools/supply-chain-lock.json"))["opentui"][os.environ["OPENTUI_VERSION"]]["zig_x86_64_linux_sha256"])')"
+          SHA="$(python3 -c 'import json,os; print(json.load(open("supply-chain-lock.json"))["opentui"][os.environ["OPENTUI_VERSION"]]["zig_x86_64_linux_sha256"])')"
           mkdir -p work
           curl -fsSLo work/zig.tar.xz "$URL"
           echo "$SHA  work/zig.tar.xz" | sha256sum -c -
           tar -xJf work/zig.tar.xz -C work
           echo "$GITHUB_WORKSPACE/work/zig-x86_64-linux-$ZIG_VERSION" >> "$GITHUB_PATH"
 
-      - name: Verify locked metadata
+      - name: Verify metadata
         run: |
           set -euo pipefail
           python3 - <<'PY'
@@ -63,28 +63,22 @@ jobs:
           import os
           import subprocess
 
-          lock = json.load(open("tools/supply-chain-lock.json", encoding="utf-8"))
-          bind = json.load(open("tools/transplant/config/bun-bind.json", encoding="utf-8"))
-          oc = lock["opencode"][os.environ["OPENCODE_VERSION"]]
+          lock = json.load(open("supply-chain-lock.json", encoding="utf-8"))
+          lock["opencode"][os.environ["OPENCODE_VERSION"]]
           ot = lock["opentui"][os.environ["OPENTUI_VERSION"]]
-          bun_version = oc["bun_version"]
-          bun = lock["android_bun"][bun_version]
           assert ot["commit"] == os.environ["OPENTUI_COMMIT"]
           assert ot["zig_version"] == os.environ["ZIG_VERSION"]
           head = subprocess.check_output(
               ["git", "-C", "work/opentui", "rev-parse", "HEAD"], text=True
           ).strip()
           assert head == ot["commit"], (head, ot["commit"])
-          assert bind["target"] == bun_version, (bind["target"], bun_version)
-          assert bind["archive_sha256"] == bun["archive_sha256"]
-          assert bind["elf_sha256"] == bun["elf_sha256"]
           PY
           test "$(zig version)" = "$ZIG_VERSION"
 
       - name: Apply OpenTUI Android hardening
         run: |
           set -euo pipefail
-          python3 tools/patch-opentui-android.py work/opentui
+          python3 scripts/patch-opentui-android.py work/opentui
           git -C work/opentui diff --check
 
       - name: Build Bionic OpenTUI library
@@ -130,8 +124,8 @@ jobs:
           )
           SO="work/opentui/packages/native/lib/aarch64-linux-android.28/libopentui.so"
           test -f "$SO"
-          python3 tools/remap-binary-prefix.py "$SO" "$GITHUB_WORKSPACE" /usr/src
-          # Keep this lib unstripped: the guard gate scans local guard-owner
+          python3 scripts/remap-binary-prefix.py "$SO" "$GITHUB_WORKSPACE" /usr/src
+          # Keep this lib unstripped: the guard gate scans guard-owner
           # symbols, and llvm-strip --strip-unneeded deletes them. The
           # transplant swap verifies the unstripped build, then strips to fit
           # the embedded slot.
@@ -152,7 +146,7 @@ jobs:
             echo "glibc-only pthread_tryjoin_np import found in Bionic library" >&2
             exit 1
           fi
-          python3 -c 'import sys; sys.path.insert(0,"tools/transplant"); from swap_tui import has_ffi_guard; assert has_ffi_guard(open(sys.argv[1],"rb").read())' "$SO"
+          python3 scripts/opentui/check-ffi-guard.py "$SO"
           if grep -aFq "$GITHUB_WORKSPACE" "$SO"; then
             echo "build workspace path leaked into library" >&2
             exit 1
@@ -174,8 +168,8 @@ jobs:
           bash scripts/ci/package-release-bundle.sh \
             "artifacts/bundle/$OPENCODE_VERSION" "$OPENCODE_VERSION" dist "$OPENCODE_REVISION"
           cp "artifacts/bundle/$OPENCODE_VERSION/report.json" dist/report.json
-          cp tools/supply-chain-lock.json dist/supply-chain-lock.json
-          python3 tools/gen-packages-index.py dist/Packages.gz dist
+          cp supply-chain-lock.json dist/supply-chain-lock.json
+          python3 scripts/gen-packages-index.py dist/Packages.gz dist
           gzip -dc dist/Packages.gz | grep -q '^Package: opencode$'
           python3 scripts/ci/write-flat-apt-release.py dist
           (cd dist && sha256sum * > SHA256SUMS)

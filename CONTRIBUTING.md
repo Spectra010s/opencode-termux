@@ -21,16 +21,12 @@ One Android/aarch64 Bionic ELF for Termux. No PRoot, no glibc, no wrapper in the
 ## Ground rules
 
 - **aarch64 only.** Do not add a 32-bit (armv7/arm32) target or re-introduce its scripts; that track failed and was removed.
-- **Pinned inputs.** Versions, commits and hashes live in [`tools/supply-chain-lock.json`](tools/supply-chain-lock.json), read through [`tools/ocver.py`](tools/ocver.py). Never hardcode a version in a script, workflow or installer — read it from the lock. A version bump means a new lock entry, not an edit to existing pins.
-- **Do not edit generated output.** `artifacts/`, `packing/dpkg/work/`, `packing/pacman/pkg/` and versioned packages are build products.
+- **Pinned inputs.** Versions, commits and hashes live in [`supply-chain-lock.json`](supply-chain-lock.json), read through [`scripts/ocver.py`](scripts/ocver.py). Never hardcode a version in a script, workflow or installer — read it from the lock. A version bump means a new lock entry, not an edit to existing pins.
+- **Do not edit generated output.** `artifacts/` and versioned packages are build products.
 - **Actions are pinned** to immutable commit SHAs with the version in a trailing comment. Use the v6 line where it exists.
 - **Shell scripts** use `set -euo pipefail` and fail fast on missing binaries or files.
 
 ## Testing
-
-```sh
-make selfcheck          # local consistency checks
-```
 
 The **Unit Tests** workflow runs the `bats` suite on every push and pull request. Release builds are not part of PR CI: `build-native-android.yml` builds the Bionic OpenTUI library, bundles the pinned source for `bun`, cross-builds the native libraries and produces an unsigned artifact, either by hand for a pre-tag test or as the first job of the release run.
 
@@ -44,7 +40,7 @@ Releases are built and published by CI, never from a maintainer machine:
 2. Push the tag (`git tag v2.2.7 && git push origin v2.2.7`). `publish-native-android.yml` then calls that same build workflow, so the run that publishes also built the files it publishes: no candidate lookup, no separate provenance check.
 3. The release job verifies the checksums, signs the APT index and publishes [`.release/v<version>.md`](.release) as the notes. The tag must match `ocver.py tag`.
 
-Publishing first means the first install *is* the test. If the release turns out to be broken, fix it, raise `package_revision` in `tools/supply-chain-lock.json`, and tag `v<version>-<revision>` (`v2.2.7-2`). The Debian version moves with it, so `apt` upgrades and the old tag is never reused. To retry a release that failed for infrastructure reasons, dispatch `publish-native-android.yml` with `--ref v<version>` instead of bumping.
+Publishing first means the first install *is* the test. If the release turns out to be broken, fix it, raise `package_revision` in `supply-chain-lock.json`, and tag `v<version>-<revision>` (`v2.2.7-2`). The Debian version moves with it, so `apt` upgrades and the old tag is never reused. To retry a release that failed for infrastructure reasons, dispatch `publish-native-android.yml` with `--ref v<version>` instead of bumping.
 
 Do not upload a locally built binary.
 
@@ -52,13 +48,10 @@ Do not upload a locally built binary.
 
 Docs are grouped by purpose under [`docs/`](docs/):
 
-| Folder | Contents |
+| File | Contents |
 |---|---|
-| `guides/` | How to build, install, migrate, manage plugins |
-| `reference/` | How the pipeline works, contracts, design notes |
-| `ops/` | Runbooks and maintainer operations |
-| `history/` | Superseded material, kept for archaeology |
+| `README.md` | index and ground rules |
+| `native-v2-build.md` | what is patched for Android and why |
+| `apt-repository.md` | signed flat APT repo setup and failure modes |
 
 When behaviour and docs disagree, fix the doc in the same change as the code. When you add or move a workflow-critical document, update the [`docs/README.md`](docs/README.md) index and the root [`AGENTS.md`](AGENTS.md) map.
-
-Documents written in Chinese are kept as-is because their evidence trails are still cited.

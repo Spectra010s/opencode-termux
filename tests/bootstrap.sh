@@ -6,7 +6,7 @@
 #   2) system `bats` on PATH
 #
 # The vendored copy is git-ignored; this script clones a pinned version when it
-# is missing so `make test` works from a clean checkout without extra setup.
+# is missing so `./tests/run.sh` works from a clean checkout without extra setup.
 set -euo pipefail
 
 BATS_VERSION="${BATS_VERSION:-v1.11.0}"

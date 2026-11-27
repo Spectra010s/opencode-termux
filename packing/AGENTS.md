@@ -1,34 +1,26 @@
 # PACKAGING KNOWLEDGE BASE
 
 ## OVERVIEW
-`packing/` mixes source templates/manifests with generated package outputs. Keep edits confined to source-of-truth files.
+`packing/` holds only the launcher template. The deb and tarball are assembled
+in CI by `scripts/ci/package-release-bundle.sh`; no package output is committed.
 
 ## STRUCTURE
 ```text
 packing/
-├── deb/DEBIAN/control                # template metadata (source-of-truth)
-├── pacman/PKGBUILD*                  # template/build scripts (source-of-truth)
-├── pacman/select_pkgbuild.sh         # architecture selector
-├── manifests/system-skills/*.json    # hook/system-skill policy manifests
-├── dpkg/*.deb                        # generated outputs (do not edit)
-├── dpkg/work/                        # generated staging tree (do not edit)
-└── pacman/pkg/, pacman/*.pkg.tar.xz  # generated outputs (do not edit)
+└── launcher/opencode        # launcher template
 ```
 
 ## WHERE TO LOOK
 | Task | Location | Notes |
 |---|---|---|
-| Deb control metadata | `deb/DEBIAN/control` | placeholder-based template consumed during package build |
-| Pacman package behavior | `pacman/PKGBUILD`, `pacman/PKGBUILD.aarch64` | staged-prefix install + post hooks |
-| Arch switch logic | `pacman/select_pkgbuild.sh` | selects concrete PKGBUILD by `uname -m` |
-| Hook manifests/policy | `manifests/system-skills/*.json` | events, compatibility gates, idempotency policy |
+| Launcher template | `launcher/opencode` | execs `bun` with the bundled `index.js` |
+| Deb metadata | `scripts/ci/package-release-bundle.sh` | control fields and dependencies generated there |
 
 ## CONVENTIONS
-- Treat `PKGBUILD*`, deb control template, and manifests as editable source.
-- Keep package post-install/upgrade hook behavior aligned with safe defaults.
-- Keep architecture-specific PKGBUILD variants semantically equivalent unless architecture requires divergence.
+- The launcher carries `__OPENCODE_VERSION__`; `scripts/materialize-bundle.sh` substitutes it for the deb.
+- The bundle's JS carries `@TERMUX_PREFIX@`; the packager and `install.sh` substitute it with the device prefix.
+- Declare runtime dependencies (`bun`, `libc++`, `ripgrep`) in the packager, not here.
 
-## ANTI-PATTERNS (PACKAGING)
-- Do not edit generated paths: `dpkg/work/`, `dpkg/*.deb`, `pacman/pkg/`, versioned `pacman/*.pkg.tar.xz`.
-- Do not hardcode one-off local paths into templates intended for staged-prefix packaging.
-- Do not bypass runtime/launcher presence checks before packaging.
+## ANTI-PATTERNS
+- Do not commit generated `.deb` or tarball files.
+- Do not add a second launcher copy; `materialize-bundle.sh` is the only template consumer for the deb.
