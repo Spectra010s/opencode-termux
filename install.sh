@@ -2,9 +2,7 @@
 set -eu
 
 repo=Spectra010s/opencode-termux
-# This script is also served standalone from a raw URL, so it cannot read the
-# lock. Bump this with every release.
-release_tag=v2.4.2
+release_tag=v2.2.7
 if [ "$#" -gt 0 ]; then
   [ "$#" -eq 2 ] && [ "$1" = --version ] || { echo 'Usage: install.sh [--version X.Y.Z[-N]]' >&2; exit 2; }
   base=${2%%-*}
