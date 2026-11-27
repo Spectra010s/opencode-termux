@@ -10,7 +10,7 @@ root (GitHub `releases/latest/download/<basename>` flat URL shape).
 
 Usage: python3 tools/gen-packages-index.py [OUT] [DIR...]
   OUT default: packing/Packages.gz
-  DIR default: packing/dpkg packing/dpkg-native packing/dpkg-compressed packing/dpkg-standalone
+  DIR default: artifacts/release
 """
 import sys, os, gzip, hashlib, tarfile, io, re
 
@@ -59,7 +59,7 @@ def read_control(deb):
 
 def main():
     out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(REPO, 'packing/Packages.gz')
-    dirs = sys.argv[2:] or ['packing/dpkg', 'packing/dpkg-native', 'packing/dpkg-compressed', 'packing/dpkg-standalone']
+    dirs = sys.argv[2:] or ['artifacts/release']
     stanzas = []
     seen = set()
     for d in dirs:

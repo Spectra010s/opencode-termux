@@ -40,5 +40,3 @@ opencode
 
 - `make selfcheck` — environment/plugin read-only check.
 - `make test` — shell unit tests.
-- `tools/upgrade-matrix.sh` — install/upgrade/downgrade/reinstall simulation
-  against a second device using cached deb artefacts.

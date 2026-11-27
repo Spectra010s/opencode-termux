@@ -107,7 +107,6 @@ Dentro de una generación, native / wrapper / compressed son mutuamente excluyen
 
 ## Documentación técnica
 
-- [docs/reference/transplant.md](./docs/reference/transplant.md) -- Pipeline de trasplante del runtime
 
 ## 💬 Comunidad y Discussions
 

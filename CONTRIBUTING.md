@@ -22,7 +22,7 @@ One Android/aarch64 Bionic ELF for Termux. No PRoot, no glibc, no wrapper in the
 
 - **aarch64 only.** Do not add a 32-bit (armv7/arm32) target or re-introduce its scripts; that track failed and was removed.
 - **Pinned inputs.** Versions, commits and hashes live in [`tools/supply-chain-lock.json`](tools/supply-chain-lock.json), read through [`tools/ocver.py`](tools/ocver.py). Never hardcode a version in a script, workflow or installer — read it from the lock. A version bump means a new lock entry, not an edit to existing pins.
-- **Do not edit generated output.** `artifacts/`, `packing/dpkg/work/` and versioned packages are build products.
+- **Do not edit generated output.** `artifacts/` and versioned packages are build products.
 - **Actions are pinned** to immutable commit SHAs with the version in a trailing comment. Use the v6 line where it exists.
 - **Shell scripts** use `set -euo pipefail` and fail fast on missing binaries or files.
 

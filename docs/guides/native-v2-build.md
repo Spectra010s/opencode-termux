@@ -64,33 +64,3 @@ the FFI guard scan (`clamp=9`, `csel_vs>0`; the marker survives because the
 build patches source before `Bun.build`), the `@TERMUX_PREFIX@` placeholder is
 still unsubstituted, and the curated highlights from
 `.release/v<version>-highlights.md` landed in an emitted chunk.
-
-## Path 2 — on-device (Termux, no NDK)
-
-Termux is already Bionic, so this path needs no NDK. Full guide:
-`docs/reference/transplant.md`.
-
-```sh
-pkg install python3 nodejs clang make zig   # zig only to rebuild OpenTUI
-python3 tools/transplant/transplant.py all \
-  --ver <version> --tgz opencode-linux-arm64-<version>.tgz
-```
-
-`transplant.py` resolves the Bun base from
-`tools/transplant/config/bun-bind.json`, which is pinned to the same Bun version
-as the lock entry; a mismatch aborts instead of silently pairing the wrong base.
-
-Output: `artifacts/transplant/<ver>/opencode-native-tui` plus `report.json`.
-Then test: `opencode --version`, TUI smoke, auth, prompt, clean exit.
-
-The on-device path needs a prebuilt `artifacts/transplant/opentui-bionic/libopentui.so`
-for the swap. Without it the tool marks the report `tui: absent` — an
-explicit gap, never a silent skip.
-
-## Why the transplant tools remain
-
-2.2.7 ships a bundle, not a spliced ELF, so the release path no longer touches
-`swap_tui.py`. The `source` strategy and `transplant.py all` still compile
-against the Android Bun ELF for comparison builds; running `transplant.py all`
-on an already compiled 1.4.4 ELF produced a binary that failed on device, which
-is why the bundle is the default.

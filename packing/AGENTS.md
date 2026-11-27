@@ -1,30 +1,25 @@
 # PACKAGING KNOWLEDGE BASE
 
 ## OVERVIEW
-`packing/` mixes source templates/manifests with generated package outputs. Keep edits confined to source-of-truth files.
+`packing/` holds the launcher template. The deb and tarball are assembled in
+CI by `scripts/ci/package-release-bundle.sh`; no package output is committed.
 
 ## STRUCTURE
 ```text
 packing/
-├── deb/DEBIAN/control                # template metadata (source-of-truth)
-├── deb-standalone/DEBIAN/control     # rollback package metadata
-├── launcher/opencode                 # bundle launcher template
-├── manifests/system-skills/*.json    # hook/system-skill policy manifests
-├── dpkg/*.deb                        # generated outputs (do not edit)
-└── dpkg/work/                        # generated staging tree (do not edit)
+└── launcher/opencode        # launcher template, @TERMUX_PREFIX@ placeholder
 ```
 
 ## WHERE TO LOOK
 | Task | Location | Notes |
 |---|---|---|
-| Deb control metadata | `deb/DEBIAN/control` | placeholder-based template consumed during package build |
-| Hook manifests/policy | `manifests/system-skills/*.json` | events, compatibility gates, idempotency policy |
+| Launcher template | `launcher/opencode` | execs `bun` with the bundled entrypoint; placeholder substituted at package time |
+| Deb metadata | `scripts/ci/package-release-bundle.sh` | control fields and dependencies are generated there |
 
 ## CONVENTIONS
-- Treat deb control templates and manifests as editable source.
-- Keep package post-install/upgrade hook behavior aligned with safe defaults.
+- Keep `@TERMUX_PREFIX@` unsubstituted in the template; the packager replaces it.
+- Declare runtime dependencies (`bun`, `libc++`, `ripgrep`) in the packager, not here.
 
 ## ANTI-PATTERNS (PACKAGING)
-- Do not edit generated paths: `dpkg/work/`, `dpkg/*.deb`, versioned packages.
-- Do not hardcode one-off local paths into templates intended for staged-prefix packaging.
-- Do not bypass runtime/launcher presence checks before packaging.
+- Do not commit generated `.deb` or tarball files.
+- Do not add a second launcher copy; `materialize-bundle.sh` is the only consumer.

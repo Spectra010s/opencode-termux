@@ -1,38 +1,23 @@
 # SCRIPTS KNOWLEDGE BASE
 
 ## OVERVIEW
-`scripts/` owns staging, packaging invocation, hook execution, and CI helper scripts.
+`scripts/` holds the release entrypoints. Everything release-facing runs from
+`scripts/ci/`; nothing here is invoked by `make`.
 
 ## WHERE TO LOOK
 | Task | Location | Notes |
 |---|---|---|
-| Stage install prefix | `build.sh`, `common.sh` | copies sources/runtime into staged prefix and writes build metadata |
-| Runtime launcher behavior | `launcher.sh` | tty cleanup, lock cleanup, runtime/CLI dispatch |
-| Debian packaging | `package/package_deb.sh` | validates staged tree, writes control/postinst, builds `.deb` |
-| System skill hooks | `hooks/run-system-skills.sh` | manifest load, compatibility gate, idempotency/state logging |
+| Build the runtime bundle | `ci/build-opencode-bundle.sh` | patches the pinned source, builds the bionic OpenTUI .so, bundles with the host Bun |
+| Build bun-pty for bionic | `ci/build-rust-pty-android.sh` | cargo cross-build against the NDK |
+| Package the release | `ci/package-release-bundle.sh` | deb + tarball from `artifacts/bundle/<ver>` |
+| Signed APT index | `ci/write-flat-apt-release.py`, `ci/sign-apt-index.sh` | `Release`/`InRelease` for the flat repo |
+| Launcher substitution | `materialize-bundle.sh` | writes `@TERMUX_PREFIX@` into `packing/launcher/opencode` |
 
 ## CONVENTIONS
-- Keep strict shell mode (`set -euo pipefail`) and explicit command checks (`command -v ...`).
-- Keep staging/package scripts deterministic: validate staged runtime/launcher before packaging.
-- Hook invocations in package lifecycle stay safe-by-default (`OPENCODE_HOOK_STRICT=0`, `OPENCODE_HOOK_ENABLE_NETWORK=0`).
-- Shared helpers belong in `common.sh`; avoid duplicating logging/path helpers across scripts.
+- Strict shell mode (`set -euo pipefail`) and explicit `command -v` checks.
+- Versions come from `tools/supply-chain-lock.json`; never hardcode them.
+- Scripts must run from the repo root, because CI calls them that way.
 
 ## ANTI-PATTERNS (SCRIPTS)
-- Do not point staging prefixes to shared install trees; `build.sh` removes target subtrees with `rm -rf`.
-- Do not run `package_*` scripts before `scripts/build.sh` (missing staged runtime/launcher fails packaging).
-- Do not assume CI helper outputs (`scripts/ci/*`) are final release artifacts.
-- Do not bypass hook compatibility/idempotency checks in `hooks/run-system-skills.sh`.
-
-## COMMANDS
-```bash
-# stage prefix
-./scripts/build.sh
-
-# release bundle (CI runs the same script)
-bash scripts/ci/build-opencode-bundle.sh
-bash scripts/ci/package-release-bundle.sh artifacts/bundle/<ver> <ver> artifacts/release
-
-# manual hook run
-OPENCODE_HOOK_STRICT=0 OPENCODE_HOOK_ENABLE_NETWORK=0 \
-  ./scripts/hooks/run-system-skills.sh post_install
-```
+- Do not assume CI helper outputs are release artifacts; the tag run publishes.
+- Do not add a build path that skips the FFI guard scan on the unstripped .so.

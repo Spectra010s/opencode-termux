@@ -7,24 +7,17 @@ itself is documented upstream at [opencode.ai/docs](https://opencode.ai/docs).
 
 ## Pipeline
 
-- [`guides/native-v2-build.md`](guides/native-v2-build.md) — pinned inputs, the bundle build, the `source` fallback, and the on-device path.
+- [`guides/native-v2-build.md`](guides/native-v2-build.md) — pinned inputs, the bundle build and the OpenTUI step.
 - [`ops/apt-repository.md`](ops/apt-repository.md) — what a release publishes, how the index is signed, and how to debug a broken source.
-- [`reference/transplant.md`](reference/transplant.md) — 中文: the revive/splice surgery the older compiled line used.
-- [`reference/tui-common-fix.md`](reference/tui-common-fix.md) — 中文: TUI crash analysis (pointer tags, FFI shim, renderer startup).
 
 ## Packaging and runtime
 
 - [`guides/plugin-management.md`](guides/plugin-management.md) — plugin install, self-update, snapshot rollback.
-- [`reference/system-skills-hook-architecture.md`](reference/system-skills-hook-architecture.md) — package-mode system skills and the hook framework.
 - [`reference/plugin-packaging-design.md`](reference/plugin-packaging-design.md) — package-manager-driven plugin model.
-- [`reference/performance-optimization.md`](reference/performance-optimization.md) — 中文: performance roadmap.
-- [`reference/bundle-list.txt`](reference/bundle-list.txt) — Bun module bundle inventory.
-- [`reference/measurements/native-baseline-1.3.13.json`](reference/measurements/native-baseline-1.3.13.json) — recorded baseline measurements.
 
 ## Operations
 
 - [`ops/execution-checklist.md`](ops/execution-checklist.md) — end-to-end install/test validation before a tag.
-- [`ops/skills-index.md`](ops/skills-index.md) — index of Termux skills and quick fixes.
 
 ## Ground rules
 

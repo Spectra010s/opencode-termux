@@ -217,7 +217,7 @@ def is_glibc_linked(lib: bytes) -> bool:
     )
 
 def has_ffi_guard(lib: bytes) -> bool:
-    """Guard verification (task-tui-common-fix): scan the code ranges of all
+    """Guard verification: scan the code ranges of all
     guard-owning symbols for the compiled guard patterns: `mov wN,
     #0x7fffffff` clamps (MOVN #0x8000,LSL#16) + saturating-add `csel ..., vs`.
     An unguarded build has plain adds + b.vs integerOutOfBounds branches in
@@ -314,8 +314,8 @@ def main() -> int:
     if is_glibc_linked(lib):
         print(
             "swap_tui: REFUSED — tui-lib is glibc-linked (DT_NEEDED libc.so.6 "
-            "& co) and cannot dlopen on bionic; build via "
-            "tools/transplant/build-libopentui.sh",
+            "& co) and cannot dlopen on bionic; build it in the "
+            "OpenTUI step of .github/workflows/build-native-android.yml",
             file=sys.stderr,
         )
         return 6
@@ -323,8 +323,8 @@ def main() -> int:
     if not args.guard_preverified and not has_ffi_guard(lib):
         print(
             "swap_tui: REFUSED — tui-lib lacks the FFI negative-coordinate "
-            "guard v2 (patches/opentui/*.patch); build via "
-            "tools/transplant/build-libopentui.sh which applies + verifies them",
+            "guard v2; the OpenTUI step in "
+            ".github/workflows/build-native-android.yml applies and verifies it",
             file=sys.stderr,
         )
         return 5

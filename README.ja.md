@@ -107,7 +107,6 @@ pacman -S opencode1           # v1 メインライン
 
 ## 技術ドキュメント
 
-- [docs/reference/transplant.md](./docs/reference/transplant.md) -- ランタイム移植パイプライン
 
 ## 💬 コミュニティ & Discussions
 

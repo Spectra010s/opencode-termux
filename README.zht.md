@@ -107,7 +107,6 @@ pacman -S opencode1           # v1 主線
 
 ## 技術文件
 
-- [docs/reference/transplant.md](./docs/reference/transplant.md) -- 執行時移植管線
 
 ## 💬 社群與討論
 
