@@ -42,17 +42,6 @@ def main() -> None:
     replace_once(package, f'"packageManager": "{declared}"', f'"packageManager": "bun@{pinned_bun}"')
 
     build = root / "packages/cli/script/build.ts"
-    replace_once(
-        build,
-        "async function compileExecutable(item: (typeof allTargets)[number]) {\n",
-        "async function compileExecutable(item: (typeof allTargets)[number]) {\n"
-        ' const pinned = process.env.BUN_SOURCE_TARGET_ELF\n'
-        ' if (pinned) {\n'
-        '   if (item.os !== "linux" || item.arch !== "arm64" || item.abi) throw new Error("unexpected source-build target " + item.os + "-" + item.arch + (item.abi ? "-" + item.abi : "") + " (set OPENCODE_TARGET=linux-arm64)")\n'
-        '   if (!(await Bun.file(pinned).exists())) throw new Error("pinned Bun target missing")\n'
-        '   return pinned\n'
-        ' }\n',
-    )
 
     # Bionic has no glibc pty helper: for a cross arm64 build upstream resolves
     # @opencode/pty-linux-arm64-gnu and embeds that binary. It cannot exec on

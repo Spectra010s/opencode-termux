@@ -13,7 +13,6 @@ tag so a tagged copy cannot silently install a later release.
 | `current` | OpenCode version this branch builds and publishes |
 | `opencode[current]` | upstream commit + `source_sha256` + `bun_version` + `opentui_version` |
 | `opentui[<ver>]` | OpenTUI commit, required Zig version, Zig archive hash |
-| `android_bun[<ver>]` | Android/Bionic Bun base archive + ELF hashes |
 | `source_build_bun_<ver>` | host Bun archive hash used to compile the CLI |
 
 `tools/ocver.py` is the only reader. Use it instead of hardcoding:

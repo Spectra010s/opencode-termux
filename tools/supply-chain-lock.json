@@ -63,24 +63,6 @@
     "commit": "a582ae17cc6c41cb890b142c48669936541339c7",
     "portable_pty": "0.9"
   },
-  "android_bun": {
-    "1.4.0": {
-      "archive_sha256": "42544d7438bb92c7e7df7d30b9a5858cb7a834636608e5b850f59138283567fc",
-      "elf_sha256": "44a83a9b716a2df09c7c62cfee94f99b4d0b389f9326c6318c4831d888e2a250"
-    },
-    "1.4.2": {
-      "archive_sha256": "a1c7e2983f1bb65146beb256a4d72449f23042412bc2cf278aa6397ba27e0274",
-      "elf_sha256": "f2970336bfccf36e4e8a408b25c627122f210e941672f184198c31f4dbd377a0"
-    },
-    "1.4.4": {
-      "archive_sha256": "d72e42c60e895ccbc16144bb1e0e0ad7ee384841c35b5501a7ec28b4d6d759c9",
-      "elf_sha256": "461fda703381e03e8856791cd57093cd79b8f05f2ee262bc69f16c27d2c5575e"
-    }
-  },
-  "source_build_bun_1_4_0": {
-    "linux_x64_archive_sha256": "2d03fb5fb83ac8b567aca0a281b2ce1a1a19d488f56c2968d88c3f25e92fe452",
-    "linux_aarch64_archive_sha256": "4b1a332ee861983eb93bcfe6f770fff94e3e31b2c388bdaea3c8ed35e58eed0e"
-  },
   "opentui": {
     "0.5.17": {
       "commit": "6f0efd3330978d696b42db3d7d95d2042008312b",
