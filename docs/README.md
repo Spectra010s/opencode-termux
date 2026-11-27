@@ -8,7 +8,7 @@ itself is documented upstream at [opencode.ai/docs](https://opencode.ai/docs).
 ## Pipeline
 
 - [`guides/native-v2-build.md`](guides/native-v2-build.md) — pinned inputs, the bundle build and the OpenTUI step.
-- [`ops/apt-repository.md`](ops/apt-repository.md) — flat-release repo layout, index generation, signing key and source setup.
+- [`apt-repository.md`](apt-repository.md) — flat-release repo layout, index generation, signing key and source setup.
 
 ## Packaging and runtime
 

@@ -56,7 +56,7 @@ supported host and base — upstream `package.json` declares
    the released files are the ones that run built: it re-verifies the
    checksums, signs the APT index, and publishes
    [`.release/v<version>.md`](../../.release). See
-   [`../ops/apt-repository.md`](../ops/apt-repository.md) for the signed source and its failure modes.
+   [`../apt-repository.md`](../apt-repository.md) for the signed source and its failure modes.
 
 The bundle build refuses to produce a product unless the embedded OpenTUI passes
 the FFI guard scan (`clamp=9`, `csel_vs>0`; the marker survives because the

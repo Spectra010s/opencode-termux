@@ -1,7 +1,7 @@
 # DOCS KNOWLEDGE BASE
 
 ## OVERVIEW
-`docs/` is organised by role: `guides/` (how to), `ops/` (runbooks).
+`docs/` holds the index, two guides and the APT repository runbook.
 
 ## NAVIGATION ANCHORS
 - Start at `README.md` — it is the index.
@@ -10,7 +10,7 @@
 | Question | Document | Notes |
 |---|---|---|
 | How do I build the Android bundle? | `guides/native-v2-build.md` | pinned inputs, CI path, OpenTUI step |
-| What does a release publish? | `ops/apt-repository.md` | flat APT repo setup, signed index, failure modes |
+| What does a release publish? | `apt-repository.md` | flat APT repo setup, signed index, failure modes |
 | Plugin operations? | `guides/plugin-management.md` | file-plugin mode + rollback model |
 
 ## CONVENTIONS
@@ -26,5 +26,5 @@
 ## QUICK CHECK
 ```bash
 # verify docs entrypoints still resolve
-ls docs/README.md docs/guides/native-v2-build.md docs/ops/apt-repository.md
+ls docs/README.md docs/guides/native-v2-build.md docs/apt-repository.md
 ```

@@ -1,6 +1,6 @@
 # APT source: how it is set up
 
-User-facing install steps are in the [root README](../../README.md#install-with-apt).
+User-facing install steps are in the [root README](../README.md#install-with-apt).
 This document explains what the repository is and how CI produces it.
 
 ## Shape of the repository
