@@ -48,11 +48,10 @@ Do not upload a locally built binary.
 
 Docs are grouped by purpose under [`docs/`](docs/):
 
-| Folder | Contents |
+| File | Contents |
 |---|---|
-| `guides/` | How to build, install, migrate, manage plugins |
-| `ops/` | Runbooks and maintainer operations |
+| `README.md` | index and ground rules |
+| `native-v2-build.md` | what is patched for Android and why |
+| `apt-repository.md` | signed flat APT repo setup and failure modes |
 
 When behaviour and docs disagree, fix the doc in the same change as the code. When you add or move a workflow-critical document, update the [`docs/README.md`](docs/README.md) index and the root [`AGENTS.md`](AGENTS.md) map.
-
-Documents written in Chinese are kept as-is because their evidence trails are still cited.
