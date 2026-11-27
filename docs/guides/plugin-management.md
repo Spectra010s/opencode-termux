@@ -1,101 +1,57 @@
-# Plugin Management (Online install + self-update + rollback)
+# Plugin management
 
-For Termux, user-friendly plugin management should be based on **local-plugin file URLs**, not direct package-name plugin install.
+OpenCode's own CLI handles plugins: `opencode plugin add/list/check/update/remove`
+accepts npm names, Git specs and configured local paths. Use that for general
+plugins. `scripts/plugin-manager.sh` is a narrower helper for installing
+`oh-my-opencode` from source on Termux, with snapshots and patch recovery.
 
-## Recommended install path (updated 2026-09)
+## What the helper owns
 
-- **Preferred**: install plugins with the `opencode plugin` command, then let the agent configure them per this document. Verified working on both runtime lines (`opencode` native mainline and `opencode-wrapper`).
-- **Still supported**: local `file:///.../index.js` registration (the flows below). Keep using it when you need snapshot/rollback control or offline installs.
-- Legacy note: machines upgraded from the 1.2.x era may still carry bare-name `plugin:` entries in `opencode.json` (e.g. `"plugin": ["oh-my-openagent", ...]`). That is a legacy trace, not the recommended pattern on Termux.
+```
+config      $XDG_CONFIG_HOME/opencode/opencode.json
+plugins     $XDG_CONFIG_HOME/opencode/local-plugins/<name>/
+snapshots   $XDG_CONFIG_HOME/opencode/plugin-snapshots/
+state       $XDG_CONFIG_HOME/opencode/plugin-manager-state.json
+```
 
-Main packing/build route for external plugins now lives in:
-
-- `https://github.com/Hope2333/opencode-plugins-termux`
-
-## Why
-
-`plugin: ["oh-my-opencode"]` can trigger runtime installation behavior and native dependency breakage on Termux/Bionic after upstream updates.
-
-## Recommended path
-
-- Online source of truth: plugin Git repo
-- Local runtime path: `~/.config/opencode/local-plugins/<name>/index.js`
-- Config registration: `file:///.../index.js`
-- Snapshots for rollback before every update
+It clones the plugin repo, builds it with `bun run` or `npm`, registers the
+entry as a `file://` path in the config, and snapshots the config before each
+mutation. Network failures are retried.
 
 ## Commands
 
-```bash
-./scripts/plugin-manager.sh install                  # install OMO from GitHub
-./scripts/plugin-manager.sh update                   # self-update (git pull + rebuild)
-./scripts/plugin-manager.sh migrate-installed        # switch HOME local-plugin entry to system package path
-./scripts/plugin-manager.sh list-snapshots           # view recoverable snapshots
-./scripts/plugin-manager.sh rollback                 # restore latest snapshot
-./scripts/plugin-manager.sh patch-export             # export local patch file
-./scripts/plugin-manager.sh patch-apply oh-my-opencode /path/to.patch
-./scripts/plugin-manager.sh verify-config 7600       # check MCPs/agents from /config
+```sh
+./scripts/plugin-manager.sh install [name] [repo-url]
+./scripts/plugin-manager.sh update [name]
+./scripts/plugin-manager.sh list-snapshots [name]
+./scripts/plugin-manager.sh rollback [name] [snapshot-file]
+./scripts/plugin-manager.sh patch-export [name]
+./scripts/plugin-manager.sh patch-apply [name] <patch-file>
+./scripts/plugin-manager.sh verify-config [port]
 ```
 
-External plugin builder route (recommended for reproducible plugin packaging):
+Default name is `oh-my-opencode`, default repo is
+`https://github.com/code-yeongyu/oh-my-opencode.git`.
 
-```bash
-git clone https://github.com/Hope2333/opencode-plugins-termux.git
-cd opencode-plugins-termux
-make list
-make all PLUGIN=omo MODE=source   # in that repo
-```
+`migrate-installed [name]` also exists, but it targets
+`$PREFIX/lib/opencode/plugins/<name>/index.js`. This build no longer installs
+system plugins there, so that command is legacy.
 
-## Recovery model (self patch + rollback)
+## Recovery model
 
-1. Update plugin (snapshot auto-created)
-2. If broken, rollback snapshot immediately
-3. If custom fix is needed, patch local repo and export patch
-4. Re-apply patch after future upstream updates as needed
+1. `update` takes a config snapshot before changing anything.
+2. If an update breaks the plugin, `rollback` restores the latest snapshot.
+3. For a local fix, edit the cloned plugin and use `patch-export` to save a diff.
+4. After a future upstream update, `patch-apply` re-applies the saved diff.
 
-This gives both convenience and recoverability.
+## Caveats
 
-## Resilience behavior (network / upstream instability)
-
-`plugin-manager.sh` now includes additional safeguards:
-
-- git clone/fetch/pull retry with exponential backoff (configurable)
-- automatic rollback to latest snapshot when install/update fails
-- state file output with last action/status/error metadata
-
-Defaults and knobs:
-
-- `PLUGIN_GIT_RETRY_MAX=3`
-- `PLUGIN_GIT_RETRY_DELAY=2` (seconds, exponential backoff)
-- `PLUGIN_FORCE_NPM=1` (force npm path, skip bun install when bun causes permission/platform issues)
-- state file: `~/.config/opencode/plugin-manager-state.json`
-
-Default safety recommendation:
-
-- Prefer the `opencode plugin` command for install/management (verified on both runtime lines); use local `file://` registration when you need snapshot/rollback or offline control.
-- Avoid bare package-name plugin entries in `opencode.json` on Termux if plugin has native or postinstall-heavy deps.
-
-Suggested replacement candidate for oauth-login style plugin flow:
-
-- `https://github.com/andyvandaric/opencode-ag-auth`
-  - active repository and explicit OpenCode auth plugin focus
-  - supports local file plugin registration path for Termux-first setups
-
-## Seamless migration to packaged plugin path
-
-If you previously used a HOME local-plugin entry like:
-
-- `file://~/.config/opencode/local-plugins/oh-my-opencode/index.js`
-
-and now have the packaged plugin installed, you can migrate only the plugin entry while
-leaving the rest of `opencode.json` untouched:
-
-```bash
-./scripts/plugin-manager.sh migrate-installed
-```
-
-Current target path:
-
-- `file:///data/data/com.termux/files/usr/lib/opencode/plugins/oh-my-opencode/index.js`
-
-The command snapshots `opencode.json` first and only rewrites matching OMO/plugin-manager
-local entries.
+- The script writes the legacy singular `"plugin"` config key. OpenCode 2.3.2
+  reads `"plugins"`, so entries written by this helper may need translating by
+  hand before OpenCode picks them up.
+- oh-my-opencode is a third-party plugin, not part of this build. It is not
+  shipped, tested or patched here. Its `@opentui/solid` dependency pulls
+  `@opentui/core` 0.5.x, which has no bionic native and predates the loader
+  patch applied to this bundle.
+- Prefer `opencode plugin add` for any plugin other than this specific source
+  install workflow.
