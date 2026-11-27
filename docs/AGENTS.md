@@ -1,29 +1,25 @@
 # DOCS KNOWLEDGE BASE
 
 ## OVERVIEW
-`docs/` holds the index, two guides and the APT repository runbook.
-
-## NAVIGATION ANCHORS
-- Start at `README.md` — it is the index.
+`docs/` is flat: an index, a build/patch guide and an APT runbook. No subdirectories.
 
 ## WHERE TO LOOK
 | Question | Document | Notes |
 |---|---|---|
-| What is patched for Android and why? | `guides/native-v2-build.md` | source/native patches, build shape |
-| What does a release publish? | `apt-repository.md` | flat APT repo setup, signed index, failure modes |
+| What is patched for Android and why? | `native-v2-build.md` | source/native patches, build shape |
+| How is the APT source set up? | `apt-repository.md` | flat repo, signing, device setup |
+| What are the ground rules? | `README.md` | index and constraints |
 
 ## CONVENTIONS
-- Keep docs aligned with current command surfaces (`scripts/ci/*`, `scripts/*`).
-- If adding a workflow-critical document, update `docs/README.md` and the root `AGENTS.md` map.
-- Keep target scope explicit: aarch64 only.
+- Keep docs aligned with the current command surface (`scripts/ci/*`, `scripts/*`).
+- Do not repeat version literals; refer to `supply-chain-lock.json` and `scripts/ocver.py`.
+- Update `docs/README.md` and the root `AGENTS.md` when a document moves.
 
-## ANTI-PATTERNS (DOCS)
-- Do not propose 32-bit (armv7/arm32) targets; 32-bit Bun builds fail.
-- Do not duplicate long command sequences across many files; link to canonical runbook sections.
-- Do not leave numbering/index references stale after moving or adding docs.
+## ANTI-PATTERNS
+- Do not propose 32-bit targets.
+- Do not duplicate long command sequences across files; link to the canonical document.
 
 ## QUICK CHECK
 ```bash
-# verify docs entrypoints still resolve
-ls docs/README.md docs/guides/native-v2-build.md docs/apt-repository.md
+ls docs/README.md docs/native-v2-build.md docs/apt-repository.md
 ```

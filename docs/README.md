@@ -7,7 +7,7 @@ itself is documented upstream at [opencode.ai/docs](https://opencode.ai/docs).
 
 ## Pipeline
 
-- [`guides/native-v2-build.md`](guides/native-v2-build.md) — source and native patches, why each exists, and the resulting build shape.
+- [`native-v2-build.md`](native-v2-build.md) — source and native patches, why each exists, and the resulting build shape.
 - [`apt-repository.md`](apt-repository.md) — flat-release repo layout, index generation, signing key and source setup.
 
 ## Ground rules
