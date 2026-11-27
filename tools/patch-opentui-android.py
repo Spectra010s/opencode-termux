@@ -147,6 +147,25 @@ fn addTranslatedCImports(
         },""",
     )
 
+    # Android's os.tag is .linux, so the static-archive branch runs
+    # scripts/bundle-libcxx.zig, which spawns its own `zig build-lib` for the
+    # target. That invocation never receives this build's `--libc` file, and Zig
+    # carries no bionic libc, so it dies with:
+    #
+    #   zig build-lib: unable to provide libc for target
+    #     "aarch64-linux.5.10...7.2-android.28"
+    #
+    # The archive exists for downstream static linking; the bundle ships
+    # lib/libopentui.so and consumes nothing else, so skip it on Android.
+    replace(
+        build,
+        "        if (lib.isStaticLibrary() and (windows or target.result.os.tag == .linux)) {",
+        "        // No static archive for Android: see patch-opentui-android.py.\n"
+        "        if (lib.isStaticLibrary() and target.result.abi != .android and\n"
+        "            (windows or target.result.os.tag == .linux))\n"
+        "        {",
+    )
+
     # Bionic < 11 ignores TLSDESC relocations; the shim also supplies the
     # glibc-only pthread_tryjoin_np that OpenTUI declares as extern.
     shim = Path(__file__).resolve().parent.parent / "patches" / "opentui" / "tlsdesc-shim.c"
@@ -243,6 +262,7 @@ fn addTranslatedCImports(
         "addBionicTranslateIncludes(b, miniaudio_translate)",
         "addBionicTranslateIncludes(b, yoga_translate)",
         'b.graph.environ_map.get("BIONIC_LIB_DIR")',
+        "target.result.abi != .android",
     ):
         if marker not in build_text:
             raise SystemExit(f"patch-opentui: missing postcondition in build.zig: {marker}")
