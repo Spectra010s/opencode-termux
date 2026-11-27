@@ -26,14 +26,14 @@ Main packing/build route for external plugins now lives in:
 ## Commands
 
 ```bash
-./tools/plugin-manager.sh install                  # install OMO from GitHub
-./tools/plugin-manager.sh update                   # self-update (git pull + rebuild)
-./tools/plugin-manager.sh migrate-installed        # switch HOME local-plugin entry to system package path
-./tools/plugin-manager.sh list-snapshots           # view recoverable snapshots
-./tools/plugin-manager.sh rollback                 # restore latest snapshot
-./tools/plugin-manager.sh patch-export             # export local patch file
-./tools/plugin-manager.sh patch-apply oh-my-opencode /path/to.patch
-./tools/plugin-manager.sh verify-config 7600       # check MCPs/agents from /config
+./scripts/plugin-manager.sh install                  # install OMO from GitHub
+./scripts/plugin-manager.sh update                   # self-update (git pull + rebuild)
+./scripts/plugin-manager.sh migrate-installed        # switch HOME local-plugin entry to system package path
+./scripts/plugin-manager.sh list-snapshots           # view recoverable snapshots
+./scripts/plugin-manager.sh rollback                 # restore latest snapshot
+./scripts/plugin-manager.sh patch-export             # export local patch file
+./scripts/plugin-manager.sh patch-apply oh-my-opencode /path/to.patch
+./scripts/plugin-manager.sh verify-config 7600       # check MCPs/agents from /config
 ```
 
 External plugin builder route (recommended for reproducible plugin packaging):
@@ -90,7 +90,7 @@ and now have the packaged plugin installed, you can migrate only the plugin entr
 leaving the rest of `opencode.json` untouched:
 
 ```bash
-./tools/plugin-manager.sh migrate-installed
+./scripts/plugin-manager.sh migrate-installed
 ```
 
 Current target path:

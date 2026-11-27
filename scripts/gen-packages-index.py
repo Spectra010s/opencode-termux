@@ -8,7 +8,7 @@ and emits RFC822-style stanzas compatible with apt flat repos.
 Filename is written as the BASENAME because release assets live at the release
 root (GitHub `releases/latest/download/<basename>` flat URL shape).
 
-Usage: python3 tools/gen-packages-index.py [OUT] [DIR...]
+Usage: python3 scripts/gen-packages-index.py [OUT] [DIR...]
   OUT default: packing/Packages.gz
   DIR default: artifacts/release
 """

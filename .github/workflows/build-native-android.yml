@@ -64,7 +64,7 @@ jobs:
           import subprocess
 
           lock = json.load(open("supply-chain-lock.json", encoding="utf-8"))
-          bind = json.load(open("tools/transplant/config/bun-bind.json", encoding="utf-8"))
+          bind = json.load(open("scripts/transplant/config/bun-bind.json", encoding="utf-8"))
           oc = lock["opencode"][os.environ["OPENCODE_VERSION"]]
           ot = lock["opentui"][os.environ["OPENTUI_VERSION"]]
           bun_version = oc["bun_version"]
@@ -84,7 +84,7 @@ jobs:
       - name: Apply OpenTUI Android hardening
         run: |
           set -euo pipefail
-          python3 tools/patch-opentui-android.py work/opentui
+          python3 scripts/patch-opentui-android.py work/opentui
           git -C work/opentui diff --check
 
       - name: Build Bionic OpenTUI library
@@ -130,7 +130,7 @@ jobs:
           )
           SO="work/opentui/packages/native/lib/aarch64-linux-android.28/libopentui.so"
           test -f "$SO"
-          python3 tools/remap-binary-prefix.py "$SO" "$GITHUB_WORKSPACE" /usr/src
+          python3 scripts/remap-binary-prefix.py "$SO" "$GITHUB_WORKSPACE" /usr/src
           # Keep this lib unstripped: the guard gate scans local guard-owner
           # symbols, and llvm-strip --strip-unneeded deletes them. The
           # transplant swap verifies the unstripped build, then strips to fit
@@ -152,7 +152,7 @@ jobs:
             echo "glibc-only pthread_tryjoin_np import found in Bionic library" >&2
             exit 1
           fi
-          python3 -c 'import sys; sys.path.insert(0,"tools/transplant"); from swap_tui import has_ffi_guard; assert has_ffi_guard(open(sys.argv[1],"rb").read())' "$SO"
+          python3 -c 'import sys; sys.path.insert(0,"scripts/transplant"); from swap_tui import has_ffi_guard; assert has_ffi_guard(open(sys.argv[1],"rb").read())' "$SO"
           if grep -aFq "$GITHUB_WORKSPACE" "$SO"; then
             echo "build workspace path leaked into library" >&2
             exit 1
@@ -175,7 +175,7 @@ jobs:
             "artifacts/bundle/$OPENCODE_VERSION" "$OPENCODE_VERSION" dist "$OPENCODE_REVISION"
           cp "artifacts/bundle/$OPENCODE_VERSION/report.json" dist/report.json
           cp supply-chain-lock.json dist/supply-chain-lock.json
-          python3 tools/gen-packages-index.py dist/Packages.gz dist
+          python3 scripts/gen-packages-index.py dist/Packages.gz dist
           gzip -dc dist/Packages.gz | grep -q '^Package: opencode$'
           python3 scripts/ci/write-flat-apt-release.py dist
           (cd dist && sha256sum * > SHA256SUMS)

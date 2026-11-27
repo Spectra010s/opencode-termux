@@ -11,7 +11,7 @@ file is for whoever publishes the source and debugs it.
 |---|---|
 | `opencode_<version>-1_aarch64.deb` | `scripts/ci/package-release-bundle.sh` |
 | `opencode-<version>-android-aarch64-bundle.tar.gz` | same |
-| `Packages`, `Packages.gz` | `tools/gen-packages-index.py` |
+| `Packages`, `Packages.gz` | `scripts/gen-packages-index.py` |
 | `Release`, `Release.gpg`, `InRelease` | `scripts/ci/write-flat-apt-release.py`, `scripts/ci/sign-apt-index.sh` |
 | `SHA256SUMS` | the build workflow, extended with the signed files at publish |
 | `supply-chain-lock.json`, `report.json` | the build workflow |

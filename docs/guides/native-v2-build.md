@@ -15,12 +15,12 @@ tag so a tagged copy cannot silently install a later release.
 | `opentui[<ver>]` | OpenTUI commit, required Zig version, Zig archive hash |
 | `source_build_bun_<ver>` | host Bun archive hash used to compile the CLI |
 
-`tools/ocver.py` is the only reader. Use it instead of hardcoding:
+`scripts/ocver.py` is the only reader. Use it instead of hardcoding:
 
 ```sh
-python3 tools/ocver.py current            # 2.2.7
-python3 tools/ocver.py tag                # v2.2.7
-python3 tools/ocver.py field bun_version  # 1.4.4
+python3 scripts/ocver.py current            # 2.2.7
+python3 scripts/ocver.py tag                # v2.2.7
+python3 scripts/ocver.py field bun_version  # 1.4.4
 ```
 
 Current release record: OpenCode `2.2.7` (commit `fedc6f20…`) on Bun `1.4.4`,
@@ -36,9 +36,9 @@ supported host and base — upstream `package.json` declares
 1. Resolves `OPENCODE_VERSION`, `BUN_VERSION`, `OPENTUI_VERSION` and `ZIG_VERSION`
    from the lock.
 2. Fetches the pinned OpenCode commit, rewrites `packageManager` to the pinned
-   Bun via `tools/patch-opencode-source.py`, and installs with the pinned host Bun.
+   Bun via `scripts/patch-opencode-source.py`, and installs with the pinned host Bun.
 3. Cross-compiles OpenTUI for `aarch64-linux-android.28` with the NDK sysroot,
-   Zig, and `patches/opentui/tlsdesc-shim.c`. `tools/patch-opentui-android.py`
+   Zig, and `scripts/opentui/tlsdesc-shim.c`. `scripts/patch-opentui-android.py`
    applies the bionic build hooks and the FFI guards. It is version-agnostic: a
    missing required anchor fails the build, while guards upstream already fixed
    are skipped.

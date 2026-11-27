@@ -28,7 +28,7 @@ Upstream's `Bun.build` call only knows `compile: {...}`. The patch adds an
       contents, which is also valid for a bundle);
     * selects the musl asset names for libc-based native lookups.
 
-Run after `tools/patch-opencode-source.py`; every anchor must match exactly
+Run after `scripts/patch-opencode-source.py`; every anchor must match exactly
 once so an upstream change fails the build instead of shipping a silently
 different product.
 

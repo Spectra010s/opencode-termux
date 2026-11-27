@@ -168,7 +168,7 @@ fn addTranslatedCImports(
 
     # Bionic < 11 ignores TLSDESC relocations; the shim also supplies the
     # glibc-only pthread_tryjoin_np that OpenTUI declares as extern.
-    shim = Path(__file__).resolve().parent.parent / "patches" / "opentui" / "tlsdesc-shim.c"
+    shim = Path(__file__).resolve().parent / "opentui" / "tlsdesc-shim.c"
     if not shim.is_file():
         raise SystemExit(f"patch-opentui: missing {shim}")
     (src / "tlsdesc-shim.c").write_text(shim.read_text(encoding="utf-8"), encoding="utf-8")

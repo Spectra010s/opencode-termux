@@ -1,5 +1,5 @@
 #!/usr/bin/env bats
-# Unit tests for tools/patch-fff-android.py: fff ships an aarch64-linux-android
+# Unit tests for scripts/patch-fff-android.py: fff ships an aarch64-linux-android
 # build, but its embedded-library resolver only names darwin, win32 and linux,
 # so on Termux file search silently degrades to the ripgrep layer.
 
@@ -7,7 +7,7 @@ load '../lib/helper'
 
 setup() {
 	make_tmpdir
-	PATCHER="$(script_path tools/patch-fff-android.py)"
+	PATCHER="$(script_path scripts/patch-fff-android.py)"
 	SRC_DIR="$TEST_TMPDIR/node_modules/@ff-labs/fff-bun/src"
 	mkdir -p "$SRC_DIR"
 	SRC="$SRC_DIR/embedded.ts"

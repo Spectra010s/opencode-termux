@@ -1,5 +1,5 @@
 #!/usr/bin/env bats
-# Unit tests for tools/plugin-manager.sh
+# Unit tests for scripts/plugin-manager.sh
 #
 # Only the pure / filesystem-local helpers are exercised here; network and
 # build paths (git clone, npm/bun, tsc) are out of scope for unit tests.
@@ -8,7 +8,7 @@ load '../lib/helper'
 
 setup() {
 	make_tmpdir
-	PM="$(script_path tools/plugin-manager.sh)"
+	PM="$(script_path scripts/plugin-manager.sh)"
 	# Isolate all config/state under the temp dir.
 	export HOME="$TEST_TMPDIR/home"
 	export XDG_CONFIG_HOME="$TEST_TMPDIR/cfg"

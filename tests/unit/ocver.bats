@@ -1,5 +1,5 @@
 #!/usr/bin/env bats
-# tools/ocver.py is the only reader of the lock version.
+# scripts/ocver.py is the only reader of the lock version.
 
 setup() {
   repo="$(cd "$BATS_TEST_DIRNAME/../.." && pwd)"
@@ -12,7 +12,7 @@ lock["package_revision"] = 1
 json.dump(lock, open(sys.argv[2], "w"))
 PY
   export OCVER_LOCK="$tmp/lock.json"
-  ocver="$repo/tools/ocver.py"
+  ocver="$repo/scripts/ocver.py"
 }
 
 teardown() {

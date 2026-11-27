@@ -21,7 +21,7 @@ One Android/aarch64 Bionic ELF for Termux. No PRoot, no glibc, no wrapper in the
 ## Ground rules
 
 - **aarch64 only.** Do not add a 32-bit (armv7/arm32) target or re-introduce its scripts; that track failed and was removed.
-- **Pinned inputs.** Versions, commits and hashes live in [`supply-chain-lock.json`](supply-chain-lock.json), read through [`tools/ocver.py`](tools/ocver.py). Never hardcode a version in a script, workflow or installer — read it from the lock. A version bump means a new lock entry, not an edit to existing pins.
+- **Pinned inputs.** Versions, commits and hashes live in [`supply-chain-lock.json`](supply-chain-lock.json), read through [`scripts/ocver.py`](scripts/ocver.py). Never hardcode a version in a script, workflow or installer — read it from the lock. A version bump means a new lock entry, not an edit to existing pins.
 - **Do not edit generated output.** `artifacts/` and versioned packages are build products.
 - **Actions are pinned** to immutable commit SHAs with the version in a trailing comment. Use the v6 line where it exists.
 - **Shell scripts** use `set -euo pipefail` and fail fast on missing binaries or files.
@@ -29,7 +29,7 @@ One Android/aarch64 Bionic ELF for Termux. No PRoot, no glibc, no wrapper in the
 ## Testing
 
 ```sh
-./tools/plugin-selfcheck.sh    # local consistency checks
+./scripts/plugin-selfcheck.sh    # local consistency checks
 ```
 
 The **Unit Tests** workflow runs the `bats` suite on every push and pull request. Release builds are not part of PR CI: `build-native-android.yml` builds the Bionic OpenTUI library, bundles the pinned source for `bun`, cross-builds the native libraries and produces an unsigned artifact, either by hand for a pre-tag test or as the first job of the release run.

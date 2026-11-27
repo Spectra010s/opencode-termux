@@ -24,5 +24,5 @@ Package post-install prints registration and verification commands.
 ## Update and rollback
 
 - update via package manager version bump
-- local snapshots via `tools/plugin-manager.sh`
+- local snapshots via `scripts/plugin-manager.sh`
 - patch recovery via `patch-export` and `patch-apply`

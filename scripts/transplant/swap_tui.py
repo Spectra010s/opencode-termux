@@ -11,7 +11,7 @@ trailing NUL bytes to exactly that length (ELF loaders ignore out-of-section
 trailing bytes).
 
 Usage:
-  python3 tools/transplant/swap_tui.py --binary <in> --tui-lib <libopentui.so> --out <out>
+  python3 scripts/transplant/swap_tui.py --binary <in> --tui-lib <libopentui.so> --out <out>
 """
 import argparse
 import os

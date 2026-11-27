@@ -15,7 +15,7 @@
 | Plugin operations? | `guides/plugin-management.md`, `reference/plugin-packaging-design.md` | file-plugin mode + rollback model |
 
 ## CONVENTIONS
-- Keep docs aligned with current command surfaces (`scripts/ci/*`, `tools/*`).
+- Keep docs aligned with current command surfaces (`scripts/ci/*`, `scripts/*`).
 - If adding a workflow-critical document, update `docs/README.md` and the root `AGENTS.md` map.
 - Keep target scope explicit: aarch64 only.
 

@@ -1,12 +1,12 @@
 #!/usr/bin/env bats
-# Unit tests for tools/patch-opentui-ffi.py: the shim must keep Bionic's
+# Unit tests for scripts/patch-opentui-ffi.py: the shim must keep Bionic's
 # top-byte pointer tag intact (Scudo aborts on a truncated tag at free()).
 
 load '../lib/helper'
 
 setup() {
 	make_tmpdir
-	PATCHER="$(script_path tools/patch-opentui-ffi.py)"
+	PATCHER="$(script_path scripts/patch-opentui-ffi.py)"
 	CHUNK_DIR="$TEST_TMPDIR/node_modules/@opentui/core"
 	mkdir -p "$CHUNK_DIR"
 	CHUNK_JS="$CHUNK_DIR/chunk-bun-test00000.js"

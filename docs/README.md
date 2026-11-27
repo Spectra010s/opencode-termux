@@ -22,7 +22,7 @@ itself is documented upstream at [opencode.ai/docs](https://opencode.ai/docs).
 ## Ground rules
 
 - The release artifact is a bundle plus a launcher on Termux's `bun`; nothing glibc, nothing proot, nothing musl.
-- Build against the versions in `supply-chain-lock.json`. `tools/ocver.py` is the only reader; do not repeat version literals.
+- Build against the versions in `supply-chain-lock.json`. `scripts/ocver.py` is the only reader; do not repeat version literals.
 - Verify the FFI guard on the unstripped OpenTUI library, then check the marker survives in the bundle: `bytecode: true` makes binary-level JS edits dead.
 - aarch64 only. No 32-bit target exists, and `TERMUX_PKG_EXCLUDED_ARCHES` style arch games are out of scope.
 - Publish from CI only: the tag run builds, signs and releases in one go. A locally built artifact is never a release.

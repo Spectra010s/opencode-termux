@@ -1,5 +1,5 @@
 #!/usr/bin/env bats
-# Unit tests for tools/patch-opentui-loader.py: OpenTUI must treat Termux's
+# Unit tests for scripts/patch-opentui-loader.py: OpenTUI must treat Termux's
 # process.platform "android" as the linux-arm64 asset, or the TUI dies with
 # "Unsupported OpenTUI Node asset target" before the first frame.
 
@@ -7,7 +7,7 @@ load '../lib/helper'
 
 setup() {
 	make_tmpdir
-	PATCHER="$(script_path tools/patch-opentui-loader.py)"
+	PATCHER="$(script_path scripts/patch-opentui-loader.py)"
 	CHUNK_DIR="$TEST_TMPDIR/node_modules/@opentui/core"
 	mkdir -p "$CHUNK_DIR"
 	CHUNK_JS="$CHUNK_DIR/chunk-bun-test00000.js"

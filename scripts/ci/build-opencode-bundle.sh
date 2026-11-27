@@ -23,8 +23,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 
-: "${OPENCODE_VERSION:=$(python3 tools/ocver.py current)}"
-BUN_VERSION="$(python3 tools/ocver.py field bun_version "$OPENCODE_VERSION")"
+: "${OPENCODE_VERSION:=$(python3 scripts/ocver.py current)}"
+BUN_VERSION="$(python3 scripts/ocver.py field bun_version "$OPENCODE_VERSION")"
 PREFIX_PLACEHOLDER="${PREFIX_PLACEHOLDER:-@TERMUX_PREFIX@}"
 install_dir="$PREFIX_PLACEHOLDER/lib/opencode"
 api="${ANDROID_API:-28}"
@@ -71,8 +71,8 @@ git -C "$src" fetch -q --depth=1 origin "$commit"
 git -C "$src" checkout -q --detach FETCH_HEAD
 test "$(git -C "$src" rev-parse HEAD)" = "$commit"
 # The lock mirrors pins upstream owns; stop before shipping mismatched natives.
-python3 - "$src" "$(python3 tools/ocver.py field opentui_version "$OPENCODE_VERSION")" \
-  "$(python3 tools/ocver.py bunpty ref)" <<'PY'
+python3 - "$src" "$(python3 scripts/ocver.py field opentui_version "$OPENCODE_VERSION")" \
+  "$(python3 scripts/ocver.py bunpty ref)" <<'PY'
 import json
 import re
 import sys
@@ -102,8 +102,8 @@ if drift:
     )
 print(f"pins: opentui {opentui}, bun-pty {bunpty}")
 PY
-OPENCODE_BUN_VERSION="$BUN_VERSION" python3 tools/patch-opencode-source.py "$src"
-python3 tools/patch-opencode-bundle.py "$src"
+OPENCODE_BUN_VERSION="$BUN_VERSION" python3 scripts/patch-opencode-source.py "$src"
+python3 scripts/patch-opencode-bundle.py "$src"
 
 cd "$src"
 "$host_bun" install \
@@ -114,9 +114,9 @@ cd "$src"
 # The TUI shim must hand Bionic's tagged pointers to the FFI unchanged, and
 # OpenTUI's asset loader must accept process.platform "android". Both patch the
 # installed @opentui/core chunks, so they run before Bun bundles them.
-python3 "$ROOT/tools/patch-opentui-ffi.py" "$src"
-python3 "$ROOT/tools/patch-opentui-loader.py" "$src"
-python3 "$ROOT/tools/patch-fff-android.py" "$src"
+python3 "$ROOT/scripts/patch-opentui-ffi.py" "$src"
+python3 "$ROOT/scripts/patch-opentui-loader.py" "$src"
+python3 "$ROOT/scripts/patch-fff-android.py" "$src"
 
 # ---- natives ---------------------------------------------------------------
 tui="$ROOT/artifacts/transplant/opentui-bionic/libopentui.so"
