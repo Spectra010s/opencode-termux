@@ -2,7 +2,10 @@
 set -eu
 
 repo=Spectra010s/opencode-termux
-release_tag=v2.2.7
+# No arguments: use whatever GitHub reports as the latest release. With
+# --version, pin an exact tag instead.
+base_url="https://github.com/$repo/releases/latest/download"
+requested_version=
 if [ "$#" -gt 0 ]; then
   [ "$#" -eq 2 ] && [ "$1" = --version ] || { echo 'Usage: install.sh [--version X.Y.Z[-N]]' >&2; exit 2; }
   base=${2%%-*}
@@ -13,11 +16,9 @@ if [ "$#" -gt 0 ]; then
     *[!0-9.]*|.*|*..*|*.) echo 'Invalid release version.' >&2; exit 2 ;;
   esac
   printf '%s\n' "$base" | awk -F. 'NF == 3 && $1 != "" && $2 != "" && $3 != "" { ok = 1 } END { exit !ok }' || { echo 'Invalid release version.' >&2; exit 2; }
-  release_tag=v$2
+  requested_version=$base
+  base_url="https://github.com/$repo/releases/download/v$2"
 fi
-# The tarball is named after the version; the revision only moves the tag.
-version=${release_tag#v}
-version=${version%%-*}
 
 prefix=${PREFIX:-/data/data/com.termux/files/usr}
 lib_dir=$prefix/lib/opencode
@@ -26,10 +27,6 @@ launcher=$prefix/bin/opencode
 for tool in curl sha256sum tar sed mktemp install rm uname getprop awk; do
   command -v "$tool" >/dev/null 2>&1 || { printf 'Missing command: %s\n' "$tool" >&2; exit 1; }
 done
-
-asset="opencode-$version-android-aarch64-bundle"
-archive="$asset.tar.gz"
-base_url="https://github.com/$repo/releases/download/$release_tag"
 
 # 64-bit ARM Android reports aarch64 here; x86, armv7 and 32-bit userspace
 # report something else.
@@ -78,6 +75,15 @@ temporary_dir=$(mktemp -d)
 trap 'rm -rf -- "$temporary_dir"' EXIT HUP INT TERM
 
 curl -fL --retry 3 -o "$temporary_dir/SHA256SUMS" "$base_url/SHA256SUMS"
+archive=$(awk '$2 ~ /^opencode-[0-9]+(\.[0-9]+)*-android-aarch64-bundle\.tar\.gz$/ { print $2; exit }' "$temporary_dir/SHA256SUMS")
+[ -n "$archive" ] || { echo 'Release bundle asset is missing from SHA256SUMS.' >&2; exit 1; }
+# The tarball is named after the version; the revision only moves the tag.
+version=${archive#opencode-}
+version=${version%%-*}
+if [ -n "$requested_version" ] && [ "$archive" != "opencode-$requested_version-android-aarch64-bundle.tar.gz" ]; then
+  echo "Release $requested_version has no matching bundle asset." >&2
+  exit 1
+fi
 curl -fL --retry 3 -o "$temporary_dir/$archive" "$base_url/$archive"
 checksum_line=$(awk -v name="$archive" '$2 == name && length($1) == 64 { print }' "$temporary_dir/SHA256SUMS")
 [ -n "$checksum_line" ] || { echo 'Release checksum for archive is missing.' >&2; exit 1; }
