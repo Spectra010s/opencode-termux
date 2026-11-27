@@ -9,7 +9,7 @@
 ## WHERE TO LOOK
 | Question | Document | Notes |
 |---|---|---|
-| How do I build the Android bundle? | `guides/native-v2-build.md` | pinned inputs, CI path, OpenTUI step |
+| What is patched for Android and why? | `guides/native-v2-build.md` | source/native patches, build shape |
 | What does a release publish? | `apt-repository.md` | flat APT repo setup, signed index, failure modes |
 
 ## CONVENTIONS

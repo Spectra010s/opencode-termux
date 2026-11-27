@@ -17,7 +17,7 @@
 **Generated:** 2026-11-27 **Branch:** feat/2.4.2
 
 ## OVERVIEW
-Termux-first OpenCode build/packaging workspace. Since 2.2.7 the mainline is a runtime bundle under `$PREFIX/lib/opencode/` executed by Termux's `bun`, built by `scripts/ci/build-opencode-bundle.sh` and shipped as one `opencode` deb. The older single-ELF line (transplant revival, `opencode-wrapper`, `opencode-wrapper-standalone`) stays on disk for comparison builds only. Releases are built and published by GitHub Actions on tag push; see `docs/guides/native-v2-build.md`.
+Termux-first OpenCode build/packaging workspace. The mainline is a runtime bundle under `$PREFIX/lib/opencode/` executed by Termux's `bun`, built by `scripts/ci/build-opencode-bundle.sh` and shipped as one `opencode` deb. Releases are built and published by GitHub Actions on tag push; see `docs/guides/native-v2-build.md`.
 
 ## STRUCTURE
 ```text
