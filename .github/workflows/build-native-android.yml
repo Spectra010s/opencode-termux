@@ -152,7 +152,7 @@ jobs:
             echo "glibc-only pthread_tryjoin_np import found in Bionic library" >&2
             exit 1
           fi
-          python3 -c 'import sys; sys.path.insert(0,"scripts/transplant"); from swap_tui import has_ffi_guard; assert has_ffi_guard(open(sys.argv[1],"rb").read())' "$SO"
+          python3 scripts/opentui/check-ffi-guard.py "$SO"
           if grep -aFq "$GITHUB_WORKSPACE" "$SO"; then
             echo "build workspace path leaked into library" >&2
             exit 1

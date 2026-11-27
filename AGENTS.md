@@ -42,7 +42,7 @@ opencode-termux/
 | Pinned versions | `supply-chain-lock.json`, `scripts/ocver.py` | single source of truth; `current` drives CI/publish/install |
 | Bundle source patches | `scripts/patch-opencode-source.py`, `scripts/patch-opentui-ffi.py`, `scripts/patch-fff-android.py` | edits applied to the pinned source and installed packages before the host Bun bundles the graph |
 | OpenTUI Android build | `scripts/patch-opentui-android.py`, `scripts/opentui/tlsdesc-shim.c` | build.zig hooks + the TLSDESC shim the workflow compiles |
-| Guard verification | `scripts/transplant/swap_tui.py` | `has_ffi_guard()` is the gate the workflow runs on the unstripped .so |
+| Guard verification | `scripts/opentui/check-ffi-guard.py` | CLI gate the workflow runs on the unstripped .so |
 
 ## CODE MAP
 | Symbol | Type | Location | Refs | Role |

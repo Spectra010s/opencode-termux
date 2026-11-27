@@ -9,8 +9,7 @@ Actions call the scripts directly; there is no top-level wrapper.
 ```text
 scripts/
 ├── ci/                     # release entrypoints (bundle, natives, package, APT index)
-├── opentui/                # tlsdesc-shim.c copied into the OpenTUI tree
-├── transplant/             # has_ffi_guard() + the Bun base pin
+├── opentui/                # tlsdesc shim + the FFI guard check
 ├── patch-*.py              # source and native transforms
 ├── ocver.py                # the only reader of supply-chain-lock.json
 ├── gen-packages-index.py   # writes Packages.gz for the flat repo
@@ -30,8 +29,7 @@ scripts/
 | Source patching | `patch-opencode-source.py`, `patch-opencode-bundle.py` | edits applied to the pinned upstream tree before `Bun.build` |
 | Native patching | `patch-opentui-ffi.py`, `patch-opentui-loader.py`, `patch-fff-android.py` | tagged-pointer passthrough, loader, FFI fixes |
 | OpenTUI Android hooks | `patch-opentui-android.py`, `opentui/tlsdesc-shim.c` | build.zig bionic hooks, `--libc` fields, `limits.h` shadow |
-| Guard gate | `transplant/swap_tui.py` | `has_ffi_guard()`; CI imports it directly |
-| Bun base pin | `transplant/config/bun-bind.json` | cross-checked against the lock by the workflow |
+| Guard gate | `opentui/check-ffi-guard.py` | CLI the workflow runs on the unstripped .so |
 | Plugin install/update/rollback | `plugin-manager.sh` | snapshot-first mutation model + state file |
 | Environment diagnostics | `plugin-selfcheck.sh` | read-only JSON checks for config and plugins |
 
