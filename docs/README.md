@@ -8,15 +8,11 @@ itself is documented upstream at [opencode.ai/docs](https://opencode.ai/docs).
 ## Pipeline
 
 - [`guides/native-v2-build.md`](guides/native-v2-build.md) — pinned inputs, the bundle build and the OpenTUI step.
-- [`ops/apt-repository.md`](ops/apt-repository.md) — what a release publishes, how the index is signed, and how to debug a broken source.
+- [`ops/apt-repository.md`](ops/apt-repository.md) — flat-release repo layout, index generation, signing key and source setup.
 
 ## Packaging and runtime
 
 - [`guides/plugin-management.md`](guides/plugin-management.md) — plugin install, self-update, snapshot rollback.
-
-## Operations
-
-- [`ops/execution-checklist.md`](ops/execution-checklist.md) — end-to-end install/test validation before a tag.
 
 ## Ground rules
 

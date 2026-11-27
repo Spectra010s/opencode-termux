@@ -10,8 +10,7 @@
 | Question | Document | Notes |
 |---|---|---|
 | How do I build the Android bundle? | `guides/native-v2-build.md` | pinned inputs, CI path, OpenTUI step |
-| What does a release publish? | `ops/apt-repository.md` | signed flat APT repo, failure modes |
-| Validation runbook? | `ops/execution-checklist.md` | tag run, install paths, on-device checks |
+| What does a release publish? | `ops/apt-repository.md` | flat APT repo setup, signed index, failure modes |
 | Plugin operations? | `guides/plugin-management.md` | file-plugin mode + rollback model |
 
 ## CONVENTIONS
@@ -27,5 +26,5 @@
 ## QUICK CHECK
 ```bash
 # verify docs entrypoints still resolve
-ls docs/README.md docs/guides/native-v2-build.md docs/ops/execution-checklist.md docs/ops/apt-repository.md
+ls docs/README.md docs/guides/native-v2-build.md docs/ops/apt-repository.md
 ```
