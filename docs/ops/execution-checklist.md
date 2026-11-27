@@ -5,7 +5,7 @@
 The release is built and published by CI: push the tag, then verify the
 artefacts that run produced.
 
-1. Lock says `current` = the upstream version you intend to ship (`make status`).
+1. Lock says `current` = the upstream version you intend to ship (`python3 tools/ocver.py current`).
 2. Tag and push: `git push origin "$(python3 tools/ocver.py tag)"`.
    `publish-native-android.yml` runs the build workflow first, so the released
    files come from that run.
@@ -38,5 +38,5 @@ opencode
 
 ## Validation
 
-- `make selfcheck` — environment/plugin read-only check.
-- `make test` — shell unit tests.
+- `./tools/plugin-selfcheck.sh` — environment/plugin read-only check.
+- `./tests/run.sh` — shell unit tests.

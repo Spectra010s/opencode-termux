@@ -6,11 +6,11 @@
 - In flight: branch `feat/2.4.2`, lock `current: 2.4.2` (commit `fc31a48`), `package_revision: 1`, OpenTUI `0.9.9`, Zig `0.17.1`, `bun_version 1.4.4` (CI bundling only; the deb depends on `bun (>= 1.4.4)` and never pins it).
 - `2.4.1` never shipped: its build (Actions run 45446416586) failed at the OpenTUI step because 0.9.4 added a `bundle-libcxx` step that is not wired to the `--libc` file (`zig build-lib`: `unable to provide libc for target "aarch64-linux.5.10...7.2-android.28"`). The lock therefore skips it, and `.release/v2.4.2.md` covers `2.3.2 → 2.4.2` in one range.
 - `bundle-libcxx` fix: `tools/patch-opentui-android.py` skips OpenTUI's static archive on Android. That archive spawns a nested `zig build-lib` which never sees this build's bionic `--libc` file, and Zig has no bundled bionic libc. The bundle ships only the shared `libopentui.so`. Verified against the pinned 0.9.9 tree with Zig `0.17.1` (patch idempotent, `zig fmt --check` clean, build.zig compiles); no full CI build has run yet. Zig stays `0.17.1`; 0.9.9's `build.zig.zon` requires exactly that.
-- The bundle is `$PREFIX/lib/opencode/` plus a `$PREFIX/bin/opencode` launcher that execs `bun`; `bun`, `libc++` and `ripgrep` are dependencies instead of embedded. Build with `scripts/ci/build-opencode-bundle.sh`, package with `scripts/ci/package-release-bundle.sh`. CI never calls `make`; the `Makefile` is a local mirror (`bundle`, `deb`, `status`, `selfcheck`, `test`).
+- The bundle is `$PREFIX/lib/opencode/` plus a `$PREFIX/bin/opencode` launcher that execs `bun`; `bun`, `libc++` and `ripgrep` are dependencies instead of embedded. Build with `scripts/ci/build-opencode-bundle.sh`, package with `scripts/ci/package-release-bundle.sh`. Actions call the scripts directly; there is no top-level wrapper.
 - Release policy: pushing the tag is the only way to publish, and `publish-native-android.yml` runs the build workflow as its first job (`uses: ./.github/workflows/build-native-android.yml`), so the released files are built by that run. There is no candidate lookup and no provenance step: test the published release, and if it is broken bump `package_revision`, tag `v<version>-<revision>` (`v2.2.7-2`) and let the Debian version rise with it. `--target` must be `$GITHUB_SHA`; a release created for another commit is refused with `HTTP 403`.
 - Android bionic tags heap pointers in the top byte; OpenTUI's `toSafeNumberPointer()` rejects them, so `tools/patch-opentui-ffi.py` passes the tagged BigInt straight to Bun's FFI (masking the tag makes Scudo abort at `free()` with "Pointer tag … was truncated"). It must run before `Bun.build` (`bytecode:true` makes binary-level JS edits dead); CI greps the built ELF for the `BigInt.asUintN` marker.
 - Zig `0.17.1` needs every field in the `--libc` file (`cc_dir` is mandatory for linux/Android) and its `translate-c` also searches the host `/usr/include`, which bionic's `#include_next <limits.h>` then follows into glibc. `tools/patch-opentui-android.py` injects an empty `src/bionic-include-next/limits.h` to stop that inside the sysroot.
-- Build guide: `docs/guides/native-v2-build.md`. Release builds run in GitHub Actions for reproducibility. On-device local builds are allowed; Termux already is Bionic so no NDK. Needs Termux `python3`, `npm`, `clang`, `make` (`zig` only to rebuild OpenTUI) and network.
+- Build guide: `docs/guides/native-v2-build.md`. Release builds run in GitHub Actions for reproducibility. On-device local builds are allowed; Termux already is Bionic so no NDK. Needs Termux `python3`, `npm`, `clang` (`zig` only to rebuild OpenTUI) and network.
 - Scope: pacman packaging, `docs/history/`, the v1 wrapper/standalone packaging, the transplant comparison pipeline, the system-skills hook runner, `.omo/` and the translated READMEs were removed in the 2026-11 cleanup.
 - Pin current native workflow actions to immutable commit SHAs, with the version in a comment. Use v6 where available.
 
@@ -22,7 +22,6 @@ Termux-first OpenCode build/packaging workspace. Since 2.2.7 the mainline is a r
 ## STRUCTURE
 ```text
 opencode-termux/
-├── Makefile                    # top-level orchestration (bundle/deb/status/selfcheck)
 ├── scripts/                    # CI entrypoints: bundle build, packaging, signed index
 ├── tools/                      # patch scripts, lock reader, plugin lifecycle
 ├── packing/                    # launcher template
@@ -34,7 +33,7 @@ opencode-termux/
 ## WHERE TO LOOK
 | Task | Location | Notes |
 |---|---|---|
-| Build orchestration | `Makefile` | local mirror of the CI steps; CI calls the scripts directly |
+| Build orchestration | `scripts/ci/*.sh` | Actions call the scripts directly; no top-level wrapper |
 | Runtime bundle (2.2.7+) | `scripts/ci/build-opencode-bundle.sh`, `tools/patch-opencode-bundle.py`, `tools/patch-opentui-loader.py` | lock-driven bundle + bionic natives; build.ts gets an `android` bundle target |
 | Bundle installer bits | `packing/launcher/opencode`, `scripts/materialize-bundle.sh`, `install.sh` | launcher template, `@TERMUX_PREFIX@` substitution, curl install path |
 | Release notes | `.release/v<version>.md`, `.release/v<version>-highlights.md` | body notes and the embedded TUI banner; publish reads them by lock version |
@@ -49,7 +48,6 @@ opencode-termux/
 ## CODE MAP
 | Symbol | Type | Location | Refs | Role |
 |---|---|---|---:|---|
-| `bundle`, `deb`, `status`, `selfcheck`, `test` | Make targets | `Makefile` | high | local mirror of the CI steps |
 | `build_plugin` | shell function | `tools/plugin-manager.sh` | medium | plugin build pipeline (bun/npm + fallback) |
 | `cmd_install` / `cmd_update` / `cmd_rollback` | shell functions | `tools/plugin-manager.sh` | high | plugin lifecycle commands |
 
@@ -70,15 +68,17 @@ opencode-termux/
 ## COMMANDS
 ```bash
 # Runtime bundle, then the release artefacts (NDK + llvm-strip)
-make bundle
-make deb
+VER="$(python3 tools/ocver.py current)"
+REV="$(python3 tools/ocver.py revision)"
+bash scripts/ci/build-opencode-bundle.sh
+bash scripts/ci/package-release-bundle.sh "artifacts/bundle/$VER" "$VER" artifacts/release "$REV"
 
 # Validation
-make selfcheck
-make test
+./tools/plugin-selfcheck.sh
+./tests/run.sh
 
 # What the lock says is current
-make status
+python3 tools/ocver.py current
 
 # Publish: push the tag from the lock; CI builds and publishes in one run
 git push origin "$(python3 tools/ocver.py tag)"

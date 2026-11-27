@@ -2,7 +2,7 @@
 
 ## OVERVIEW
 `scripts/` holds the release entrypoints. Everything release-facing runs from
-`scripts/ci/`; nothing here is invoked by `make`.
+`scripts/ci/`; Actions call these scripts directly, with no top-level wrapper.
 
 ## WHERE TO LOOK
 | Task | Location | Notes |
