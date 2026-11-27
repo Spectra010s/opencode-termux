@@ -1,55 +1,19 @@
-# Build artifacts
+# Generated build outputs
 artifacts/
-runtime/
-packages/
+dist/
 *.deb
 *.deb.*
-*.pkg.tar.*
 *.tgz
-
-# Large files (downloaded by CI)
 *.tar.gz
 *.zip
-opencode-1.14.*
-opencode-linux-arm64-*.tgz
 
 # Build work directories
-packing/dpkg/work/
-packing/dpkg-native/
-packing/pacman/pkg/
-packing/pacman/src/
 .work/
 work/
 
-# Session artifacts / temp test files
-26003091@session*
-f1.bin
-f2.bin
-package/bin/opencode
-
-# Project metadata
-.ai/
-.sisyphus/
-.omo/
+# Local installs and bytecode
+node_modules/
+__pycache__/
 
 # Vendored test runner (fetched on demand by tests/bootstrap.sh)
 tests/vendor/
-
-# Python bytecode
-tools/transplant/__pycache__/
-
-# session/work dirs with local-only content
-.opencode-dream/
-.claude/
-.opencode-autopilot/
-.opencode/
-packing/dpkg-standalone/work/
-packing/dpkg-compressed/work/
-
-# generated indexes/outputs (release assets are the canonical copies)
-packing/Packages.gz
-packing/SHA256SUMS.txt
-packing/deb-compressed/
-tools/__pycache__/
-# Node modules (local install only)
-node_modules/
